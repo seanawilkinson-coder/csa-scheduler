@@ -1279,42 +1279,86 @@ document.getElementById('btn-save-pdf').addEventListener('click', async () => {
   const sub = document.getElementById('print-header-sub');
   sub.textContent = label ? (yr + ' · ' + label) : (yr + ' Season');
 
-  // Show print header briefly for capture
-  const ph = document.getElementById('print-header');
-  ph.style.display = 'block';
+  // Elements to manipulate
+  const container   = document.getElementById('calendar-container');
+  const chipTray    = document.getElementById('scenario-headers');
+  const collapsedBar= document.getElementById('collapsed-bar');
+  const calScroll   = document.getElementById('calendar');
+  const ph          = document.getElementById('print-header');
 
-  // Target: the calendar scroll area + headers
-  const target = document.getElementById('app') || document.body;
+  // Stash original styles
+  const origChipDisplay    = chipTray.style.display;
+  const origBarDisplay     = collapsedBar.style.display;
+  const origCalOverflow    = calScroll.style.overflow;
+  const origCalHeight      = calScroll.style.height;
+  const origCalMaxHeight   = calScroll.style.maxHeight;
+  const origContOverflow   = container.style.overflow;
+  const origContHeight     = container.style.height;
+  const origPhDisplay      = ph.style.display;
+  const origPhPosition     = ph.style.position;
 
   try {
-    const canvas = await html2canvas(target, {
+    // Hide chip tray and collapsed bar — not part of the PDF
+    chipTray.style.display     = 'none';
+    collapsedBar.style.display = 'none';
+
+    // Expand calendar scroll to full content height
+    calScroll.style.overflow    = 'visible';
+    calScroll.style.height      = 'auto';
+    calScroll.style.maxHeight   = 'none';
+    container.style.overflow    = 'visible';
+    container.style.height      = 'auto';
+
+    // Inject print header at top of container
+    ph.style.display   = 'block';
+    ph.style.position  = 'relative';
+    container.insertBefore(ph, container.firstChild);
+
+    // Wait a frame for layout to settle
+    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+    const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
-      backgroundColor: '#0d1824',
+      backgroundColor: '#F5F0E6',
       logging: false,
       ignoreElements: el => {
-        const ids = ['login-screen','viewer-banner','invite-banner'];
-        return ids.includes(el.id) ||
-          el.classList.contains('controls-bar') ||
-          el.classList.contains('header') ||
-          el.classList.contains('share-panel') ||
-          el.classList.contains('btn-set-default') ||
-          el.classList.contains('chip-remove');
+        return el.classList.contains('chip-remove') ||
+               el.id === 'login-screen' ||
+               el.id === 'viewer-banner' ||
+               el.id === 'invite-banner';
       }
     });
 
     const { jsPDF } = window.jspdf;
     const imgW = canvas.width;
     const imgH = canvas.height;
-    const pdfW = 297; // A4 landscape mm
+    // Use page width proportional to content; landscape for wide calendars
+    const pdfW = 297;
     const pdfH = Math.round((imgH / imgW) * pdfW);
-    const pdf = new jsPDF({ orientation: pdfW > pdfH ? 'landscape' : 'portrait', unit: 'mm', format: [pdfW, Math.max(pdfH, 100)] });
+    const orientation = pdfH < pdfW ? 'landscape' : 'portrait';
+    const pdf = new jsPDF({ orientation, unit: 'mm', format: [pdfW, Math.max(pdfH, 100)] });
     pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, pdfH);
 
-    const filename = label ? 'CSA-' + label.replace(/\s+/g,'-') + '.pdf' : 'CSA-Schedule-' + (appState.withinYear||'2026-27') + '.pdf';
+    const filename = label
+      ? 'CSA-' + label.replace(/\s+/g, '-') + '.pdf'
+      : 'CSA-Schedule-' + (appState.withinYear || '2026-27') + '.pdf';
     pdf.save(filename);
   } finally {
-    ph.style.display = 'none';
+    // Restore everything
+    chipTray.style.display     = origChipDisplay;
+    collapsedBar.style.display = origBarDisplay;
+    calScroll.style.overflow   = origCalOverflow;
+    calScroll.style.height     = origCalHeight;
+    calScroll.style.maxHeight  = origCalMaxHeight;
+    container.style.overflow   = origContOverflow;
+    container.style.height     = origContHeight;
+    ph.style.display           = origPhDisplay;
+    ph.style.position          = origPhPosition;
+    // Move print header back to its original location (after controls-bar)
+    const controlsBar = document.querySelector('.controls-bar');
+    controlsBar.parentNode.insertBefore(ph, controlsBar);
+
     btn.textContent = 'Save PDF';
     btn.disabled = false;
   }
