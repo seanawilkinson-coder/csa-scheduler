@@ -1272,11 +1272,13 @@ document.getElementById('btn-signout').addEventListener('click', async () => {
 document.getElementById('btn-set-default').addEventListener('click', saveDefaultState);
 
 document.getElementById('btn-save-pdf').addEventListener('click', () => {
-  // Set the header label before printing
-  const yr  = (appState.withinYear || '2026-27').replace('-', '–');
-  const label = document.getElementById('pdf-label-input').value.trim();
-  document.getElementById('print-header-sub').textContent =
-    label ? (yr + ' · ' + label) : (yr + ' Season');
+  try {
+    const yr    = (appState.withinYear || '2026-27').replace('-', '–');
+    const input = document.getElementById('pdf-label-input');
+    const label = input ? input.value.trim() : '';
+    const sub   = document.getElementById('print-header-sub');
+    if (sub) sub.textContent = label ? (yr + ' · ' + label) : (yr + ' Season');
+  } catch(e) { /* label update failed, still print */ }
   window.print();
 });
 
