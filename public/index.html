@@ -352,6 +352,7 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 .wknd-marker.mlk   { background: #f0e8d4; color: #7a5a20; }
 .wknd-marker.pday  { background: #d8e8f0; color: #1a4a5a; }
 .wknd-marker.after-mlk { background: #e4f0dc; color: #2a4a18; }
+.wknd-marker.tgiving { background: #f5e6d0; color: #8b4513; }
 
 /* drop zone */
 .drop-zone {
@@ -1483,7 +1484,7 @@ const yearData = {
     { key:'nov-6',  label:'Nov 6–8',    month:'November', relLabel:'Nov W1', season:'fall' },
     { key:'nov-13', label:'Nov 13–15',  month:null,       relLabel:'Nov W2', season:'fall' },
     { key:'nov-20', label:'Nov 20–22',  month:null,       relLabel:'Nov W3', season:'fall' },
-    { key:'nov-27', label:'Nov 27–29',  month:null,       relLabel:'Nov W4', season:'fall' },
+    { key:'nov-27', label:'Nov 27–29',  month:null,       relLabel:'Nov W4', season:'fall', marker:{text:'Thanksgiving Nov 26', cls:'tgiving'} },
     { key:'dec-4',  label:'Dec 4–6',    month:'December', relLabel:'Dec W1', season:'fall' },
     { key:'dec-11', label:'Dec 11–13',  month:null,       relLabel:'Dec W2', season:'fall' },
         { key:'jan-1',  label:'Jan 1–3',   month:'January',  relLabel:'Jan W1' },
@@ -1509,7 +1510,7 @@ const yearData = {
     { key:'nov-5',  label:'Nov 5–7',    month:'November', relLabel:'Nov W1', season:'fall' },
     { key:'nov-12', label:'Nov 12–14',  month:null,       relLabel:'Nov W2', season:'fall' },
     { key:'nov-19', label:'Nov 19–21',  month:null,       relLabel:'Nov W3', season:'fall' },
-    { key:'nov-26', label:'Nov 26–28',  month:null,       relLabel:'Nov W4', season:'fall' },
+    { key:'nov-26', label:'Nov 26–28',  month:null,       relLabel:'Nov W4', season:'fall', marker:{text:'Thanksgiving Nov 25', cls:'tgiving'} },
     { key:'dec-3',  label:'Dec 3–5',    month:'December', relLabel:'Dec W1', season:'fall' },
     { key:'dec-10', label:'Dec 10–12',  month:null,       relLabel:'Dec W2', season:'fall' },
         { key:'jan-7',  label:'Jan 7–9',   month:'January',  relLabel:'Jan W1' },
@@ -1533,7 +1534,7 @@ const yearData = {
     { key:'nov-3',  label:'Nov 3–5',    month:'November', relLabel:'Nov W1', season:'fall' },
     { key:'nov-10', label:'Nov 10–12',  month:null,       relLabel:'Nov W2', season:'fall' },
     { key:'nov-17', label:'Nov 17–19',  month:null,       relLabel:'Nov W3', season:'fall' },
-    { key:'nov-24', label:'Nov 24–26',  month:null,       relLabel:'Nov W4', season:'fall' },
+    { key:'nov-24', label:'Nov 24–26',  month:null,       relLabel:'Nov W4', season:'fall', marker:{text:'Thanksgiving Nov 23', cls:'tgiving'} },
     { key:'dec-1',  label:'Dec 1–3',    month:'December', relLabel:'Dec W1', season:'fall' },
     { key:'dec-8',  label:'Dec 8–10',   month:null,       relLabel:'Dec W2', season:'fall' },
         { key:'jan-5',  label:'Jan 5–7',   month:'January',  relLabel:'Jan W1' },
@@ -1557,7 +1558,7 @@ const yearData = {
     { key:'nov-2',  label:'Nov 2–4',    month:'November', relLabel:'Nov W1', season:'fall' },
     { key:'nov-9',  label:'Nov 9–11',   month:null,       relLabel:'Nov W2', season:'fall' },
     { key:'nov-16', label:'Nov 16–18',  month:null,       relLabel:'Nov W3', season:'fall' },
-    { key:'nov-23', label:'Nov 23–25',  month:null,       relLabel:'Nov W4', season:'fall' },
+    { key:'nov-23', label:'Nov 23–25',  month:null,       relLabel:'Nov W4', season:'fall', marker:{text:'Thanksgiving Nov 22', cls:'tgiving'} },
     { key:'nov-30', label:'Nov 30–Dec 2', month:null,     relLabel:'Nov W5', season:'fall' },
     { key:'dec-7',  label:'Dec 7–9',    month:'December', relLabel:'Dec W1', season:'fall' },
         { key:'jan-4',  label:'Jan 4–6',   month:'January',  relLabel:'Jan W1' },
