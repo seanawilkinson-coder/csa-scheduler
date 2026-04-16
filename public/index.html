@@ -1272,6 +1272,7 @@ document.getElementById('btn-signout').addEventListener('click', async () => {
 document.getElementById('btn-set-default').addEventListener('click', saveDefaultState);
 
 document.getElementById('btn-save-pdf').addEventListener('click', () => {
+  alert('DEBUG: print handler fired');
   try {
     const yr    = (appState.withinYear || '2026-27').replace('-', '–');
     const input = document.getElementById('pdf-label-input');
