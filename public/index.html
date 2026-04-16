@@ -884,6 +884,30 @@ body.presenting .exit-present-btn { display: block; }
 .btn-joint:hover { background: rgba(255,255,255,0.08); color: white; }
 .btn-joint.active { background: rgba(30,122,140,0.28); color: #6ad4e0; border-color: #1E7A8C; }
 
+/* ── INVITE BANNER ─────────────────────────────────────────────────────────── */
+.invite-banner {
+  display: none; position: fixed; top: 0; left: 0; right: 0; z-index: 1600;
+  background: #1a4a2e; padding: 7px 18px; gap: 14px;
+  font-family: 'Barlow Condensed', sans-serif; align-items: center; justify-content: center;
+  font-size: 7pt; font-weight: 500; letter-spacing: 1.5pt; text-transform: uppercase;
+  color: #6adfa0; border-bottom: 2px solid #2a6b50;
+}
+.invite-banner.visible { display: flex; }
+.invite-join-btn {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 7pt; font-weight: 700;
+  letter-spacing: 1pt; text-transform: uppercase; padding: 4px 12px;
+  background: #6adfa0; color: #0e2a1a; border: none; border-radius: 4px; cursor: pointer;
+}
+.invite-dismiss-btn {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 7pt;
+  background: none; border: none; color: rgba(106,223,160,0.45); cursor: pointer; padding: 4px;
+}
+.joint-lobby-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 7pt; font-weight: 700; letter-spacing: 2pt; text-transform: uppercase;
+  color: rgba(255,255,255,0.35); margin-bottom: 8px; margin-top: 4px;
+}
+
 /* ── SEASON TOGGLE ─────────────────────────────────────────────────────────── */
 .season-toggle { display: flex; gap: 2px; }
 .season-btn {
@@ -960,6 +984,13 @@ body.presenting .exit-present-btn { display: block; }
   </div>
 </div>
 
+<!-- Invite banner (shown when another user starts a session) -->
+<div class="invite-banner" id="invite-banner">
+  <span id="invite-banner-text"></span>
+  <button class="invite-join-btn" id="invite-join-btn">Join Now</button>
+  <button class="invite-dismiss-btn" id="invite-dismiss-btn">✕</button>
+</div>
+
 <!-- Viewer mode banner -->
 <div class="viewer-banner" id="viewer-banner"></div>
 
@@ -970,6 +1001,10 @@ body.presenting .exit-present-btn { display: block; }
       <button class="btn-joint" id="btn-share">⬡ Joint Session</button>
       <div class="joint-panel" id="share-panel">
         <div class="joint-panel-title">Joint Session</div>
+        <div class="joint-lobby-title">Online Now</div>
+        <div class="joint-user-list" id="lobby-user-list">
+          <div class="joint-empty">No one else online</div>
+        </div>
         <div class="joint-session-link-row">
           <input class="joint-link-input" id="share-link-input" readonly placeholder="Start session to get link" />
           <button class="joint-copy-btn" id="share-copy-btn">Copy</button>
@@ -1117,6 +1152,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let currentUser = null;
 let shareChannel = null;
 let shareSessionId = null;
+let lobbyChannel  = null;
 let isViewer = false;       // true = joined via share link
 let shareActive = false;    // true = host session started
 let _receivingRemote = false; // prevent broadcast echo
@@ -1131,6 +1167,7 @@ if (_urlParams.get('session')) {
 function showApp() {
   document.getElementById('login-screen').classList.add('hidden');
   updateUserBadge();
+  joinLobby();
   if (isViewer) enterViewerMode();
   else loadUserState();
 }
@@ -1282,9 +1319,77 @@ function applyShareState(state) {
   _receivingRemote = false;
 }
 
+// ─── Lobby: global presence for all logged-in users ──────────────────────────
+function joinLobby() {
+  if (!currentUser) return;
+  if (lobbyChannel) lobbyChannel.unsubscribe();
+  lobbyChannel = sb.channel('schedule:lobby', { config: { presence: { key: currentUser.email } } })
+    .on('presence', { event: 'sync' }, updateLobbyList)
+    .on('broadcast', { event: 'invite' }, ({ payload }) => {
+      if (payload.from !== currentUser.email && !shareActive && !isViewer) {
+        showInviteBanner(payload.from, payload.sessionId);
+      }
+    })
+    .subscribe(async (status) => {
+      if (status === 'SUBSCRIBED') {
+        await lobbyChannel.track({ email: currentUser.email, joined: Date.now() });
+      }
+    });
+}
+
+function updateLobbyList() {
+  if (!lobbyChannel) return;
+  const state = lobbyChannel.presenceState();
+  const users = Object.values(state).flat();
+  const list = document.getElementById('lobby-user-list');
+  if (!list) return;
+  list.innerHTML = '';
+  const others = users.filter(u => u.email !== currentUser?.email);
+  if (others.length === 0) {
+    list.innerHTML = '<div class="joint-empty">No one else online</div>';
+    return;
+  }
+  others.forEach(u => {
+    const row = document.createElement('div');
+    row.className = 'joint-user-row';
+    const dot = document.createElement('div');
+    dot.className = 'joint-user-dot';
+    row.appendChild(dot);
+    const label = document.createElement('span');
+    label.textContent = u.email;
+    row.appendChild(label);
+    list.appendChild(row);
+  });
+}
+
+function showInviteBanner(from, sessionId) {
+  const banner = document.getElementById('invite-banner');
+  document.getElementById('invite-banner-text').textContent = from + ' has started a session';
+  banner.classList.add('visible');
+  document.querySelector('.header').style.marginTop = '34px';
+
+  document.getElementById('invite-join-btn').onclick = () => {
+    banner.classList.remove('visible');
+    document.querySelector('.header').style.marginTop = '';
+    shareSessionId = sessionId;
+    isViewer = true;
+    enterViewerMode();
+  };
+  document.getElementById('invite-dismiss-btn').onclick = () => {
+    banner.classList.remove('visible');
+    document.querySelector('.header').style.marginTop = '';
+  };
+}
+
 function startSharing() {
   if (shareChannel) shareChannel.unsubscribe();
   shareActive = true;
+
+  // Notify everyone in the lobby
+  if (lobbyChannel) {
+    lobbyChannel.send({ type: 'broadcast', event: 'invite',
+      payload: { from: currentUser?.email || 'host', sessionId: shareSessionId } });
+  }
 
   shareChannel = sb.channel('schedule:' + shareSessionId, { config: { presence: { key: currentUser?.email || 'host' } } })
     .on('presence', { event: 'sync' }, updatePresenceList)
