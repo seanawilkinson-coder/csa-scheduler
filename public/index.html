@@ -1325,6 +1325,13 @@ function joinLobby() {
   if (lobbyChannel) lobbyChannel.unsubscribe();
   lobbyChannel = sb.channel('schedule:lobby', { config: { presence: { key: currentUser.email } } })
     .on('presence', { event: 'sync' }, updateLobbyList)
+    .on('presence', { event: 'join' }, () => {
+      // Re-broadcast invite to anyone who joins the lobby while a session is already active
+      if (shareActive && shareSessionId) {
+        lobbyChannel.send({ type: 'broadcast', event: 'invite',
+          payload: { from: currentUser?.email || 'host', sessionId: shareSessionId } });
+      }
+    })
     .on('broadcast', { event: 'invite' }, ({ payload }) => {
       if (payload.from !== currentUser.email && !shareActive && !isViewer) {
         showInviteBanner(payload.from, payload.sessionId);
