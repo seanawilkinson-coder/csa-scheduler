@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <title>CSA Season Scheduler v2</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap');
@@ -98,6 +100,13 @@ html, body {
 .btn-small.btn-present:hover { background: rgba(255,255,255,0.12); color: white; }
 .btn-small.btn-set-default { color: var(--accent); border-color: rgba(196,147,63,0.4); }
 .btn-small.btn-set-default:hover { background: rgba(196,147,63,0.15); }
+.pdf-label-input {
+  font-family: 'Barlow Condensed', sans-serif; font-size: 8pt;
+  width: 90px; padding: 5px 9px; border-radius: 5px;
+  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.7); outline: none;
+}
+.pdf-label-input::placeholder { color: rgba(255,255,255,0.25); }
 .btn-small.btn-fullscreen {
   font-size: 13pt; padding: 4px 10px; line-height: 1;
   color: rgba(255,255,255,0.38); border-color: rgba(255,255,255,0.13);
@@ -685,11 +694,35 @@ body.presenting .exit-present-btn { display: block; }
 .vault-item-del:hover { color: #f07070 !important; }
 
 /* ── PRINT ─────────────────────────────────────────────────────────────────── */
+/* ── PRINT HEADER (hidden on screen) ─────────────────────────────────────── */
+.print-header { display: none; }
+.print-header-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22pt; letter-spacing: 4pt; color: #1b2a4a;
+}
+.print-header-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9pt; font-weight: 600; letter-spacing: 3pt;
+  text-transform: uppercase; color: #c4933f; margin-top: 2px;
+}
+
 @media print {
-  .controls-bar, .icon-btn, .saved-drawer, .exit-present-btn { display: none !important; }
-  .app-body { height: auto; overflow: visible; }
-  .calendar-scroll { overflow: visible; }
-  .chip-remove { display: none; }
+  /* Force color printing */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+  /* Hide all UI chrome */
+  .header, .controls-bar, .viewer-banner, .invite-banner,
+  .icon-btn, .saved-drawer, .exit-present-btn,
+  .chip-remove, #share-panel { display: none !important; }
+
+  /* Show print header */
+  .print-header { display: block !important; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #c4933f; }
+
+  /* Layout */
+  body { background: white !important; margin: 0; padding: 16px; }
+  .app-body { height: auto !important; overflow: visible !important; padding-top: 0 !important; }
+  .calendar-scroll { overflow: visible !important; }
+  #app { padding-top: 0 !important; }
 }
 
 /* ── LOGIN SCREEN ────────────────────────────────────────────────────────────── */
@@ -1018,9 +1051,16 @@ body.presenting .exit-present-btn { display: block; }
         </div>
       </div>
     </div><div class="bar-divider" style="height:22px;width:1px;background:rgba(255,255,255,0.1);"></div><div class="user-badge" id="user-badge" style="display:none;"><div class="user-avatar" id="user-avatar">?</div><span class="user-email" id="user-email-label"></span><button class="btn-signout" id="btn-signout">Sign out</button></div><button class="btn-small btn-set-default" id="btn-set-default" style="display:none;" title="Save current layout as the default all users see on first login">Set as Default</button><button class="btn-small btn-present" id="btn-present">Present</button>
-    <button class="btn-small" onclick="window.print()">Save PDF</button>
+    <input class="pdf-label-input" id="pdf-label-input" placeholder="Option A" title="PDF label (e.g. Option A, Proposal v2)" maxlength="30" />
+    <button class="btn-small" id="btn-save-pdf">Save PDF</button>
     <button class="btn-small btn-fullscreen" id="btn-fullscreen" title="Toggle fullscreen">⛶</button>
   </div>
+</div>
+
+<!-- Print-only header -->
+<div class="print-header" id="print-header">
+  <div class="print-header-title">CSA SEASON SCHEDULER</div>
+  <div class="print-header-sub" id="print-header-sub">2026–27 Season</div>
 </div>
 
 <!-- ── CONTROLS BAR ────────────────────────────────────────────────────────── -->
@@ -1156,6 +1196,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 let currentUser = null;
 let shareChannel = null;
 let shareSessionId = null;
+let printTitle = '';
 let lobbyChannel  = null;
 let isViewer = false;       // true = joined via share link
 let shareActive = false;    // true = host session started
@@ -1226,6 +1267,58 @@ document.getElementById('btn-signout').addEventListener('click', async () => {
 });
 
 document.getElementById('btn-set-default').addEventListener('click', saveDefaultState);
+
+document.getElementById('btn-save-pdf').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-save-pdf');
+  btn.textContent = 'Generating…';
+  btn.disabled = true;
+
+  // Build header label
+  const yr = (appState.withinYear || '2026-27').replace('-', '–');
+  const label = document.getElementById('pdf-label-input').value.trim();
+  const sub = document.getElementById('print-header-sub');
+  sub.textContent = label ? (yr + ' · ' + label) : (yr + ' Season');
+
+  // Show print header briefly for capture
+  const ph = document.getElementById('print-header');
+  ph.style.display = 'block';
+
+  // Target: the calendar scroll area + headers
+  const target = document.getElementById('app') || document.body;
+
+  try {
+    const canvas = await html2canvas(target, {
+      scale: 2,
+      useCORS: true,
+      backgroundColor: '#0d1824',
+      logging: false,
+      ignoreElements: el => {
+        const ids = ['login-screen','viewer-banner','invite-banner'];
+        return ids.includes(el.id) ||
+          el.classList.contains('controls-bar') ||
+          el.classList.contains('header') ||
+          el.classList.contains('share-panel') ||
+          el.classList.contains('btn-set-default') ||
+          el.classList.contains('chip-remove');
+      }
+    });
+
+    const { jsPDF } = window.jspdf;
+    const imgW = canvas.width;
+    const imgH = canvas.height;
+    const pdfW = 297; // A4 landscape mm
+    const pdfH = Math.round((imgH / imgW) * pdfW);
+    const pdf = new jsPDF({ orientation: pdfW > pdfH ? 'landscape' : 'portrait', unit: 'mm', format: [pdfW, Math.max(pdfH, 100)] });
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, pdfH);
+
+    const filename = label ? 'CSA-' + label.replace(/\s+/g,'-') + '.pdf' : 'CSA-Schedule-' + (appState.withinYear||'2026-27') + '.pdf';
+    pdf.save(filename);
+  } finally {
+    ph.style.display = 'none';
+    btn.textContent = 'Save PDF';
+    btn.disabled = false;
+  }
+});
 
 // ─── Share mode ───────────────────────────────────────────────────────────────
 function genSessionId() {
@@ -2822,6 +2915,14 @@ function renderExpandedBack() {
 // ────────────────────────────────────────────────────────────────────────────
 
 function renderAll() {
+  // Update print header
+  const sub = document.getElementById('print-header-sub');
+  if (sub) {
+    const yr = appState.withinYear || '2026-27';
+    const label = yr.replace('-', '–');
+    sub.textContent = printTitle || (label + ' Season');
+  }
+
   // Broadcast state to all collaborators (host or viewer) unless we're applying incoming state
   if (!_receivingRemote && shareChannel && (shareActive || isViewer)) {
     shareChannel.send({ type: "broadcast", event: "state", payload: getShareState() });
