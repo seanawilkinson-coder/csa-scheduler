@@ -625,9 +625,9 @@ body.presenting .exit-present-btn { display: block; }
 }
 #login-screen.hidden { display: none; }
 .login-card {
-  background: #182236; border-radius: 14px;
-  padding: 38px 42px; width: 370px;
-  box-shadow: 0 28px 90px rgba(0,0,0,0.55);
+  background: #182236; border-radius: 12px;
+  padding: 28px 32px; width: 300px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
   border: 1px solid rgba(255,255,255,0.07);
 }
 .login-logo {
@@ -648,7 +648,7 @@ body.presenting .exit-present-btn { display: block; }
 .login-input {
   width: 100%; font-size: 9pt; padding: 11px 14px; border-radius: 8px;
   background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.10);
-  color: white; outline: none; margin-bottom: 16px; box-sizing: border-box;
+  color: white; outline: none; margin-bottom: 10px; box-sizing: border-box;
   font-family: 'Outfit', sans-serif; transition: border-color 0.15s;
 }
 .login-input:focus { border-color: var(--accent); }
@@ -762,8 +762,6 @@ body.presenting .exit-present-btn { display: block; }
 <!-- ── LOGIN SCREEN ────────────────────────────────────────────────────────── -->
 <div id="login-screen">
   <div class="login-card">
-    <div class="login-logo">CSA Season Scheduler <span>·</span> Spring</div>
-    <div class="login-sub">Princeton Squash — Authorized Access Only</div>
     <div class="login-error" id="login-error"></div>
     <label class="login-label" for="login-email">Email</label>
     <input class="login-input" type="email" id="login-email" placeholder="you@princeton.edu" autocomplete="email" />
@@ -892,6 +890,7 @@ function showApp() {
   document.getElementById('login-screen').classList.add('hidden');
   updateUserBadge();
   if (isViewer) enterViewerMode();
+  else loadUserState();
 }
 
 function showLogin() {
@@ -1104,6 +1103,58 @@ function updatePresenceList() {
 
 // Broadcast on every renderAll when hosting
 const _origRenderAll = renderAll;
+
+
+// ─── State persistence ────────────────────────────────────────────────────────
+let _saveTimer = null;
+
+function scheduleStateSave() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(saveUserState, 1500);
+}
+
+async function saveUserState() {
+  if (!currentUser || isViewer) return;
+  const state = {
+    placements:        JSON.parse(JSON.stringify(placements)),
+    crossPlacements:   JSON.parse(JSON.stringify(crossPlacements)),
+    masterPlacements:  JSON.parse(JSON.stringify(masterPlacements)),
+    currentPlacements: JSON.parse(JSON.stringify(currentPlacements)),
+    scenarioLabels:    JSON.parse(JSON.stringify(scenarioLabels)),
+    savedVariations:   JSON.parse(JSON.stringify(savedVariations)),
+    appMode:           appState.mode,
+    withinYear:        appState.withinYear,
+    scenarioCount:     appState.scenarioCount,
+  };
+  await sb.from('schedule_state').upsert({ user_id: currentUser.id, state, updated_at: new Date().toISOString() });
+}
+
+async function loadUserState() {
+  if (!currentUser) return;
+  const { data, error } = await sb.from('schedule_state').select('state').eq('user_id', currentUser.id).single();
+  if (error || !data?.state) { renderAll(); return; }
+
+  const s = data.state;
+  if (s.placements)        Object.assign(placements,        s.placements);
+  if (s.crossPlacements)   Object.assign(crossPlacements,   s.crossPlacements);
+  if (s.masterPlacements)  Object.assign(masterPlacements,  s.masterPlacements);
+  if (s.currentPlacements) Object.assign(currentPlacements, s.currentPlacements);
+  if (s.scenarioLabels)    Object.assign(scenarioLabels,    s.scenarioLabels);
+  if (s.savedVariations)   savedVariations = s.savedVariations;
+  if (s.appMode)           appState.mode = s.appMode;
+  if (s.withinYear)        appState.withinYear = s.withinYear;
+  if (s.scenarioCount)     appState.scenarioCount = s.scenarioCount;
+
+  // Sync year tab UI
+  document.querySelectorAll('.year-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.year === appState.withinYear);
+  });
+  document.querySelectorAll('.iter-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.count) === appState.scenarioCount);
+  });
+
+  renderAll();
+}
 
 // ─── Session restore ──────────────────────────────────────────────────────────
 async function initAuth() {
@@ -2260,6 +2311,8 @@ function renderAll() {
   if (shareActive && shareChannel) {
     shareChannel.send({ type: "broadcast", event: "state", payload: getShareState() });
   }
+  // Debounced save to Supabase
+  scheduleStateSave();
   // Apply rules for all active years
   ALL_YEARS.forEach(yr => applyRules(yr));
 
