@@ -96,6 +96,8 @@ html, body {
 .btn-small:hover { background: var(--accent); color: var(--navy); }
 .btn-small.btn-present { color: rgba(255,255,255,0.45); border-color: rgba(255,255,255,0.18); }
 .btn-small.btn-present:hover { background: rgba(255,255,255,0.12); color: white; }
+.btn-small.btn-set-default { color: var(--accent); border-color: rgba(196,147,63,0.4); }
+.btn-small.btn-set-default:hover { background: rgba(196,147,63,0.15); }
 .btn-small.btn-fullscreen {
   font-size: 13pt; padding: 4px 10px; line-height: 1;
   color: rgba(255,255,255,0.38); border-color: rgba(255,255,255,0.13);
@@ -1015,7 +1017,7 @@ body.presenting .exit-present-btn { display: block; }
           <div class="joint-empty">No active session</div>
         </div>
       </div>
-    </div><div class="bar-divider" style="height:22px;width:1px;background:rgba(255,255,255,0.1);"></div><div class="user-badge" id="user-badge" style="display:none;"><div class="user-avatar" id="user-avatar">?</div><span class="user-email" id="user-email-label"></span><button class="btn-signout" id="btn-signout">Sign out</button></div><button class="btn-small btn-present" id="btn-present">Present</button>
+    </div><div class="bar-divider" style="height:22px;width:1px;background:rgba(255,255,255,0.1);"></div><div class="user-badge" id="user-badge" style="display:none;"><div class="user-avatar" id="user-avatar">?</div><span class="user-email" id="user-email-label"></span><button class="btn-signout" id="btn-signout">Sign out</button></div><button class="btn-small btn-set-default" id="btn-set-default" style="display:none;" title="Save current layout as the default all users see on first login">Set as Default</button><button class="btn-small btn-present" id="btn-present">Present</button>
     <button class="btn-small" onclick="window.print()">Save PDF</button>
     <button class="btn-small btn-fullscreen" id="btn-fullscreen" title="Toggle fullscreen">⛶</button>
   </div>
@@ -1148,6 +1150,7 @@ body.presenting .exit-present-btn { display: block; }
 // ────────────────────────────────────────────────────────────────────────────
 const SUPABASE_URL  = 'https://laowthdmumuocawnktza.supabase.co';
 const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxhb3d0aGRtdW11b2Nhd25rdHphIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYzNTY3NDIsImV4cCI6MjA5MTkzMjc0Mn0.9hPdRaX9Eub4BmmkltrUnW3EYQMB0ZB2wsNHjvpLo_8';
+const ADMIN_EMAIL   = 'sw12@princeton.edu';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
 
 let currentUser = null;
@@ -1168,6 +1171,9 @@ if (_urlParams.get('session')) {
 function showApp() {
   document.getElementById('login-screen').classList.add('hidden');
   updateUserBadge();
+  // Show Set as Default button for admin only
+  document.getElementById('btn-set-default').style.display =
+    currentUser?.email === ADMIN_EMAIL ? 'inline-flex' : 'none';
   joinLobby();
   if (isViewer) enterViewerMode();
   else loadUserState();
@@ -1218,6 +1224,8 @@ document.getElementById('btn-signout').addEventListener('click', async () => {
   leaveShare();
   showLogin();
 });
+
+document.getElementById('btn-set-default').addEventListener('click', saveDefaultState);
 
 // ─── Share mode ───────────────────────────────────────────────────────────────
 function genSessionId() {
@@ -1487,6 +1495,53 @@ function scheduleStateSave() {
   _saveTimer = setTimeout(saveUserState, 1500);
 }
 
+// ─── Admin: default state ─────────────────────────────────────────────────────
+async function saveDefaultState() {
+  const customEvs = ALL_EVENTS.filter(e => e.custom);
+  const state = {
+    placements:        JSON.parse(JSON.stringify(placements)),
+    crossPlacements:   JSON.parse(JSON.stringify(crossPlacements)),
+    masterPlacements:  JSON.parse(JSON.stringify(masterPlacements)),
+    currentPlacements: JSON.parse(JSON.stringify(currentPlacements)),
+    scenarioLabels:    JSON.parse(JSON.stringify(scenarioLabels)),
+    savedVariations:   JSON.parse(JSON.stringify(savedVariations)),
+    customEvents:      JSON.parse(JSON.stringify(customEvs)),
+    appMode:           appState.mode,
+    withinYear:        appState.withinYear,
+    scenarioCount:     appState.scenarioCount,
+    seasonFilter:      appState.seasonFilter,
+  };
+  const { error } = await sb.from('default_state').upsert({ id: 1, state, updated_at: new Date().toISOString() });
+  if (!error) {
+    const btn = document.getElementById('btn-set-default');
+    const orig = btn.textContent;
+    btn.textContent = 'Saved ✓';
+    setTimeout(() => { btn.textContent = orig; }, 2000);
+  }
+}
+
+async function loadDefaultState() {
+  const { data } = await sb.from('default_state').select('state').eq('id', 1).single();
+  if (!data?.state || Object.keys(data.state).length === 0) return false;
+  const s = data.state;
+  if (s.placements)        Object.assign(placements,        s.placements);
+  if (s.crossPlacements)   Object.assign(crossPlacements,   s.crossPlacements);
+  if (s.masterPlacements)  Object.assign(masterPlacements,  s.masterPlacements);
+  if (s.currentPlacements) Object.assign(currentPlacements, s.currentPlacements);
+  if (s.scenarioLabels)    Object.assign(scenarioLabels,    s.scenarioLabels);
+  if (s.savedVariations)   savedVariations = s.savedVariations;
+  if (s.customEvents && Array.isArray(s.customEvents)) {
+    s.customEvents.forEach(ev => { if (!ALL_EVENTS.find(e => e.id === ev.id)) ALL_EVENTS.push(ev); });
+  }
+  if (s.appMode)       appState.mode         = s.appMode;
+  if (s.withinYear)    appState.withinYear    = s.withinYear;
+  if (s.scenarioCount) appState.scenarioCount = s.scenarioCount;
+  if (s.seasonFilter)  appState.seasonFilter  = s.seasonFilter;
+  document.querySelectorAll('.year-tab').forEach(t => t.classList.toggle('active', t.dataset.year === appState.withinYear));
+  document.querySelectorAll('.season-btn').forEach(b => b.classList.toggle('active', b.dataset.season === appState.seasonFilter));
+  return true;
+}
+
 async function saveUserState() {
   if (!currentUser || isViewer) return;
   const customEvs = ALL_EVENTS.filter(e => e.custom);
@@ -1509,7 +1564,7 @@ async function saveUserState() {
 async function loadUserState() {
   if (!currentUser) return;
   const { data, error } = await sb.from('schedule_state').select('state').eq('user_id', currentUser.id).single();
-  if (error || !data?.state) { renderAll(); return; }
+  if (error || !data?.state) { await loadDefaultState(); renderAll(); return; }
 
   const s = data.state;
   if (s.placements)        Object.assign(placements,        s.placements);
