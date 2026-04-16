@@ -1271,15 +1271,67 @@ document.getElementById('btn-signout').addEventListener('click', async () => {
 
 document.getElementById('btn-set-default').addEventListener('click', saveDefaultState);
 
-document.getElementById('btn-save-pdf').addEventListener('click', () => {
+document.getElementById('btn-save-pdf').addEventListener('click', async () => {
+  const btn   = document.getElementById('btn-save-pdf');
+  btn.textContent = 'Generating…';
+  btn.disabled = true;
+
   try {
+    // Set print header text
     const yr    = (appState.withinYear || '2026-27').replace('-', '–');
     const input = document.getElementById('pdf-label-input');
     const label = input ? input.value.trim() : '';
     const sub   = document.getElementById('print-header-sub');
     if (sub) sub.textContent = label ? (yr + ' · ' + label) : (yr + ' Season');
-  } catch(e) { /* label update failed, still print */ }
-  window.print();
+
+    // Show print header, hide chrome UI
+    const ph = document.getElementById('print-header');
+    ph.style.display = 'block';
+
+    // Capture clean HTML: just head + calendar content
+    const calHTML = document.getElementById('calendar-container').outerHTML;
+    const styles  = Array.from(document.querySelectorAll('style')).map(s => s.outerHTML).join('\n');
+    const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
+      <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+      ${styles}
+      <style>
+        html,body{margin:0;padding:0;background:#F5F0E6;}
+        #print-header{display:block!important;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #c4933f;}
+        #scenario-headers,#collapsed-bar,.chip-remove{display:none!important;}
+        .calendar-container{overflow:visible!important;height:auto!important;}
+        .calendar-scroll{overflow:visible!important;height:auto!important;max-height:none!important;}
+      </style>
+    </head><body>
+      ${document.getElementById('print-header').outerHTML}
+      ${calHTML}
+    </body></html>`;
+
+    ph.style.display = '';
+
+    const filename = label
+      ? 'CSA-' + label.replace(/\s+/g, '-') + '.pdf'
+      : 'CSA-Schedule-' + (appState.withinYear || '2026-27') + '.pdf';
+
+    const resp = await fetch('/generate-pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html, filename }),
+    });
+
+    if (!resp.ok) throw new Error('Server PDF generation failed');
+
+    const blob = await resp.blob();
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = filename; a.click();
+    URL.revokeObjectURL(url);
+  } catch (err) {
+    console.error('PDF error:', err);
+    alert('PDF generation failed. Try using Ctrl+P / Cmd+P and Save as PDF.');
+  } finally {
+    btn.textContent = 'Save PDF';
+    btn.disabled = false;
+  }
 });
 
 // ─── Share mode ───────────────────────────────────────────────────────────────
