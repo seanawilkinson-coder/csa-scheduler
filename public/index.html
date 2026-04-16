@@ -352,7 +352,8 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 .wknd-marker.mlk   { background: #f0e8d4; color: #7a5a20; }
 .wknd-marker.pday  { background: #d8e8f0; color: #1a4a5a; }
 .wknd-marker.after-mlk { background: #e4f0dc; color: #2a4a18; }
-.wknd-marker.tgiving { background: #f5e6d0; color: #8b4513; }
+.wknd-marker.tgiving  { background: #f5e6d0; color: #8b4513; }
+.wknd-marker.columbus { background: #e8e0f0; color: #4a2a7a; }
 
 /* drop zone */
 .drop-zone {
@@ -1589,7 +1590,7 @@ const ALL_EVENTS = [
 const yearData = {
   '2026-27': { weekends: [
     { key:'oct-2',  label:'Oct 2–4',    month:'October',  relLabel:'Oct W1', season:'fall' },
-    { key:'oct-9',  label:'Oct 9–11',   month:null,       relLabel:'Oct W2', season:'fall' },
+    { key:'oct-9',  label:'Oct 9–11',   month:null,       relLabel:'Oct W2', season:'fall', marker:{text:'Columbus Oct 12', cls:'columbus'} },
     { key:'oct-16', label:'Oct 16–18',  month:null,       relLabel:'Oct W3', season:'fall' },
     { key:'oct-23', label:'Oct 23–25',  month:null,       relLabel:'Oct W4', season:'fall' },
     { key:'oct-30', label:'Oct 30–Nov 1', month:null,     relLabel:'Oct W5', season:'fall' },
@@ -1615,7 +1616,7 @@ const yearData = {
   ]},
   '2027-28': { weekends: [
     { key:'oct-1',  label:'Oct 1–3',    month:'October',  relLabel:'Oct W1', season:'fall' },
-    { key:'oct-8',  label:'Oct 8–10',   month:null,       relLabel:'Oct W2', season:'fall' },
+    { key:'oct-8',  label:'Oct 8–10',   month:null,       relLabel:'Oct W2', season:'fall', marker:{text:'Columbus Oct 11', cls:'columbus'} },
     { key:'oct-15', label:'Oct 15–17',  month:null,       relLabel:'Oct W3', season:'fall' },
     { key:'oct-22', label:'Oct 22–24',  month:null,       relLabel:'Oct W4', season:'fall' },
     { key:'oct-29', label:'Oct 29–31',  month:null,       relLabel:'Oct W5', season:'fall' },
@@ -1639,7 +1640,7 @@ const yearData = {
     { key:'mar-24', label:'Mar 24–26', month:null,     relLabel:'Mar W4' },
   ]},
   '2028-29': { weekends: [
-    { key:'oct-6',  label:'Oct 6–8',    month:'October',  relLabel:'Oct W1', season:'fall' },
+    { key:'oct-6',  label:'Oct 6–8',    month:'October',  relLabel:'Oct W1', season:'fall', marker:{text:'Columbus Oct 9', cls:'columbus'} },
     { key:'oct-13', label:'Oct 13–15',  month:null,       relLabel:'Oct W2', season:'fall' },
     { key:'oct-20', label:'Oct 20–22',  month:null,       relLabel:'Oct W3', season:'fall' },
     { key:'oct-27', label:'Oct 27–29',  month:null,       relLabel:'Oct W4', season:'fall' },
@@ -1663,7 +1664,7 @@ const yearData = {
     { key:'mar-23', label:'Mar 23–25', month:null,     relLabel:'Mar W4' },
   ]},
   '2029-30': { weekends: [
-    { key:'oct-5',  label:'Oct 5–7',    month:'October',  relLabel:'Oct W1', season:'fall' },
+    { key:'oct-5',  label:'Oct 5–7',    month:'October',  relLabel:'Oct W1', season:'fall', marker:{text:'Columbus Oct 8', cls:'columbus'} },
     { key:'oct-12', label:'Oct 12–14',  month:null,       relLabel:'Oct W2', season:'fall' },
     { key:'oct-19', label:'Oct 19–21',  month:null,       relLabel:'Oct W3', season:'fall' },
     { key:'oct-26', label:'Oct 26–28',  month:null,       relLabel:'Oct W4', season:'fall' },
