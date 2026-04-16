@@ -707,22 +707,25 @@ body.presenting .exit-present-btn { display: block; }
 }
 
 @media print {
+  @page { size: landscape; margin: 0.4in; }
+
   /* Force color printing */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
   /* Hide all UI chrome */
   .header, .controls-bar, .viewer-banner, .invite-banner,
-  .icon-btn, .saved-drawer, .exit-present-btn,
-  .chip-remove, #share-panel { display: none !important; }
+  .icon-btn, .saved-drawer, .exit-present-btn, .panel-collapsed-bar,
+  .chip-remove, #share-panel, #scenario-headers, #collapsed-bar,
+  #login-screen { display: none !important; }
 
   /* Show print header */
   .print-header { display: block !important; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 2px solid #c4933f; }
 
-  /* Layout */
-  body { background: white !important; margin: 0; padding: 16px; }
-  .app-body { height: auto !important; overflow: visible !important; padding-top: 0 !important; }
-  .calendar-scroll { overflow: visible !important; }
-  #app { padding-top: 0 !important; }
+  /* Layout — expand everything so full calendar prints */
+  html, body { height: auto !important; overflow: visible !important; background: #F5F0E6 !important; margin: 0; padding: 0; }
+  .app-body { height: auto !important; overflow: visible !important; }
+  .calendar-container { height: auto !important; overflow: visible !important; }
+  .calendar-scroll { overflow: visible !important; height: auto !important; max-height: none !important; }
 }
 
 /* ── LOGIN SCREEN ────────────────────────────────────────────────────────────── */
@@ -1268,83 +1271,13 @@ document.getElementById('btn-signout').addEventListener('click', async () => {
 
 document.getElementById('btn-set-default').addEventListener('click', saveDefaultState);
 
-document.getElementById('btn-save-pdf').addEventListener('click', async () => {
-  const btn = document.getElementById('btn-save-pdf');
-  btn.textContent = 'Generating…';
-  btn.disabled = true;
-
-  // Build header label
-  const yr = (appState.withinYear || '2026-27').replace('-', '–');
+document.getElementById('btn-save-pdf').addEventListener('click', () => {
+  // Set the header label before printing
+  const yr  = (appState.withinYear || '2026-27').replace('-', '–');
   const label = document.getElementById('pdf-label-input').value.trim();
   document.getElementById('print-header-sub').textContent =
     label ? (yr + ' · ' + label) : (yr + ' Season');
-
-  // Build an off-screen capture wrapper — avoids all overflow/clip problems
-  const wrapper = document.createElement('div');
-  const calScroll = document.getElementById('calendar');
-  const captureW  = calScroll.scrollWidth;
-
-  Object.assign(wrapper.style, {
-    position:   'fixed',
-    top:        '0',
-    left:       '-99999px',
-    width:      captureW + 'px',
-    background: '#F5F0E6',
-    zIndex:     '-1',
-  });
-
-  // Clone print header + calendar grid into wrapper
-  const phClone  = document.getElementById('print-header').cloneNode(true);
-  phClone.style.display = 'block';
-  const calClone = calScroll.cloneNode(true);
-  Object.assign(calClone.style, {
-    overflow:  'visible',
-    height:    'auto',
-    maxHeight: 'none',
-    width:     '100%',
-  });
-
-  wrapper.appendChild(phClone);
-  wrapper.appendChild(calClone);
-  document.body.appendChild(wrapper);
-
-  // Two frames for layout to paint
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-
-  try {
-    const canvas = await html2canvas(wrapper, {
-      scale:           2,
-      useCORS:         true,
-      backgroundColor: '#F5F0E6',
-      logging:         false,
-      width:           captureW,
-      height:          wrapper.scrollHeight,
-      windowWidth:     captureW,
-      windowHeight:    wrapper.scrollHeight,
-      ignoreElements:  el => el.classList.contains('chip-remove'),
-    });
-
-    const { jsPDF } = window.jspdf;
-    const imgW  = canvas.width;
-    const imgH  = canvas.height;
-    const pdfW  = 297;
-    const pdfH  = Math.round((imgH / imgW) * pdfW);
-    const pdf   = new jsPDF({
-      orientation: 'landscape',
-      unit:        'mm',
-      format:      [pdfW, Math.max(pdfH, 100)],
-    });
-    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfW, pdfH);
-
-    const filename = label
-      ? 'CSA-' + label.replace(/\s+/g, '-') + '.pdf'
-      : 'CSA-Schedule-' + (appState.withinYear || '2026-27') + '.pdf';
-    pdf.save(filename);
-  } finally {
-    document.body.removeChild(wrapper);
-    btn.textContent = 'Save PDF';
-    btn.disabled    = false;
-  }
+  window.print();
 });
 
 // ─── Share mode ───────────────────────────────────────────────────────────────
