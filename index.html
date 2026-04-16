@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CSA Season Scheduler v2</title>
+<style>
+/* ── DESIGN TOKENS ─────────────────────────────────────────────────────────── */
+:root {
+  --navy:        #1b2a4a;
+  --navy-light:  #e8edf5;
+  --accent:      #c4a265;
+  --accent-light:#e8d5b0;
+  --teal:        #2a6b7c;
+  --teal-light:  #e0f0f3;
+  --bg:          #f4f2ee;
+  --border:      #d4cfc6;
+  --label:       136px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; display: flex; flex-direction: column;
+  font-family: 'Helvetica Neue', Arial, sans-serif;background: #e8e4de;
+  overflow: hidden;
+}
+
+/* ── HEADER ─────────────────────────────────────────────────────────────────── */
+.header {
+  background: var(--navy);
+  padding: 10px 20px;
+  border-bottom: 3px solid var(--accent);
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  flex-shrink: 0; z-index: 50;
+}
+.header-title { color: white; font-size: 14pt; font-weight: 800; letter-spacing: -0.3pt; }
+.header-title span { color: var(--accent); }
+.header-right { display: flex; align-items: center;gap: 12px; }
+
+/* year tabs (within-year mode) */
+.year-tabs { display: flex; gap: 4px; }
+.year-tab {
+  font-size: 8pt; font-weight: 700; letter-spacing:0.5pt;
+  padding: 6px 12px; border-radius: 3px; cursor: pointer;
+  background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6);
+  border: 1px solid rgba(255,255,255,0.15); transition: all 0.15s;
+}
+.year-tab:hover { background: rgba(255,255,255,0.18); color: white; }
+.year-tab.active { background: var(--accent); color: var(--navy); border-color: var(--accent); }
+
+/* year pills (across-years mode) */
+.year-pills { display: flex; gap: 4px; }
+.year-pill {
+  font-size: 8pt; font-weight: 700; letter-spacing:0.5pt;
+  padding: 6px 12px; border-radius: 14px; cursor: pointer;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.12); transition: all 0.15s; user-select: none;
+}
+.year-pill:hover { background: rgba(255,255,255,0.16); color: white; }
+.year-pill.active { background: var(--teal); color:white; border-color: var(--teal); }
+
+.btn-small {
+  font-size: 7.5pt; font-weight: 700; letter-spacing: 0.8pt; text-transform: uppercase;
+  background: transparent; color: var(--accent); border: 1px solid var(--accent);
+  padding: 6px 12px; border-radius: 3px; cursor: pointer; white-space: nowrap;
+}
+.btn-small:hover { background: var(--accent); color: var(--navy); }
+.btn-small.btn-present { color: rgba(255,255,255,0.5); border-color: rgba(255,255,255,0.2); }
+.btn-small.btn-present:hover { background: rgba(255,255,255,0.12); color: white; }
+.btn-small.btn-fullscreen {
+  font-size: 13pt; padding: 3px 9px; line-height: 1;
+  color: rgba(255,255,255,0.4); border-color: rgba(255,255,255,0.15);
+  text-transform: none; letter-spacing: 0;
+}
+.btn-small.btn-fullscreen:hover { background: rgba(255,255,255,0.1); color: white; }
+body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--accent); }
+
+/* ── CONTROLS BAR ────────────────────────────────────────────────────────────── */
+.controls-bar {
+  background: #111d33;
+  padding: 6px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  display: flex; align-items: center; gap: 14px;
+  flex-shrink: 0; z-index: 49; flex-wrap: nowrap;
+}
+.bar-section { display: flex; align-items: center; gap: 8px; }
+.bar-label {
+  font-size: 6.5pt; font-weight: 800; letter-spacing: 2pt; text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+}
+.bar-divider { width: 1px; height: 22px; background: rgba(255,255,255,0.1); flex-shrink: 0; }
+
+/* iteration buttons */
+.iter-btns { display: flex; gap: 3px; }
+.iter-btn {
+  width: 26px; height: 26px; font-size: 9pt; font-weight: 800;
+  border-radius: 4px; cursor: pointer;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.12); transition: all 0.15s;
+}
+.iter-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+.iter-btn.active { background: var(--accent); color: var(--navy); border-color: var(--accent); }
+
+/* mode toggle */
+.mode-btn {
+  font-size: 7pt; font-weight: 700; letter-spacing:0.5pt;
+  padding: 5px 10px; border-radius: 3px; cursor: pointer;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.45);
+  border: 1px solid rgba(255,255,255,0.12); transition: all 0.15s;
+}
+.mode-btn:hover { background: rgba(255,255,255,0.14); color: white; }
+.mode-btn.active { background: var(--teal); color: white; border-color: var(--teal); }
+
+/* ── APP BODY ────────────────────────────────────────────────────────────────── */
+.app-body {
+  flex: 1; display: flex; overflow: hidden;
+}
+.calendar-container {
+  flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative;
+}
+
+/* ── SCENARIO HEADERS (fixed, outside scroll) ─────────────────────────────── */
+.scenario-headers-row {
+  display: flex; flex-shrink: 0;
+  background: #f8f7f5;
+  border-bottom: 2px solid var(--accent);
+  overflow: hidden;
+  transition: max-height 0.22s ease, border-width 0.22s ease;
+  max-height: 300px;
+}
+.scenario-headers-row.collapsed {
+  max-height: 0;
+  border-bottom-width: 0;
+}
+.scenario-header-spacer {
+  width: var(--label); flex-shrink: 0;
+  border-right: 2px solid var(--border);
+  background: var(--bg);
+  display: flex; align-items: flex-start; justify-content: flex-end;
+  padding-top: 6px; padding-right: 4px;
+}
+.collapse-toggle {
+  background: none; border: none; cursor: pointer;
+  color: var(--accent); font-size: 10pt; line-height: 1;
+  padding: 2px 4px; border-radius: 3px;
+  transition: background 0.12s;
+  flex-shrink: 0;
+}
+.collapse-toggle:hover { background: var(--accent-light); }
+
+/* strip above calendar when collapsed, showing thetoggle inline */
+.panel-collapsed-bar {
+  display: none; flex-shrink: 0;
+  align-items: center; gap: 8px;
+  padding: 4px 12px 4px calc(var(--label) + 8px);
+  background: #f8f7f5;
+  border-bottom: 1px solid var(--border);
+}
+.panel-collapsed-bar.visible { display: flex; }
+.panel-collapsed-bar .collapse-toggle { font-size: 9pt; }
+.panel-collapsed-label {
+  font-size: 6.5pt; font-weight: 700; letter-spacing: 1.5pt;
+  text-transform: uppercase; color: #aaa;
+}
+.scenario-header {
+  flex: 1; padding: 8px 10px;
+  border-right: 1px solid var(--border); min-width:0;
+  position: relative;
+}
+.scenario-header:last-child { border-right: none; }
+
+.scenario-label-wrap {
+  display: flex; align-items: center; gap: 6px; margin-bottom: 6px;
+}
+.scenario-index {
+  font-size: 6.5pt; font-weight: 900; letter-spacing: 1pt;
+  color: rgba(255,255,255,0.7); background: var(--navy);
+  border-radius: 2px; padding: 1px 5px; flex-shrink: 0;
+}
+.scenario-label-input {
+  flex: 1; font-size: 8pt; font-weight: 800; letter-spacing: 0.5pt; text-transform: uppercase;
+  color: var(--navy); background: transparent; border: none;
+  border-bottom: 1px dashed transparent; padding: 00 1px; outline: none; cursor: text;
+  transition: border-color 0.15s; min-width: 0;
+}
+.scenario-label-input:hover { border-bottom-color: var(--border); }
+.scenario-label-input:focus { border-bottom-color: var(--accent); }
+
+/* header action icons */
+.header-icons {
+  position: absolute; top: 8px; right: 8px;
+  display: flex; gap: 4px;
+}
+.icon-btn {
+  font-size: 11pt; background: none; border: none; cursor: pointer;
+  color: #bbb; padding: 1px 3px; border-radius: 3px; transition: color 0.12s, background 0.12s;
+  line-height: 1;
+}
+.icon-btn:hover { color: var(--navy); background: var(--accent-light); }
+
+/* chip bank */
+.scenario-chip-bank {
+  display: flex; flex-wrap: wrap; gap: 4px;
+  padding: 4px 0; align-items: flex-start;
+}
+.bank-section-divider {
+  width: 100%; height: 0; margin: 2px 0;
+}
+.bank-drop-target {
+  outline: 2px dashed var(--accent); outline-offset: -2px; background: #fff8ec;
+  border-radius: 3px;
+}
+.bank-empty {
+  font-size: 7pt; color: #bbb; font-style: italic; align-self: center;
+}
+
+/* ── CHIPS ───────────────────────────────────────────────────────────────────── */
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 7pt; font-weight: 700;
+  padding: 4px 7px; border-radius: 3px;
+  cursor: grab; user-select: none;
+  transition: opacity 0.12s, transform 0.1s;
+  line-height: 1.25; white-space: nowrap;
+}
+.chip:active { cursor: grabbing; transform: scale(0.97); }
+.chip.dragging { opacity: 0.25; }
+.chip.csa {
+  background: var(--navy);
+  color: white;
+  border: none;
+  border-left: 4px solid var(--accent);
+}
+.chip.us {
+  background: #b83228;
+  color: white;
+  border: none;
+  border-left: 4px solid #f07060;
+}
+.chip-org {
+  font-size: 5.5pt; font-weight: 900; letter-spacing: 0.8pt;
+  opacity: 0.55; text-transform: uppercase;
+  margin-right: 5px; flex-shrink: 0;
+}
+.chip.locked {
+  cursor: default;
+  background: #3a6a28 !important; color: white !important;
+  border-left: 4px solid #7ab860 !important;
+  border-top: none !important; border-right: none !important; border-bottom: none !important;
+  opacity: 0.9;
+}
+.chip.locked:active { transform: none; }
+.chip-remove { font-size: 9pt; line-height: 1; opacity: 0.4; cursor: pointer; margin-left: 2px; }
+.chip-location {
+  font-size: 5pt; font-weight: 700; letter-spacing: 0.8pt; text-transform: uppercase;
+  opacity: 0.6; white-space: nowrap; display: block; margin-top: 1px;
+}
+.drop-zone .chip-location { font-size: 7pt; margin-top: 2px; }
+
+/* ── VENUE CONFLICT ──────────────────────────────────────────────────────────── */
+.drop-zone.venue-conflict {
+  background: #fff8ee !important;
+  outline: 2px solid #e8943a;
+  outline-offset: -2px;
+}
+.venue-conflict-badge {
+  width: 100%; font-size: 6pt; font-weight: 800; letter-spacing: 0.5pt;
+  color: #b86010; background: #ffecd8;
+  border-radius: 3px; padding: 2px 6px;
+  display: flex; align-items: center; gap: 4px;
+  flex-shrink: 0;
+}
+.chip-remove:hover { opacity: 1; }
+.chip-lock-icon { font-size: 8pt; line-height: 1; }
+
+/* ── CALENDAR SCROLL ─────────────────────────────────────────────────────────── */
+.calendar-scroll { flex: 1; overflow-y: auto; background: white; }
+
+/* month header */
+.month-header {
+  background: var(--accent-light);
+  padding: 5px 16px;
+  font-size: 8pt; font-weight: 900; letter-spacing:3pt; text-transform: uppercase;
+  color: var(--navy);
+  border-top: 2px solid var(--accent); border-bottom: 1px solid var(--border);
+  position: sticky; top: 0; z-index: 2;
+}
+
+/* weekend row */
+.weekend-row {
+  display: flex; align-items: stretch;
+  border-bottom: 1px solid var(--border);
+  min-height: 64px;
+}
+
+.wknd-label {
+  width: var(--label); flex-shrink: 0;
+  padding: 8px 10px;
+  border-right: 2px solid var(--border);
+  display: flex; flex-direction: column; justify-content: center;
+  background: var(--bg);
+}
+.wknd-month {
+  font-size: 6pt; font-weight: 800; letter-spacing:2pt; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 2px;
+}
+.wknd-date {
+  font-size: 15pt; font-weight: 900; color: var(--navy);
+  line-height: 1; letter-spacing: -0.5pt;
+}
+.wknd-daynames {
+  font-size: 6pt; font-weight: 600; letter-spacing:0.5pt; text-transform: uppercase;
+  color: #aaa; margin-top: 3px;
+}
+.wknd-reldate { font-size: 7pt; color: #999; margin-top: 2px; }
+.wknd-marker {
+  font-size: 5.5pt; font-weight: 700; letter-spacing: 0.5pt; text-transform: uppercase;
+  margin-top: 4px; padding: 2px 4px; border-radius:2px; align-self: flex-start;
+}
+.wknd-marker.mlk   { background: #f0e8d8; color: #7a5a2a; }
+.wknd-marker.pday  { background: #d8e8f0; color: #1a4a5a; }
+.wknd-marker.after-mlk { background: #e8f0e0; color: #2a4a1a; }
+
+/* drop zone */
+.drop-zone {
+  flex: 1; padding: 6px 8px;
+  display: flex; flex-direction: row; flex-wrap: wrap; align-items: stretch; align-content: stretch; gap: 4px;
+  min-height: 64px; transition: background 0.1s;
+  border-right: 1px solid var(--border);
+}
+.drop-zone .chip {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: max-content;
+  justify-content: center;
+  align-items: center;
+  font-size: 13pt;
+  padding: 6px 12px;
+  white-space: normal;
+}
+.drop-zone .chip .chip-org {
+  font-size: 7pt;
+}
+.drop-zone .chip .chip-remove {
+  font-size: 12pt;
+}
+.drop-zone:last-child { border-right: none; }
+.drop-zone.drag-over {
+  background: #fff8ec;
+  outline: 2px dashed var(--accent); outline-offset: -2px;
+}
+.drop-zone.drag-inactive { background: #fafaf8; }
+.drop-zone.drag-inactive .chip { opacity: 0.3; }
+.drop-hint {
+  font-size: 6.5pt; color: #ccc; align-self: center;
+  pointer-events: none; font-style: italic;
+}
+
+/* ── PER-COLUMN RULE TOGGLES ─────────────────────────────────────────────────── */
+.col-rules {
+  display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px;
+}
+.col-rule-toggle {
+  display: flex; align-items: center; gap: 4px;
+  background: rgba(27,42,74,0.05); border: 1px solid var(--border);
+  border-radius: 10px; padding: 3px 8px 3px 5px;
+  cursor: pointer; user-select: none; transition: all 0.15s;
+  font-size: 6.5pt; font-weight: 700; color: #999; white-space: nowrap;
+}
+.col-rule-toggle:hover { border-color: #aaa; color:#555; }
+.col-rule-toggle.on { background: rgba(196,162,101,0.15); border-color: var(--accent); color: var(--navy); }
+.col-rule-pip {
+  width: 20px; height: 11px; background: #ddd;
+  border-radius: 6px; position: relative; flex-shrink: 0; transition: background 0.15s;
+}
+.col-rule-toggle.on .col-rule-pip { background: var(--accent); }
+.col-rule-pip::after {
+  content: ''; position: absolute; width: 7px; height: 7px;
+  background: white; border-radius: 50%; top: 2px; left: 2px; transition: left 0.15s;
+}
+.col-rule-toggle.on .col-rule-pip::after { left: 11px; }
+
+/* ── EXPAND FULLSCREEN ───────────────────────────────────────────────────────── */
+.expanded-back {
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: white; z-index: 40; display: flex; flex-direction: column;
+}
+.expanded-back-btn {
+  position: absolute; top: 8px; left: 8px; z-index:41;
+  font-size: 7.5pt; font-weight: 700; letter-spacing: 0.5pt;
+  background: var(--navy); color: white; border: none;
+  padding: 6px 12px; border-radius: 14px; cursor: pointer;
+}
+.expanded-back-btn:hover { background: var(--accent); color: var(--navy); }
+.expanded-header {
+  flex-shrink: 0; padding: 10px 60px 10px 80px;
+  border-bottom: 2px solid var(--accent);
+  background: #f8f7f5; display: flex; align-items: center; gap: 10px;
+}
+.expanded-header .scenario-index { font-size: 8pt; }
+.expanded-title {
+  font-size: 9pt; font-weight: 800; letter-spacing:0.5pt; text-transform: uppercase;
+  color: var(--navy);
+}
+.expanded-bank { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+.expanded-scroll { flex: 1; overflow-y: auto; }
+
+/* ── SAVE PANEL (inline drawer) ────────────────────────────────────────────── */
+.save-panel {
+  position: absolute; top: 0; right: 0; width: 240px;
+  background: white; border-left: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  border-radius: 0 0 0 6px; box-shadow: -4px 4px 16px rgba(0,0,0,0.12);
+  padding: 12px; z-index: 100; display: none;
+}
+.save-panel.open { display: block; }
+.save-panel h4 {
+  font-size: 7.5pt; font-weight: 800; letter-spacing: 1pt; text-transform: uppercase;
+  color: var(--navy); margin-bottom: 8px;
+}
+.save-input-row { display: flex; gap: 6px; }
+.save-input {
+  flex: 1; font-size: 8pt; padding: 5px 8px;
+  border: 1px solid var(--border); border-radius: 3px; outline: none;
+  color: var(--navy);
+}
+.save-input:focus { border-color: var(--accent); }
+.save-btn {
+  font-size: 8pt; font-weight: 700; background: var(--navy); color: white;
+  border: none; border-radius: 3px; padding: 5px 10px; cursor: pointer;
+}
+.save-btn:hover { background: var(--accent); color:var(--navy); }
+.save-close {
+  position: absolute; top: 8px; right: 8px;
+  font-size: 12pt; cursor: pointer; color: #aaa; line-height: 1;
+}
+.save-close:hover { color: var(--navy); }
+
+/* ── SAVED VARIATIONS DRAWER ─────────────────────────────────────────────────── */
+.saved-drawer {
+  width: 220px; flex-shrink: 0;
+  background: #f8f7f5; border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.saved-drawer.hidden { display: none; }
+.saved-drawer-header {
+  padding: 8px 12px; background: var(--navy); color: white;
+  font-size: 7pt; font-weight: 800; letter-spacing:1.5pt; text-transform: uppercase;
+  display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;
+}
+.saved-drawer-close {
+  cursor: pointer; font-size: 12pt; line-height: 1;color: rgba(255,255,255,0.5);
+}
+.saved-drawer-close:hover { color: white; }
+.saved-list { flex: 1; overflow-y: auto; padding: 8px; }
+.saved-item {
+  background: white; border: 1px solid var(--border); border-radius: 4px;
+  padding: 8px; margin-bottom: 6px;
+}
+.saved-item-name { font-size: 8pt; font-weight: 800; color: var(--navy); margin-bottom: 3px; }
+.saved-item-meta { font-size: 6.5pt; color: #888; margin-bottom: 6px; }
+.saved-item-actions { display: flex; gap: 4px; align-items: center; }
+.saved-load-btn {
+  font-size: 7pt; font-weight: 700; background: var(--navy); color: white;
+  border: none; border-radius: 3px; padding: 3px 8px; cursor: pointer; flex: 1;
+}
+.saved-load-btn:hover { background: var(--accent); color: var(--navy); }
+.saved-slot-select {
+  font-size: 7pt; border: 1px solid var(--border); border-radius: 3px;
+  padding: 3px 4px; color: var(--navy); background:white; cursor: pointer;
+}
+.saved-delete-btn {
+  font-size: 9pt; background: none; border: none; color: #ccc; cursor: pointer;
+  padding: 0 2px; line-height: 1;
+}
+.saved-delete-btn:hover { color: #c0392b; }
+.saved-empty { font-size: 7.5pt; color: #bbb; font-style: italic; text-align: center; padding: 16px 0; }
+.btn-show-saved {
+  font-size: 7pt; font-weight: 700; letter-spacing:0.5pt;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 3px;
+  padding: 5px 9px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn-show-saved:hover { background: rgba(255,255,255,0.14); color: white; }
+.btn-show-saved.highlight { background: rgba(196,162,101,0.2); color: var(--accent); border-color: var(--accent); }
+
+/* ── PRESENTATION MODE ────────────────────────────────────────────────────────── */
+body.presenting .btn-reset,
+body.presenting .controls-bar,
+body.presenting .header .year-tabs,
+body.presenting .header .year-pills,
+body.presenting .header .btn-present,
+body.presenting .header .btn-small:not(.exit-btn),
+body.presenting .icon-btn,
+body.presenting .scenario-chip-bank,
+body.presenting .chip-remove,
+body.presenting .col-rules,
+body.presenting .saved-drawer,
+body.presenting .panel-collapsed-bar { display: none !important; }
+body.presenting .drop-hint { display: none; }
+body.presenting .drop-zone { pointer-events: none; }
+body.presenting .chip { cursor: default; }
+body.presenting .chip:active { transform: none; }
+.exit-present-btn {
+  display: none;
+  position: fixed; top: 12px; right: 16px; z-index:999;
+  font-size: 7.5pt; font-weight: 700; letter-spacing: 0.5pt;
+  background: rgba(255,255,255,0.12); color: white;
+  border: 1px solid rgba(255,255,255,0.3); border-radius: 14px;
+  padding: 6px 14px; cursor: pointer;
+}
+.exit-present-btn:hover { background: rgba(255,255,255,0.22); }
+body.presenting .exit-present-btn { display: block;}
+
+/* ── ACROSS-YEARS: relative row labels (sub date) ──────────────────────────── */
+.wknd-actual { font-size: 6.5pt; color: #999; }
+
+/* ── PLANNER / CURRENT MODE ────────────────────────────────────────────────────── */
+.mode-btn-master { border-color: var(--accent) !important; color: var(--accent) !important; }
+.mode-btn-master.active { background: var(--accent)!important; color: var(--navy) !important; }
+.master-save-btn {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 6.5pt; font-weight: 800; letter-spacing: 0.5pt; text-transform: uppercase;
+  background: rgba(196,162,101,0.1); color: var(--accent);
+  border: 1px solid rgba(196,162,101,0.4);
+  border-radius: 3px; padding: 3px 8px; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.master-save-btn:hover { background: var(--accent);color: var(--navy); }
+.master-save-btn.saved { background: rgba(100,160,80,0.12); color: #3a7a2a; border-color: #8ab870; }
+.master-empty-col {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  border-right: 1px solid var(--border); color: #ccc;
+  font-size: 7.5pt; font-style: italic;
+}
+.master-empty-col:last-child { border-right: none; }
+
+/* Current mode button */
+.mode-btn-current { border-color: #6a9a6a !important; color: #4a7a4a !important; }
+.mode-btn-current.active { background: #4a7a4a !important; color: white !important; border-color: #4a7a4a !important; }
+
+/* Overlay toggle button */
+.btn-overlay {
+  font-size: 7pt; font-weight: 700; letter-spacing: 0.5pt;
+  background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.5);
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 3px;
+  padding: 5px 10px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn-overlay:hover { background: rgba(255,255,255,0.14); color: white; }
+.btn-overlay.on { background: rgba(74,122,74,0.25); color: #8aba8a; border-color: #4a7a4a; }
+
+/* Ghost chips — Current overlay */
+.chip.ghost {
+  opacity: 0.45;
+  cursor: default !important;
+}
+.chip.ghost.csa {
+  background: transparent !important;
+  border: 2px dashed var(--accent) !important;
+  border-left: 4px solid var(--accent) !important;
+  color: var(--navy) !important;
+}
+.chip.ghost.us {
+  background: transparent !important;
+  border: 2px dashed #f07060 !important;
+  border-left: 4px solid #f07060 !important;
+  color: #b83228 !important;
+}
+.ghost-divider {
+  width: 100%; height: 1px; background: var(--border);
+  margin: 2px 0; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+}
+.ghost-label {
+  font-size: 5pt; font-weight: 800; letter-spacing: 1.5pt;
+  text-transform: uppercase; color: #bbb;
+  background: white; padding: 0 6px;
+}
+
+/* ── RESET BUTTON ───────────────────────────────────────────────────────────── */
+.btn-reset {
+  font-size: 7pt; font-weight: 700; letter-spacing: 0.5pt;
+  background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.4);
+  border: 1px solid rgba(255,255,255,0.14); border-radius: 3px;
+  padding: 5px 10px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+}
+.btn-reset:hover { background: rgba(180,60,60,0.25); color: #f09090; border-color: rgba(180,60,60,0.5); }
+
+/* ── RESET MODAL ─────────────────────────────────────────────────────────────── */
+.reset-modal-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.35); align-items: center; justify-content: center;
+}
+.reset-modal-backdrop.open { display: flex; }
+.reset-modal {
+  background: white; border-radius: 8px; padding: 20px 24px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.22); min-width: 280px; max-width: 380px;
+}
+.reset-modal-title {
+  font-size: 10pt; font-weight: 800; color: var(--navy);
+  letter-spacing: -0.3pt; margin-bottom: 4px;
+}
+.reset-modal-sub {
+  font-size: 7.5pt; color: #888; margin-bottom: 14px;
+}
+.reset-modal-btns {
+  display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px;
+}
+.reset-scenario-btn {
+  font-size: 8.5pt; font-weight: 700; text-align: left;
+  padding: 9px 14px; border-radius: 5px; cursor: pointer;
+  background: #f8f6f2; border: 1px solid var(--border); color: var(--navy);
+  transition: all 0.12s;
+}
+.reset-scenario-btn:hover { background: #fdeaea; border-color: #e07070; color: #c03030; }
+.reset-cancel-btn {
+  width: 100%; font-size: 7.5pt; font-weight: 700; padding: 7px;
+  border-radius: 4px; border: 1px solid var(--border);
+  background: transparent; color: #aaa; cursor: pointer;
+}
+.reset-cancel-btn:hover { color: var(--navy); border-color: #aaa; }
+
+/* ── PRINT ─────────────────────────────────────────────────────────────────── */
+@media print {
+  .controls-bar, .icon-btn, .saved-drawer, .exit-present-btn { display: none !important; }
+  .app-body { height: auto; overflow: visible; }
+  .calendar-scroll { overflow: visible; }
+  .chip-remove { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── HEADER ──────────────────────────────────────────────────────────────── -->
+<div class="header">
+  <div class="header-title">CSA Season Scheduler <span>·</span> Spring</div>
+  <div class="header-right">
+    <!-- Within-year: single tab selector -->
+    <div class="year-tabs" id="year-tabs-within">
+      <div class="year-tab active" data-year="2026-27">2026–27</div>
+      <div class="year-tab" data-year="2027-28">2027–28</div>
+      <div class="year-tab" data-year="2028-29">2028–29</div>
+      <div class="year-tab" data-year="2029-30">2029–30</div>
+    </div>
+    <!-- Across-years: multi-select pills -->
+    <div class="year-pills" id="year-pills-across" style="display:none;">
+      <div class="year-pill active" data-year="2026-27">2026–27</div>
+      <div class="year-pill active" data-year="2027-28">2027–28</div>
+      <div class="year-pill" data-year="2028-29">2028–29</div>
+      <div class="year-pill" data-year="2029-30">2029–30</div>
+    </div>
+    <button class="btn-small btn-present" id="btn-present">Present</button>
+    <button class="btn-small" onclick="window.print()">Save PDF</button>
+    <button class="btn-small btn-fullscreen" id="btn-fullscreen" title="Toggle fullscreen">⛶</button>
+  </div>
+</div>
+
+<!-- ── CONTROLS BAR ────────────────────────────────────────────────────────── -->
+<div class="controls-bar">
+  <!-- Mode -->
+  <div class="bar-section">
+    <span class="bar-label">Mode</span>
+    <button class="mode-btn active" id="mode-within">Within Year</button>
+    <button class="mode-btn" id="mode-across">Across Years</button>
+    <button class="mode-btn mode-btn-master" id="mode-master">★ Planner</button>
+    <button class="mode-btn mode-btn-current" id="mode-current">◎ Current</button>
+  </div>
+  <div class="bar-divider" id="overlay-divider" style="display:none;"></div>
+  <div class="bar-section" id="overlay-section" style="display:none;">
+    <button class="btn-overlay" id="btn-overlay">⊕ Show Current</button>
+  </div>
+  <div class="bar-divider"></div>
+  <!-- Iterations (within-year only) -->
+  <div class="bar-section" id="iter-section">
+    <span class="bar-label">Scenarios</span>
+    <div class="iter-btns">
+      <button class="iter-btn active" data-count="1">1</button>
+      <button class="iter-btn" data-count="2">2</button>
+      <button class="iter-btn" data-count="3">3</button>
+    </div>
+  </div>
+  <div class="bar-divider" id="iter-divider"></div>
+  <!-- Saved drawer toggle -->
+  <div class="bar-section">
+    <button class="btn-show-saved" id="btn-show-saved">Saved Variations</button>
+  </div>
+  <div class="bar-divider" id="reset-divider"></div>
+  <div class="bar-section" id="reset-section">
+    <button class="btn-reset" id="btn-reset">↺ Reset</button>
+  </div>
+</div>
+
+<div class="app-body">
+  <div class="calendar-container" id="calendar-container">
+    <div class="scenario-headers-row" id="scenario-headers"></div>
+    <div class="panel-collapsed-bar" id="collapsed-bar">
+      <button class="collapse-toggle" id="expand-btn" title="Show event bank">▼ Events</button>
+    </div>
+    <div class="calendar-scroll" id="calendar"></div>
+  </div>
+  <div class="saved-drawer hidden" id="saved-drawer">
+    <div class="saved-drawer-header">
+      Saved Variations
+      <span class="saved-drawer-close" id="saved-drawer-close">×</span>
+    </div>
+    <div class="saved-list" id="saved-list"></div>
+  </div>
+</div>
+
+<!-- Reset modal -->
+<div class="reset-modal-backdrop" id="reset-backdrop">
+  <div class="reset-modal" id="reset-modal">
+    <div class="reset-modal-title">Reset Scenario</div>
+    <div class="reset-modal-sub" id="reset-modal-sub">Select a scenario to clear all placements</div>
+    <div class="reset-modal-btns" id="reset-modal-btns"></div>
+    <button class="reset-cancel-btn" id="reset-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- Presentation exit button (floats over everything) -->
+<button class="exit-present-btn" id="exit-present-btn">Exit Presentation</button>
+
+<script>
+'use strict';
+
+// ────────────────────────────────────────────────────────────────────────────
+// DATA: Events
+// ────────────────────────────────────────────────────────────────────────────
+const ALL_EVENTS = [
+  { id: 'individuals', name: 'Individual Championships',  type: 'csa' },
+  { id: 'club-champs', name: 'Club Championships',      type: 'csa', location: 'Specter' },
+  { id: 'ivy-champs',  name: 'Ivy Championships',      type: 'csa' },
+  { id: 'ivy-wknd-1',  name: 'Ivy Weekend 1',     type: 'csa' },
+  { id: 'ivy-wknd-2',  name: 'Ivy Weekend 2',     type: 'csa' },
+  { id: 'ivy-split',   name: 'Ivy Split Weekend',     type: 'csa' },
+  { id: 'ivy-travel',  name: 'Ivy Travel Partner',     type: 'csa' },
+  { id: 'conf-champs', name: 'Conference Championships',  type: 'csa' },
+  { id: 'divisionals', name: 'Divisional Championships',  type: 'csa', location: 'Specter' },
+  { id: 'nationals',   name: 'National Championships',    type: 'csa' },
+  { id: 'jct5',        name: 'JCT #5',     type: 'us'  },
+  { id: 'hs-nationals',name: 'HS Nationals',      type: 'us',  location: 'Specter & Penn' },
+  { id: 'gold-nationals',name: 'Gold Nationals',      type: 'us'  },
+];
+
+// ────────────────────────────────────────────────────────────────────────────
+// DATA: Weekends per year
+// Each weekend: { key, label, relLabel, month, marker?, afterMlk? }
+// relLabel = "Jan W1", "Jan W2", etc. (relative within month)
+// ────────────────────────────────────────────────────────────────────────────
+const yearData = {
+  '2026-27': { weekends: [
+    { key:'jan-1',  label:'Jan 1–3',   month:'January',  relLabel:'Jan W1' },
+    { key:'jan-8',  label:'Jan 8–10',  month:null,     relLabel:'Jan W2' },
+    { key:'jan-15', label:'Jan 15–17', month:null,     relLabel:'Jan W3', marker:{text:'MLK Jan 18', cls:'mlk'} },
+    { key:'jan-22', label:'Jan 22–24', month:null,     relLabel:'Jan W4', afterMlk:true },
+    { key:'jan-29', label:'Jan 29–31', month:null,     relLabel:'Jan W5' },
+    { key:'feb-5',  label:'Feb 5–7',   month:'February', relLabel:'Feb W1' },
+    { key:'feb-12', label:'Feb 12–14', month:null,     relLabel:'Feb W2', marker:{text:'Pres. Feb 15', cls:'pday'} },
+    { key:'feb-19', label:'Feb 19–21', month:null,     relLabel:'Feb W3' },
+    { key:'feb-26', label:'Feb 26–28', month:null,     relLabel:'Feb W4', lastFeb:true },
+    { key:'mar-5',  label:'Mar 5–7',   month:'March',    relLabel:'Mar W1' },
+    { key:'mar-12', label:'Mar 12–14', month:null,     relLabel:'Mar W2' },
+    { key:'mar-19', label:'Mar 19–21', month:null,     relLabel:'Mar W3' },
+    { key:'mar-26', label:'Mar 26–28', month:null,     relLabel:'Mar W4' },
+  ]},
+  '2027-28': { weekends: [
+    { key:'jan-7',  label:'Jan 7–9',   month:'January',  relLabel:'Jan W1' },
+    { key:'jan-14', label:'Jan 14–16', month:null,     relLabel:'Jan W2', marker:{text:'MLK Jan 17', cls:'mlk'} },
+    { key:'jan-21', label:'Jan 21–23', month:null,     relLabel:'Jan W3', afterMlk:true },
+    { key:'jan-28', label:'Jan 28–30', month:null,     relLabel:'Jan W4' },
+    { key:'feb-4',  label:'Feb 4–6',   month:'February', relLabel:'Feb W1' },
+    { key:'feb-11', label:'Feb 11–13', month:null,     relLabel:'Feb W2' },
+    { key:'feb-18', label:'Feb 18–20', month:null,     relLabel:'Feb W3', marker:{text:'Pres. Feb 21', cls:'pday'} },
+    { key:'feb-25', label:'Feb 25–27', month:null,     relLabel:'Feb W4', lastFeb:true },
+    { key:'mar-3',  label:'Mar 3–5',   month:'March',    relLabel:'Mar W1' },
+    { key:'mar-10', label:'Mar 10–12', month:null,     relLabel:'Mar W2' },
+    { key:'mar-17', label:'Mar 17–19', month:null,     relLabel:'Mar W3' },
+    { key:'mar-24', label:'Mar 24–26', month:null,     relLabel:'Mar W4' },
+  ]},
+  '2028-29': { weekends: [
+    { key:'jan-5',  label:'Jan 5–7',   month:'January',  relLabel:'Jan W1' },
+    { key:'jan-12', label:'Jan 12–14', month:null,     relLabel:'Jan W2', marker:{text:'MLK Jan 15', cls:'mlk'} },
+    { key:'jan-19', label:'Jan 19–21', month:null,     relLabel:'Jan W3', afterMlk:true },
+    { key:'jan-26', label:'Jan 26–28', month:null,     relLabel:'Jan W4' },
+    { key:'feb-2',  label:'Feb 2–4',   month:'February', relLabel:'Feb W1' },
+    { key:'feb-9',  label:'Feb 9–11',  month:null,     relLabel:'Feb W2' },
+    { key:'feb-16', label:'Feb 16–18', month:null,     relLabel:'Feb W3', marker:{text:'Pres. Feb 19', cls:'pday'} },
+    { key:'feb-23', label:'Feb 23–25', month:null,     relLabel:'Feb W4', lastFeb:true },
+    { key:'mar-2',  label:'Mar 2–4',   month:'March',    relLabel:'Mar W1' },
+    { key:'mar-9',  label:'Mar 9–11',  month:null,     relLabel:'Mar W2' },
+    { key:'mar-16', label:'Mar 16–18', month:null,     relLabel:'Mar W3' },
+    { key:'mar-23', label:'Mar 23–25', month:null,     relLabel:'Mar W4' },
+  ]},
+  '2029-30': { weekends: [
+    { key:'jan-4',  label:'Jan 4–6',   month:'January',  relLabel:'Jan W1' },
+    { key:'jan-11', label:'Jan 11–13', month:null,     relLabel:'Jan W2' },
+    { key:'jan-18', label:'Jan 18–20', month:null,     relLabel:'Jan W3', marker:{text:'MLK Jan 21', cls:'mlk'} },
+    { key:'jan-25', label:'Jan 25–27', month:null,     relLabel:'Jan W4', afterMlk:true },
+    { key:'feb-1',  label:'Feb 1–3',   month:'February', relLabel:'Feb W1' },
+    { key:'feb-8',  label:'Feb 8–10',  month:null,     relLabel:'Feb W2' },
+    { key:'feb-15', label:'Feb 15–17', month:null,     relLabel:'Feb W3', marker:{text:'Pres. Feb 18', cls:'pday'} },
+    { key:'feb-22', label:'Feb 22–24', month:null,     relLabel:'Feb W4', lastFeb:true },
+    { key:'mar-1',  label:'Mar 1–3',   month:'March',    relLabel:'Mar W1' },
+    { key:'mar-8',  label:'Mar 8–10',  month:null,     relLabel:'Mar W2' },
+    { key:'mar-15', label:'Mar 15–17', month:null,     relLabel:'Mar W3' },
+    { key:'mar-22', label:'Mar 22–24', month:null,     relLabel:'Mar W4' },
+  ]},
+};
+
+const ALL_YEARS = ['2026-27','2027-28','2028-29','2029-30'];
+
+// ────────────────────────────────────────────────────────────────────────────
+// STATE
+// ────────────────────────────────────────────────────────────────────────────
+
+// placements[year][scenarioIdx][weekendKey] = [eventId, ...]
+const placements = {};
+ALL_YEARS.forEach(y => { placements[y] = [{},{},{}]; });
+
+// crossPlacements[year][weekendKey] = [eventId, ...]
+const crossPlacements = {};
+ALL_YEARS.forEach(y => { crossPlacements[y] = {}; });
+
+// masterPlacements[year][weekendKey] = [eventId, ...]  — one committed schedule per year
+const masterPlacements = {};
+const masterRules = {};
+ALL_YEARS.forEach(y => {
+  masterPlacements[y] = {};
+  masterRules[y] = { keepIndividuals: false, keepHsNationals: false };
+});
+
+// currentPlacements[year][weekendKey] = [eventId, ...] — existing/baseline calendar
+const currentPlacements = {};
+ALL_YEARS.forEach(y => { currentPlacements[y] = {}; });
+
+// saved variations
+let savedVariations = []; // { id, name, year, mode, scenarioIdx, placements }
+
+// scenario labels per year per index
+const scenarioLabels = {};
+ALL_YEARS.forEach(y => { scenarioLabels[y] = ['Option A','Option B','Option C']; });
+
+// Per-scenario rules for within-year mode
+const scenarioRules = {};
+ALL_YEARS.forEach(yr => {
+  scenarioRules[yr] = [
+    { keepIndividuals: false, keepHsNationals: false },
+    { keepIndividuals: false, keepHsNationals: false },
+    { keepIndividuals: false, keepHsNationals: false },
+  ];
+});
+// Per-year rules for across-years mode
+const crossRules = {};
+ALL_YEARS.forEach(yr => {
+  crossRules[yr] = { keepIndividuals: false, keepHsNationals: false };
+});
+
+const appState = {
+  mode: 'within',         // 'within' | 'across' | 'master'
+  withinYear: '2026-27',
+  acrossYears: ['2026-27','2027-28'],
+  scenarioCount: 1,
+  expandedCol: null,      // null | column index
+  presenting: false,
+  savedDrawerOpen: false,
+  activeSavePanel: null,  // { colIndex, year } | null
+  overlayOn: false,       // show Current under Planner
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// DRAG STATE
+// ────────────────────────────────────────────────────────────────────────────
+let dragId = null;
+let dragColIndex = null;   // which column (scenario or year) this chip belongs to
+let dragSourceKey = null;  // null = from bank, otherwise weekend key
+let dragYear = null;       // which year the chip belongs to
+
+// ────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ────────────────────────────────────────────────────────────────────────────
+
+function evById(id) { return ALL_EVENTS.find(e => e.id === id); }
+
+function deepCopy(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+function getAfterMlkKey(year) {
+  const w = yearData[year].weekends.find(w => w.afterMlk);
+  return w ? w.key : null;
+}
+
+function getLastFebKey(year) {
+  const w = yearData[year].weekends.find(w => w.lastFeb);
+  return w ? w.key : null;
+}
+
+/** Returns set of event IDs that are locked (placed by rule) for a given year and ruleObj */
+function getLockedSet(year, ruleObj) {
+  const s = new Set();
+  if (ruleObj.keepIndividuals) s.add('individuals');
+  if (ruleObj.keepHsNationals) s.add('hs-nationals');
+  return s;
+}
+
+/** Returns locked event -> weekendKey map for a year and ruleObj */
+function getLockedMap(year, ruleObj) {
+  const m = {};
+  if (ruleObj.keepIndividuals) {
+    const key = getAfterMlkKey(year);
+    if (key) m['individuals'] = key;
+  }
+  if (ruleObj.keepHsNationals) {
+    const key = getLastFebKey(year);
+    if (key) m['hs-nationals'] = key;
+  }
+  return m;
+}
+
+/** Returns the appropriate ruleObj for a given year, column, and mode */
+function getScenarioRuleObj(year, colIndex, mode) {
+  if (mode === 'across') return crossRules[year];
+  if (mode === 'master') return masterRules[year];
+  return scenarioRules[year][colIndex] || { keepIndividuals: false, keepHsNationals: false };
+}
+
+/** Apply rules: force locked events into their required weekends for a year */
+function applyRules(year) {
+  // Within-year placements: each scenario has its own rules
+  for (let s = 0; s < 3; s++) {
+    const locked = getLockedMap(year, scenarioRules[year][s]);
+    Object.entries(locked).forEach(([evId, targetKey]) => {
+      // remove from wherever
+      Object.keys(placements[year][s]).forEach(k =>{
+        placements[year][s][k] = (placements[year][s][k] || []).filter(x => x !== evId);
+      });
+      // force place
+      if (!placements[year][s][targetKey]) placements[year][s][targetKey] = [];
+      if (!placements[year][s][targetKey].includes(evId)) {
+        placements[year][s][targetKey].push(evId);
+      }
+    });
+  }
+
+  // Across-years placements: each year has its owncross rules
+  const crossLocked = getLockedMap(year, crossRules[year]);
+  Object.entries(crossLocked).forEach(([evId, targetKey]) => {
+    Object.keys(crossPlacements[year]).forEach(k =>{
+      crossPlacements[year][k] = (crossPlacements[year][k] || []).filter(x => x !== evId);
+    });
+    if (!crossPlacements[year][targetKey]) crossPlacements[year][targetKey] = [];
+    if (!crossPlacements[year][targetKey].includes(evId)) {
+      crossPlacements[year][targetKey].push(evId);
+    }
+  });
+}
+
+/** Get the set of placed event IDs for a specific column */
+function getPlacedSet(year, sIdx, mode) {
+  const placed = new Set();
+  if (mode === 'within') {
+    Object.values(placements[year][sIdx]).forEach(arr => arr.forEach(id => placed.add(id)));
+  } else {
+    Object.values(crossPlacements[year]).forEach(arr => arr.forEach(id => placed.add(id)));
+  }
+  return placed;
+}
+
+/** Get the relative weekend map for across-years mode: relLabel -> [{ year, wknd }] */
+function getRelativeWeekendRows() {
+  // Collect all unique relLabels in order (from any active year)
+  const seen = [];
+  const seenSet = new Set();
+  appState.acrossYears.forEach(yr => {
+    yearData[yr].weekends.forEach(w => {
+      if (!seenSet.has(w.relLabel)) {
+        seenSet.add(w.relLabel);
+        seen.push(w.relLabel);
+      }
+    });
+  });
+  return seen;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CHIP CREATION
+// ────────────────────────────────────────────────────────────────────────────
+
+function makeChip(evId, opts = {}) {
+  // opts: { locked, removable, colIndex, fromKey, year }
+  const ev = evById(evId);
+  const chip = document.createElement('div');
+  chip.className = `chip ${ev ? ev.type : 'csa'}${opts.locked ? ' locked' : ''}`;
+  chip.draggable = !opts.locked;
+  chip.dataset.id = evId;
+  if (opts.colIndex !== undefined) chip.dataset.colIndex = opts.colIndex;
+  if (opts.fromKey) chip.dataset.fromKey = opts.fromKey;
+  if (opts.year) chip.dataset.year = opts.year;
+
+  // Org badge
+  if (!opts.locked) {
+    const badge = document.createElement('span');
+    badge.className = 'chip-org';
+    badge.textContent = (ev && ev.type === 'us') ? 'USS' : 'CSA';
+    chip.appendChild(badge);
+  }
+
+  if (opts.locked) {
+    const icon = document.createElement('span');
+    icon.className = 'chip-lock-icon';
+    icon.textContent = '🔒';
+    chip.appendChild(icon);
+    chip.appendChild(document.createTextNode('\u00A0' + (ev ? ev.name : evId)));
+  } else {
+    const nameEl = document.createElement('span');
+    nameEl.style.flex = '1';
+    nameEl.textContent = ev ? ev.name : evId;
+    chip.appendChild(nameEl);
+    if (ev && ev.location && opts.inZone) {
+      const loc = document.createElement('span');
+      loc.className = 'chip-location';
+      loc.textContent = '📍 ' + ev.location;
+      nameEl.appendChild(loc);
+    }
+    if (opts.removable) {
+      const rm = document.createElement('span');
+      rm.className = 'chip-remove';
+      rm.textContent = '\u00D7';
+      rm.addEventListener('click', e => {
+        e.stopPropagation();
+        handleChipRemove(evId, opts);
+      });
+      chip.appendChild(rm);
+    }
+  }
+  return chip;
+}
+
+function handleChipRemove(evId, opts) {
+  if (opts.colIndex === 99) {
+    // Current calendar mode
+    currentPlacements[opts.year][opts.fromKey] = (currentPlacements[opts.year][opts.fromKey] || []).filter(x => x !== evId);
+  } else if (appState.mode === 'within') {
+    const yr = opts.year || appState.withinYear;
+    placements[yr][opts.colIndex][opts.fromKey] = (placements[yr][opts.colIndex][opts.fromKey] || []).filter(x => x !== evId);
+  } else {
+    crossPlacements[opts.year][opts.fromKey] = (crossPlacements[opts.year][opts.fromKey] || []).filter(x => x !== evId);
+  }
+  renderAll();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// DRAG HELPERS
+// ────────────────────────────────────────────────────────────────────────────
+
+function setDragActive(activeColIndex) {
+  document.querySelectorAll('.drop-zone').forEach(z=> {
+    z.classList.toggle('drag-inactive', parseInt(z.dataset.colIndex) !== activeColIndex);
+  });
+}
+
+function clearDragActive() {
+  document.querySelectorAll('.drop-zone').forEach(z=> {
+    z.classList.remove('drag-inactive');
+    z.classList.remove('drag-over');
+  });
+}
+
+function bindChipDrag(chip, colIndex, fromKey, year) {
+  chip.addEventListener('dragstart', e => {
+    dragId = chip.dataset.id;
+    dragColIndex = colIndex;
+    dragSourceKey = fromKey || null;
+    dragYear = year;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => chip.classList.add('dragging'), 0);
+    setDragActive(colIndex);
+  });
+  chip.addEventListener('dragend', () => {
+    chip.classList.remove('dragging');
+    clearDragActive();
+    dragId = null; dragColIndex = null; dragSourceKey = null; dragYear = null;
+  });
+}
+
+function bindDropZone(zone, colIndex, weekendKey, year) {
+  zone.addEventListener('dragover', e => {
+    if (dragColIndex === colIndex && dragYear === year) {
+      e.preventDefault();
+      zone.classList.add('drag-over');
+    }
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (dragId === null || dragColIndex !== colIndex || dragYear !== year) return;
+    const lockedSet = getLockedSet(year, getScenarioRuleObj(year, colIndex, appState.mode));
+    if (lockedSet.has(dragId)) return;
+
+    if (appState.mode === 'within') {
+      // remove from source
+      if (dragSourceKey !== null) {
+        placements[year][colIndex][dragSourceKey] =(placements[year][colIndex][dragSourceKey] || []).filter(x => x !== dragId);
+      }
+      // add to target
+      if (!placements[year][colIndex][weekendKey]) placements[year][colIndex][weekendKey] = [];
+      if (!placements[year][colIndex][weekendKey].includes(dragId)) {
+        placements[year][colIndex][weekendKey].push(dragId);
+      }
+    } else {
+      if (dragSourceKey !== null) {
+        crossPlacements[year][dragSourceKey] = (crossPlacements[year][dragSourceKey] || []).filter(x =>x !== dragId);
+      }
+      if (!crossPlacements[year][weekendKey]) crossPlacements[year][weekendKey] = [];
+      if (!crossPlacements[year][weekendKey].includes(dragId)) {
+        crossPlacements[year][weekendKey].push(dragId);
+      }
+    }
+
+    dragId = null; dragColIndex = null; dragSourceKey = null; dragYear = null;
+    renderAll();
+  });
+}
+
+function bindBankDropZone(bank, colIndex, year) {
+  bank.addEventListener('dragover', e => {
+    if (dragColIndex === colIndex && dragYear === year && dragSourceKey !== null) {
+      e.preventDefault();
+      bank.classList.add('bank-drop-target');
+    }
+  });
+  bank.addEventListener('dragleave', () => bank.classList.remove('bank-drop-target'));
+  bank.addEventListener('drop', e => {
+    e.preventDefault();
+    bank.classList.remove('bank-drop-target');
+    if (dragId === null || dragColIndex !== colIndex || dragYear !== year || dragSourceKey === null) return;
+    const lockedSet = getLockedSet(year, getScenarioRuleObj(year, colIndex, appState.mode));
+    if (lockedSet.has(dragId)) return;
+
+    if (appState.mode === 'within') {
+      placements[year][colIndex][dragSourceKey] = (placements[year][colIndex][dragSourceKey] || []).filter(x => x !== dragId);
+    } else {
+      crossPlacements[year][dragSourceKey] = (crossPlacements[year][dragSourceKey] || []).filter(x => x!== dragId);
+    }
+
+    dragId = null; dragColIndex = null; dragSourceKey = null; dragYear = null;
+    renderAll();
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER: Scenario / Year column headers
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderScenarioHeaders() {
+  if (appState.mode === 'master') { renderMasterHeaders(); return; }
+  if (appState.mode === 'current') { renderCurrentHeaders(); return; }
+
+  const container = document.getElementById('scenario-headers');
+  container.innerHTML = '';
+
+  const spacer = document.createElement('div');
+  spacer.className = 'scenario-header-spacer';
+  const collapseBtn = document.createElement('button');
+  collapseBtn.className = 'collapse-toggle';
+  collapseBtn.title = 'Hide event bank';
+  collapseBtn.textContent = '▲';
+  collapseBtn.addEventListener('click', toggleEventBank);
+  spacer.appendChild(collapseBtn);
+  container.appendChild(spacer);
+
+  const presenting = appState.presenting;
+
+  if (appState.mode === 'within') {
+    // ── Within-year: one col per scenario ──
+    const yr = appState.withinYear;
+    const count = appState.expandedCol !== null ? 1: appState.scenarioCount;
+    const idxList = appState.expandedCol !== null ?[appState.expandedCol] : Array.from({length: count}, (_,i) => i);
+
+    idxList.forEach((s, renderPos) => {
+      const ruleObj = scenarioRules[yr][s];
+      const placed = getPlacedSet(yr, s, 'within');
+      const lockedSet = getLockedSet(yr, ruleObj);
+      const header = buildColHeader({
+        colIndex: s,
+        renderPos,
+        label: scenarioLabels[yr][s],
+        onLabelChange: v => { scenarioLabels[yr][s]= v; },
+        year: yr,
+        placed, lockedSet,
+        ruleObj,
+        mode: 'within',
+      });
+      container.appendChild(header);
+    });
+
+  } else {
+    // ── Across-years: one col per selected year ──
+    appState.acrossYears.forEach((yr, renderPos) =>{
+      const ruleObj = crossRules[yr];
+      const placed = getPlacedSet(yr, 0, 'across');
+      const lockedSet = getLockedSet(yr, ruleObj);
+      const header = buildColHeader({
+        colIndex: renderPos,
+        renderPos,
+        label: yr.replace('-', '–'),
+        onLabelChange: null, // read-only year label
+        year: yr,
+        placed, lockedSet,
+        ruleObj,
+        mode: 'across',
+      });
+      container.appendChild(header);
+    });
+  }
+
+  // Re-apply collapsed state — container is rebuilt on every render
+  if (bankCollapsed) {
+    container.classList.add('collapsed');
+    document.getElementById('collapsed-bar').classList.add('visible');
+  } else {
+    container.classList.remove('collapsed');
+    document.getElementById('collapsed-bar').classList.remove('visible');
+  }
+}
+
+function buildColHeader({ colIndex, renderPos, label, onLabelChange, year, placed, lockedSet, ruleObj, mode }) {
+  const presenting = appState.presenting;
+  const header = document.createElement('div');
+  header.className = 'scenario-header';
+
+  // Label row
+  const labelWrap = document.createElement('div');
+  labelWrap.className = 'scenario-label-wrap';
+
+  const idxSpan = document.createElement('span');
+  idxSpan.className = 'scenario-index';
+  idxSpan.textContent = mode === 'within' ? (colIndex + 1) : year;
+  labelWrap.appendChild(idxSpan);
+
+  if (onLabelChange && !presenting) {
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'scenario-label-input';
+    input.value = label;
+    input.addEventListener('input', e => onLabelChange(e.target.value));
+    labelWrap.appendChild(input);
+  } else {
+    const sp = document.createElement('span');
+    sp.className = 'scenario-label-input';
+    sp.style.cursor = 'default';
+    sp.textContent = label;
+    labelWrap.appendChild(sp);
+  }
+
+  header.appendChild(labelWrap);
+
+  // Action icons (hidden in presentation mode)
+  if (!presenting) {
+    const icons = document.createElement('div');
+    icons.className = 'header-icons';
+
+    // Expand icon
+    const expandBtn = document.createElement('button');
+    expandBtn.className = 'icon-btn';
+    expandBtn.title = 'Expand column';
+    expandBtn.textContent = '\u26F6'; // ⛶
+    expandBtn.addEventListener('click', () => enterExpandedView(colIndex, year, mode));
+    icons.appendChild(expandBtn);
+
+    // Save variation icon
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'icon-btn';
+    saveBtn.title = 'Save variation';
+    saveBtn.textContent = '\uD83D\uDCBE'; // 💾
+    saveBtn.addEventListener('click', () => openSavePanel(colIndex, year, mode));
+    icons.appendChild(saveBtn);
+
+    header.appendChild(icons);
+
+    // → Master button (within-year mode only)
+    if (mode === 'within') {
+      const masterBtn = document.createElement('button');
+      const alreadySaved = Object.keys(masterPlacements[year]).length > 0;
+      masterBtn.className = 'master-save-btn' + (alreadySaved ? ' saved' : '');
+      masterBtn.textContent = alreadySaved ? '★ In Planner' : '→ Save to Planner';
+      masterBtn.title = 'Commit this iteration to the Planner for ' + year.replace('-','–');
+      masterBtn.addEventListener('click', () => {
+        masterPlacements[year] = deepCopy(placements[year][colIndex]);
+        masterRules[year] = { ...scenarioRules[year][colIndex] };
+        renderScenarioHeaders(); // refresh the button state
+      });
+      header.appendChild(masterBtn);
+    }
+  }
+
+  // Chip bank (hidden in presentation mode)
+  if (!presenting) {
+    const bank = document.createElement('div');
+    bank.className = 'scenario-chip-bank';
+    bank.dataset.colIndex = colIndex;
+    bank.dataset.year = year;
+
+    const available = ALL_EVENTS.filter(ev => !placed.has(ev.id) && !lockedSet.has(ev.id));
+    if (available.length === 0) {
+      const empty = document.createElement('span');
+      empty.className = 'bank-empty';
+      empty.textContent = 'all placed';
+      bank.appendChild(empty);
+    } else {
+      const csaEvents = available.filter(ev => ev.type === 'csa');
+      const usEvents  = available.filter(ev => ev.type === 'us');
+
+      if (csaEvents.length) {
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:5.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-bottom:1px;';
+        lbl.textContent = 'CSA';
+        bank.appendChild(lbl);
+        csaEvents.forEach(ev => {
+          const chip = makeChip(ev.id, { colIndex, year });
+          bindChipDrag(chip, colIndex, null, year);
+          bank.appendChild(chip);
+        });
+      }
+
+      if (usEvents.length) {
+        if (csaEvents.length) {
+        }
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:5.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-top:4px;margin-bottom:1px;';
+        lbl.textContent = 'US SQUASH';
+        bank.appendChild(lbl);
+        usEvents.forEach(ev => {
+          const chip = makeChip(ev.id, { colIndex, year });
+          bindChipDrag(chip, colIndex, null, year);
+          bank.appendChild(chip);
+        });
+      }
+    }
+    bindBankDropZone(bank, colIndex, year);
+    header.appendChild(bank);
+  }
+
+  // Per-column rule toggles (hidden in presentation mode)
+  if (!presenting) {
+    const colRules = document.createElement('div');
+    colRules.className = 'col-rules';
+
+    const ruleDefs = [
+      { key: 'keepIndividuals', label: 'Keep Individuals' },
+      { key: 'keepHsNationals', label: 'Keep HS Nationals' },
+    ];
+
+    ruleDefs.forEach(({ key, label: ruleLabel }) =>{
+      const toggle = document.createElement('div');
+      toggle.className = 'col-rule-toggle' + (ruleObj[key] ? ' on' : '');
+
+      const pip = document.createElement('div');
+      pip.className = 'col-rule-pip';
+      toggle.appendChild(pip);
+
+      const txt = document.createElement('span');
+      txt.textContent = ruleLabel;
+      toggle.appendChild(txt);
+
+      toggle.addEventListener('click', () => {
+        ruleObj[key] = !ruleObj[key];
+
+        // If turning OFF, scrub that event from this column's placements
+        if (!ruleObj[key]) {
+          const evId = key === 'keepIndividuals' ? 'individuals' : 'hs-nationals';
+          if (mode === 'within') {
+            Object.keys(placements[year][colIndex]).forEach(k => {
+              placements[year][colIndex][k] = (placements[year][colIndex][k] || []).filter(x => x !== evId);
+            });
+          } else {
+            Object.keys(crossPlacements[year]).forEach(k => {
+              crossPlacements[year][k] = (crossPlacements[year][k] || []).filter(x => x !== evId);
+            });
+          }
+        }
+
+        renderAll();
+      });
+
+      colRules.appendChild(toggle);
+    });
+
+    header.appendChild(colRules);
+  }
+
+  return header;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER: Calendar rows
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderCalendar() {
+  const cal = document.getElementById('calendar');
+  cal.innerHTML = '';
+
+  if (appState.mode === 'within') {
+    renderWithinYearCalendar(cal);
+  } else if (appState.mode === 'across') {
+    renderAcrossYearsCalendar(cal);
+  } else if (appState.mode === 'current') {
+    renderCurrentCalendar(cal);
+  } else {
+    renderMasterCalendar(cal);
+  }
+}
+
+function renderWithinYearCalendar(cal) {
+  const yr = appState.withinYear;
+  const data = yearData[yr];
+  const presenting = appState.presenting;
+
+  // Which scenario columns to show
+  const idxList = appState.expandedCol !== null
+    ? [appState.expandedCol]
+    : Array.from({length: appState.scenarioCount}, (_, i) => i);
+
+  data.weekends.forEach(wknd => {
+    if (wknd.month) {
+      cal.appendChild(makeMonthHeader(wknd.month));
+    }
+
+    const row = makeWeekendRow(wknd, yr, presenting);
+
+    idxList.forEach((s, renderPos) => {
+      const ruleObj = scenarioRules[yr][s];
+      const lockedSet = getLockedSet(yr, ruleObj);
+      const evIds = (placements[yr][s][wknd.key] ||[]).filter(Boolean);
+      const zone = makeDropZone(evIds, s, wknd, yr,lockedSet, presenting);
+      row.appendChild(zone);
+    });
+
+    cal.appendChild(row);
+  });
+}
+
+function renderAcrossYearsCalendar(cal) {
+  // Build list of relative row labels (e.g. "Jan W1", "Jan W2", ...)
+  const relRows = getRelativeWeekendRows();
+  const presenting = appState.presenting;
+
+  // Group by month prefix
+  let lastMonth = null;
+
+  relRows.forEach(relLabel => {
+    // Determine month from first word of relLabel
+    const month = relLabel.split(' ')[0]; // "Jan","Feb", "Mar"
+    const fullMonth = { Jan: 'January', Feb: 'February', Mar: 'March' }[month] || month;
+
+    if (fullMonth !== lastMonth) {
+      cal.appendChild(makeMonthHeader(fullMonth));
+      lastMonth = fullMonth;
+    }
+
+    // Build the row
+    const row = document.createElement('div');
+    row.className = 'weekend-row';
+
+    // Label column: show relLabel, and actual dates per column in sub-text (shown in zone)
+    const lbl = document.createElement('div');
+    lbl.className = 'wknd-label';
+    // relLabel is e.g. "Jan W1" — split into month+ week number
+    const relParts = relLabel.split(' '); // ["Jan", "W1"]
+    const relMonth = document.createElement('div');
+    relMonth.className = 'wknd-month';
+    relMonth.textContent = relParts[0];
+    lbl.appendChild(relMonth);
+
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'wknd-date';
+    dateDiv.style.fontSize = '13pt'; // slightly smaller for "W1" vs date numbers
+    dateDiv.textContent = relParts[1] || relLabel;
+    lbl.appendChild(dateDiv);
+
+    const relDaynames = document.createElement('div');
+    relDaynames.className = 'wknd-daynames';
+    relDaynames.textContent = 'Fri – Sun';
+    lbl.appendChild(relDaynames);
+
+    row.appendChild(lbl);
+
+    // One drop zone per selected year
+    appState.acrossYears.forEach((yr, renderPos) =>{
+      const lockedSet = getLockedSet(yr, crossRules[yr]);
+      // Find the actual weekend for this year matching relLabel
+      const wknd = yearData[yr].weekends.find(w => w.relLabel === relLabel);
+
+      if (!wknd) {
+        // Year doesn't have this weekend (e.g. shorter year)
+        const empty = document.createElement('div');
+        empty.className = 'drop-zone';
+        empty.dataset.colIndex = renderPos;
+        empty.style.cssText = 'background:#f9f9f8;pointer-events:none;justify-content:center;align-items:center;';
+        const na = document.createElement('span');
+        na.style.cssText = 'font-size:12pt;color:#ddd;';
+        na.textContent = '—';
+        empty.appendChild(na);
+        row.appendChild(empty);
+        return;
+      }
+
+      const evIds = (crossPlacements[yr][wknd.key] || []).filter(Boolean);
+      const zone = makeDropZone(evIds, renderPos, wknd, yr, lockedSet, presenting, true);
+      row.appendChild(zone);
+    });
+
+    cal.appendChild(row);
+  });
+}
+
+function makeMonthHeader(text) {
+  const mh = document.createElement('div');
+  mh.className = 'month-header';
+  mh.textContent = text;
+  return mh;
+}
+
+function makeWeekendRow(wknd, yr, presenting) {
+  const row = document.createElement('div');
+  row.className = 'weekend-row';
+
+  const lbl = document.createElement('div');
+  lbl.className = 'wknd-label';
+
+  // Split "Jan 8–10" → month "JAN" + days "8–10"
+  const parts = wknd.label.split(' '); // ["Jan", "8–10"]
+  const monthEl = document.createElement('div');
+  monthEl.className = 'wknd-month';
+  monthEl.textContent = parts[0];
+  lbl.appendChild(monthEl);
+
+  const dateDiv = document.createElement('div');
+  dateDiv.className = 'wknd-date';
+  dateDiv.textContent = parts[1] || wknd.label;
+  lbl.appendChild(dateDiv);
+
+  const daynames = document.createElement('div');
+  daynames.className = 'wknd-daynames';
+  daynames.textContent = 'Fri – Sun';
+  lbl.appendChild(daynames);
+
+  if (wknd.marker) {
+    const m = document.createElement('div');
+    m.className = 'wknd-marker ' + wknd.marker.cls;
+    m.textContent = wknd.marker.text;
+    lbl.appendChild(m);
+  }
+
+  row.appendChild(lbl);
+  return row;
+}
+
+/**
+ * Build a drop zone for a weekend row column.
+ * acrossMode: if true, show actual date sub-label inside zone header
+ */
+function makeDropZone(evIds, colIndex, wknd, year, lockedSet, presenting, acrossMode = false) {
+  const zone = document.createElement('div');
+  zone.className = 'drop-zone';
+  zone.dataset.colIndex = colIndex;
+  zone.dataset.key = wknd.key;
+  zone.dataset.year = year;
+
+  // In across-years mode, show the actual Fri dateas a sub-label at top of zone
+  if (acrossMode) {
+    const sub = document.createElement('div');
+    sub.className = 'wknd-actual';
+    sub.textContent = wknd.label;
+    sub.style.width = '100%';
+    if (wknd.marker) {
+      sub.textContent += ' · ' + wknd.marker.text;
+    }
+    if (wknd.afterMlk && lockedSet.has('individuals')) {
+      sub.textContent += ' \u21D2 Indiv.';
+    }
+    zone.appendChild(sub);
+  }
+
+  if (evIds.length === 0 && !presenting) {
+    const hint = document.createElement('span');
+    hint.className = 'drop-hint';
+    hint.textContent = 'drop here';
+    zone.appendChild(hint);
+  } else {
+    evIds.forEach(evId => {
+      const locked = lockedSet.has(evId);
+      const chip = makeChip(evId, {
+        locked,
+        removable: !locked && !presenting,
+        colIndex,
+        fromKey: wknd.key,
+        year,
+        inZone: true,
+      });
+      if (!locked && !presenting) {
+        bindChipDrag(chip, colIndex, wknd.key, year);
+      }
+      zone.appendChild(chip);
+    });
+  }
+
+  if (!presenting) {
+    bindDropZone(zone, colIndex, wknd.key, year);
+  }
+
+  // Venue conflict check
+  const specter = evIds.filter(id => {
+    const ev = evById(id);
+    return ev && ev.location && ev.location.includes('Specter');
+  });
+  if (specter.length > 1) {
+    zone.classList.add('venue-conflict');
+    const badge = document.createElement('div');
+    badge.className = 'venue-conflict-badge';
+    badge.innerHTML = '⚠ Venue conflict — Specter (' + specter.map(id => evById(id).name).join(', ') + ')';
+    zone.insertBefore(badge, zone.firstChild);
+  }
+
+  return zone;
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER: Expanded single-column view
+// ────────────────────────────────────────────────────────────────────────────
+
+function enterExpandedView(colIndex, year, mode) {
+  appState.expandedCol = colIndex;
+  // For within-year expanded view, just re-render with single column
+  renderAll();
+}
+
+function exitExpandedView() {
+  appState.expandedCol = null;
+  renderAll();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER: Save Panel
+// ────────────────────────────────────────────────────────────────────────────
+
+function openSavePanel(colIndex, year, mode) {
+  // Close any existing panel
+  closeSavePanel();
+
+  // Build inline save panel
+  const panel = document.createElement('div');
+  panel.className = 'save-panel open';
+  panel.id = 'active-save-panel';
+
+  const close = document.createElement('span');
+  close.className = 'save-close';
+  close.textContent = '×';
+  close.addEventListener('click', closeSavePanel);
+  panel.appendChild(close);
+
+  const h4 = document.createElement('h4');
+  h4.textContent = 'Save Variation';
+  panel.appendChild(h4);
+
+  const row = document.createElement('div');
+  row.className = 'save-input-row';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'save-input';
+  input.placeholder = 'Name this variation...';
+  row.appendChild(input);
+
+  const btn = document.createElement('button');
+  btn.className = 'save-btn';
+  btn.textContent = 'Save';
+  btn.addEventListener('click', () => doSave(input.value.trim(), colIndex, year, mode));
+  row.appendChild(btn);
+
+  panel.appendChild(row);
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSave(input.value.trim(), colIndex, year, mode);
+  });
+
+  // Find the right scenario-header to attach it to
+  const headers = document.querySelectorAll('.scenario-header');
+  const targetHeader = headers[mode === 'within'
+    ? (appState.expandedCol !== null ? 0 : colIndex)
+    : colIndex];
+
+  if (targetHeader) {
+    targetHeader.style.position = 'relative';
+    targetHeader.appendChild(panel);
+  }
+
+  setTimeout(() => input.focus(), 50);
+}
+
+function closeSavePanel() {
+  const existing = document.getElementById('active-save-panel');
+  if (existing) existing.remove();
+}
+
+function doSave(name, colIndex, year, mode) {
+  if (!name) { alert('Please enter a name for this variation.'); return; }
+
+  let snap;
+  if (mode === 'within') {
+    snap = deepCopy(placements[year][colIndex]);
+  } else {
+    snap = deepCopy(crossPlacements[year]);
+  }
+
+  savedVariations.push({
+    id: Date.now() + Math.random(),
+    name,
+    year,
+    mode,
+    scenarioIdx: mode === 'within' ? colIndex : null,
+    placements: snap,
+    label: mode === 'within' ? scenarioLabels[year][colIndex] : year.replace('-','–'),
+  });
+
+  closeSavePanel();
+
+  // Open drawer if not already open, then render the list once
+  if (!appState.savedDrawerOpen) {
+    appState.savedDrawerOpen = true;
+    document.getElementById('saved-drawer').classList.remove('hidden');
+    document.getElementById('btn-show-saved').classList.add('highlight');
+  }
+  renderSavedList();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER: Saved Variations List
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderSavedList() {
+  const list = document.getElementById('saved-list');
+  list.innerHTML = '';
+
+  if (savedVariations.length === 0) {
+    const empty = document.createElement('div');
+    empty.className = 'saved-empty';
+    empty.textContent = 'No saved variations yet.';
+    list.appendChild(empty);
+    return;
+  }
+
+  savedVariations.forEach(sv => {
+    const item = document.createElement('div');
+    item.className = 'saved-item';
+
+    const name = document.createElement('div');
+    name.className = 'saved-item-name';
+    name.textContent = sv.name;
+    item.appendChild(name);
+
+    const meta = document.createElement('div');
+    meta.className = 'saved-item-meta';
+    meta.textContent = sv.year.replace('-','–') + (sv.mode === 'within' ? ` · ${sv.label}` : ' · AcrossYears');
+    item.appendChild(meta);
+
+    const actions = document.createElement('div');
+    actions.className = 'saved-item-actions';
+
+    // Load button + slot selector (within-year only)
+    if (sv.mode === 'within') {
+      const select = document.createElement('select');
+      select.className = 'saved-slot-select';
+      for (let i = 0; i < 3; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = `Slot ${i+1}`;
+        select.appendChild(opt);
+      }
+      actions.appendChild(select);
+
+      const loadBtn = document.createElement('button');
+      loadBtn.className = 'saved-load-btn';
+      loadBtn.textContent = 'Load';
+      loadBtn.addEventListener('click', () => {
+        const slot = parseInt(select.value);
+        placements[sv.year][slot] = deepCopy(sv.placements);
+        // Always switch to within-year mode showing the correct year
+        if (appState.mode !== 'within') setMode('within');
+        if (appState.withinYear !== sv.year) {
+          appState.withinYear = sv.year;
+          document.querySelectorAll('.year-tab').forEach(t => {
+            t.classList.toggle('active', t.dataset.year === sv.year);
+          });
+        }
+        renderAll();
+      });
+      actions.appendChild(loadBtn);
+    } else {
+      // Across-years: load directly
+      const loadBtn = document.createElement('button');
+      loadBtn.className = 'saved-load-btn';
+      loadBtn.textContent = 'Load';
+      loadBtn.addEventListener('click', () => {
+        crossPlacements[sv.year] = deepCopy(sv.placements);
+        if (!appState.acrossYears.includes(sv.year)) {
+          appState.acrossYears.push(sv.year);
+        }
+        if (appState.mode !== 'across') setMode('across');
+        // Sync pill active states to match appState.acrossYears
+        document.querySelectorAll('.year-pill').forEach(p => {
+          p.classList.toggle('active', appState.acrossYears.includes(p.dataset.year));
+        });
+        renderAll();
+      });
+      actions.appendChild(loadBtn);
+    }
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'saved-delete-btn';
+    delBtn.textContent = '\u00D7';
+    delBtn.title = 'Delete';
+    delBtn.addEventListener('click', () => {
+      savedVariations = savedVariations.filter(x =>x.id !== sv.id);
+      renderSavedList();
+    });
+    actions.appendChild(delBtn);
+
+    item.appendChild(actions);
+    list.appendChild(item);
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// RENDER: Expanded back button overlay
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderExpandedBack() {
+  // Remove any existing back button
+  const existing = document.getElementById('expanded-back-btn');
+  if (existing) existing.remove();
+
+  if (appState.expandedCol !== null && !appState.presenting) {
+    const btn = document.createElement('button');
+    btn.className = 'expanded-back-btn';
+    btn.id = 'expanded-back-btn';
+    btn.textContent = '\u2190 Back';
+    btn.addEventListener('click', exitExpandedView);
+    document.getElementById('calendar-container').appendChild(btn);
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// MAIN RENDER
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderAll() {
+  // Apply rules for all active years
+  ALL_YEARS.forEach(yr => applyRules(yr));
+
+  renderScenarioHeaders();
+  renderCalendar();
+  renderExpandedBack();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// MODE SWITCHING
+// ────────────────────────────────────────────────────────────────────────────
+
+function setMode(mode) {
+  appState.mode = mode;
+  appState.expandedCol = null;
+
+  document.getElementById('mode-within').classList.toggle('active', mode === 'within');
+  document.getElementById('mode-across').classList.toggle('active', mode === 'across');
+  document.getElementById('mode-master').classList.toggle('active', mode === 'master');
+  document.getElementById('mode-current').classList.toggle('active', mode === 'current');
+
+  // Show/hide year controls
+  document.getElementById('year-tabs-within').style.display = (mode === 'within' || mode === 'current') ? 'flex' : 'none';
+  document.getElementById('year-pills-across').style.display = mode === 'across' ? 'flex' : 'none';
+
+  // Show/hide scenario count buttons (within-year only)
+  document.getElementById('iter-section').style.display = mode === 'within' ? 'flex' : 'none';
+  document.getElementById('iter-divider').style.display = mode === 'within' ? 'block' : 'none';
+
+  // Show/hide overlay button (Planner mode only)
+  const showOverlay = mode === 'master';
+  document.getElementById('overlay-section').style.display = showOverlay ? 'flex' : 'none';
+  document.getElementById('overlay-divider').style.display = showOverlay ? 'block' : 'none';
+
+  // Show/hide reset button (hide in master/planner mode — nothing to reset there)
+  const showReset = mode !== 'master';
+  document.getElementById('reset-section').style.display = showReset ? 'flex' : 'none';
+  document.getElementById('reset-divider').style.display = showReset ? 'block' : 'none';
+
+  renderAll();
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// MASTER SCHEDULE RENDERER
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderMasterHeaders() {
+  const container = document.getElementById('scenario-headers');
+  container.innerHTML = '';
+
+  const spacer = document.createElement('div');
+  spacer.className = 'scenario-header-spacer';
+  container.appendChild(spacer);
+
+  ALL_YEARS.forEach(yr => {
+    const hasMaster = Object.keys(masterPlacements[yr]).length > 0;
+    const header = document.createElement('div');
+    header.className = 'scenario-header';
+    header.style.borderRight = '1px solid var(--border)';
+
+    const labelWrap = document.createElement('div');
+    labelWrap.className = 'scenario-label-wrap';
+
+    const idxSpan = document.createElement('span');
+    idxSpan.className = 'scenario-index';
+    idxSpan.style.background = hasMaster ? '#3a7a2a' : '#aaa';
+    idxSpan.textContent = yr.replace('-','–');
+    labelWrap.appendChild(idxSpan);
+
+    const statusEl = document.createElement('span');
+    statusEl.style.cssText = 'font-size:7pt;color:'+ (hasMaster ? '#3a7a2a' : '#bbb') + ';font-weight:700;flex:1;';
+    statusEl.textContent = hasMaster ? 'Planner set': 'Not set — go to Within Year and click → Save to Planner';
+    labelWrap.appendChild(statusEl);
+
+    if (hasMaster) {
+      const clearBtn = document.createElement('button');
+      clearBtn.style.cssText = 'font-size:6.5pt;font-weight:700;background:none;border:1px solid #ddd;border-radius:3px;padding:2px 6px;cursor:pointer;color:#aaa;white-space:nowrap;flex-shrink:0;';
+      clearBtn.textContent = '× Clear';
+      clearBtn.title = 'Clear Planner for ' + yr.replace('-','–');
+      clearBtn.addEventListener('mouseover', () => { clearBtn.style.borderColor='#e07070'; clearBtn.style.color='#c03030'; });
+      clearBtn.addEventListener('mouseout',  () => { clearBtn.style.borderColor='#ddd';    clearBtn.style.color='#aaa'; });
+      clearBtn.addEventListener('click', () => {
+        masterPlacements[yr] = {};
+        masterRules[yr] = { keepIndividuals: false,keepHsNationals: false };
+        renderScenarioHeaders();
+        renderCalendar();
+      });
+      labelWrap.appendChild(clearBtn);
+    }
+
+    header.appendChild(labelWrap);
+    container.appendChild(header);
+  });
+
+  // Re-apply collapsed state
+  if (bankCollapsed) {
+    container.classList.add('collapsed');
+    document.getElementById('collapsed-bar').classList.add('visible');
+  }
+}
+
+function renderMasterCalendar(cal) {
+  // Build rows from ALL 4 years so no weekends are missed
+  const seen = [];
+  const seenSet = new Set();
+  ALL_YEARS.forEach(yr => {
+    yearData[yr].weekends.forEach(w => {
+      if (!seenSet.has(w.relLabel)) { seenSet.add(w.relLabel); seen.push(w.relLabel); }
+    });
+  });
+  const relRows = seen;
+  const presenting = appState.presenting;
+  let lastMonth = null;
+
+  relRows.forEach(relLabel => {
+    const month = relLabel.split(' ')[0];
+    const fullMonth = { Jan: 'January', Feb: 'February', Mar: 'March' }[month] || month;
+    if (fullMonth !== lastMonth) {
+      cal.appendChild(makeMonthHeader(fullMonth));
+      lastMonth = fullMonth;
+    }
+
+    const row = document.createElement('div');
+    row.className = 'weekend-row';
+
+    // Row label
+    const lbl = document.createElement('div');
+    lbl.className = 'wknd-label';
+    const relParts = relLabel.split(' ');
+    const relMonth = document.createElement('div');
+    relMonth.className = 'wknd-month';
+    relMonth.textContent = relParts[0];
+    lbl.appendChild(relMonth);
+    const dateDiv = document.createElement('div');
+    dateDiv.className = 'wknd-date';
+    dateDiv.style.fontSize = '13pt';
+    dateDiv.textContent = relParts[1] || relLabel;
+    lbl.appendChild(dateDiv);
+    const relDaynames = document.createElement('div');
+    relDaynames.className = 'wknd-daynames';
+    relDaynames.textContent = 'Fri – Sun';
+    lbl.appendChild(relDaynames);
+    row.appendChild(lbl);
+
+    ALL_YEARS.forEach((yr, renderPos) => {
+      const hasMaster = Object.keys(masterPlacements[yr]).length > 0;
+      const wknd = yearData[yr].weekends.find(w => w.relLabel === relLabel);
+      const lockedSet = getLockedSet(yr, masterRules[yr]);
+
+      if (!hasMaster || !wknd) {
+        const empty = document.createElement('div');
+        empty.className = 'master-empty-col';
+        empty.textContent = hasMaster ? '' : '—';
+        row.appendChild(empty);
+        return;
+      }
+
+      const evIds = (masterPlacements[yr][wknd.key]|| []).filter(Boolean);
+      // Master/Planner view is read-only — pass true for presenting to skip drag binding
+      const zone = makeDropZone(evIds, renderPos, wknd, yr, lockedSet, true, true);
+
+      // Overlay: show Current events as ghost chips
+      if (appState.overlayOn) {
+        const currentIds = (currentPlacements[yr][wknd.key] || []).filter(Boolean);
+        const ghostIds = currentIds.filter(id => !evIds.includes(id));
+        const sameIds = currentIds.filter(id => evIds.includes(id));
+        if (currentIds.length > 0) {
+          // Divider with label
+          const divider = document.createElement('div');
+          divider.className = 'ghost-divider';
+          const lbl = document.createElement('span');
+          lbl.className = 'ghost-label';
+          lbl.textContent = 'Current';
+          divider.appendChild(lbl);
+          zone.appendChild(divider);
+          // Ghost chips (events in Current but not in Planner)
+          ghostIds.forEach(evId => {
+            const ev = evById(evId);
+            const ghost = document.createElement('div');
+            ghost.className = 'chip ghost ' + (ev ? ev.type : 'csa');
+            ghost.style.cssText = 'flex:1 1 auto;min-width:max-content;font-size:13pt;padding:6px 12px;display:flex;align-items:center;gap:4px;';
+            const orgBadge = document.createElement('span');
+            orgBadge.className = 'chip-org';
+            orgBadge.textContent = (ev && ev.type === 'us') ? 'USS' : 'CSA';
+            ghost.appendChild(orgBadge);
+            const nameEl = document.createElement('span');
+            nameEl.style.flex = '1';
+            nameEl.textContent = ev ? ev.name : evId;
+            ghost.appendChild(nameEl);
+            zone.appendChild(ghost);
+          });
+          // Events in both — mark Planner chips with a green tick
+          if (sameIds.length > 0) {
+            zone.querySelectorAll('.chip:not(.ghost)').forEach(chip => {
+              if (sameIds.includes(chip.dataset.id)) {
+                chip.style.outline = '2px solid #6ab870';
+                chip.title = 'Also in Current calendar';
+              }
+            });
+          }
+        }
+      }
+
+      row.appendChild(zone);
+    });
+
+    cal.appendChild(row);
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CURRENT CALENDAR RENDERER
+// ────────────────────────────────────────────────────────────────────────────
+
+function renderCurrentHeaders() {
+  const container = document.getElementById('scenario-headers');
+  container.innerHTML = '';
+
+  const spacer = document.createElement('div');
+  spacer.className = 'scenario-header-spacer';
+  container.appendChild(spacer);
+
+  const yr = appState.withinYear;
+  const header = document.createElement('div');
+  header.className = 'scenario-header';
+
+  const labelWrap = document.createElement('div');
+  labelWrap.className = 'scenario-label-wrap';
+  const idxSpan = document.createElement('span');
+  idxSpan.className = 'scenario-index';
+  idxSpan.style.background = '#4a7a4a';
+  idxSpan.textContent = yr.replace('-','–');
+  labelWrap.appendChild(idxSpan);
+  const label = document.createElement('span');
+  label.className = 'scenario-label-input';
+  label.style.cursor = 'default';
+  label.textContent = 'Current Calendar';
+  labelWrap.appendChild(label);
+  header.appendChild(labelWrap);
+
+  if (!appState.presenting) {
+    const note = document.createElement('div');
+    note.style.cssText = 'font-size:6.5pt;color:#888;margin-top:4px;font-style:italic;';
+    note.textContent = 'Drag events to set the existing schedule baseline';
+    header.appendChild(note);
+  }
+
+  container.appendChild(header);
+
+  if (bankCollapsed) {
+    container.classList.add('collapsed');
+    document.getElementById('collapsed-bar').classList.add('visible');
+  } else {
+    container.classList.remove('collapsed');
+    document.getElementById('collapsed-bar').classList.remove('visible');
+  }
+}
+
+function renderCurrentCalendar(cal) {
+  const yr = appState.withinYear;
+  const data = yearData[yr];
+  const presenting = appState.presenting;
+
+  data.weekends.forEach(wknd => {
+    if (wknd.month) cal.appendChild(makeMonthHeader(wknd.month));
+
+    const row = makeWeekendRow(wknd, yr, presenting);
+    const evIds = (currentPlacements[yr][wknd.key] || []).filter(Boolean);
+    const zone = makeCurrentDropZone(evIds, wknd, yr, presenting);
+    row.appendChild(zone);
+    cal.appendChild(row);
+  });
+}
+
+function makeCurrentDropZone(evIds, wknd, yr, presenting) {
+  const zone = document.createElement('div');
+  zone.className = 'drop-zone';
+  zone.dataset.colIndex = 99; // sentinel for current
+  zone.dataset.key = wknd.key;
+  zone.dataset.year = yr;
+
+  if (evIds.length === 0 && !presenting) {
+    const hint = document.createElement('span');
+    hint.className = 'drop-hint';
+    hint.textContent = 'drop here';
+    zone.appendChild(hint);
+  } else {
+    evIds.forEach(evId => {
+      const chip = makeChip(evId, { removable: !presenting, colIndex: 99, fromKey: wknd.key, year: yr });
+      if (!presenting) bindCurrentChipDrag(chip, wknd.key, yr);
+      zone.appendChild(chip);
+    });
+  }
+
+  if (!presenting) bindCurrentDropZone(zone, wknd.key, yr);
+  return zone;
+}
+
+function bindCurrentChipDrag(chip, fromKey, year) {
+  chip.addEventListener('dragstart', e => {
+    dragId = chip.dataset.id;
+    dragColIndex = 99;
+    dragSourceKey = fromKey;
+    dragYear = year;
+    e.dataTransfer.effectAllowed = 'move';
+    setTimeout(() => chip.classList.add('dragging'), 0);
+  });
+  chip.addEventListener('dragend', () => {
+    chip.classList.remove('dragging');
+    clearDragActive();
+    dragId = null; dragColIndex = null; dragSourceKey = null; dragYear = null;
+  });
+}
+
+function bindCurrentDropZone(zone, weekendKey, year) {
+  zone.addEventListener('dragover', e => {
+    if (dragColIndex === 99 && dragYear === year) { e.preventDefault(); zone.classList.add('drag-over'); }
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    if (dragId === null || dragColIndex !== 99 || dragYear !== year) return;
+    if (dragSourceKey !== null) {
+      currentPlacements[year][dragSourceKey] = (currentPlacements[year][dragSourceKey] || []).filter(x => x !== dragId);
+    }
+    if (!currentPlacements[year][weekendKey]) currentPlacements[year][weekendKey] = [];
+    if (!currentPlacements[year][weekendKey].includes(dragId)) currentPlacements[year][weekendKey].push(dragId);
+    dragId = null; dragColIndex = null; dragSourceKey = null; dragYear = null;
+    renderAll();
+  });
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CONTROLS: Event Bindings
+// ────────────────────────────────────────────────────────────────────────────
+
+// Mode buttons
+document.getElementById('mode-within').addEventListener('click', () => setMode('within'));
+document.getElementById('mode-across').addEventListener('click', () => setMode('across'));
+document.getElementById('mode-master').addEventListener('click', () => setMode('master'));
+document.getElementById('mode-current').addEventListener('click', () => {
+  appState.withinYear = document.querySelector('.year-tab.active')?.dataset.year || appState.withinYear;
+  setMode('current');
+});
+
+// Reset button + modal
+document.getElementById('btn-reset').addEventListener('click', () => {
+  const yr = appState.withinYear;
+  const count = appState.scenarioCount;
+  const sub = document.getElementById('reset-modal-sub');
+  const btns = document.getElementById('reset-modal-btns');
+
+  sub.textContent = yr.replace('-','–') + ' — select a scenario to clear';
+  btns.innerHTML = '';
+
+  const targets = [];
+  if (appState.mode === 'within') {
+    for (let i = 0; i < count; i++) {
+      targets.push({ label: scenarioLabels[yr][i] + ' (Scenario ' + (i+1) + ')', idx: i, yr });
+    }
+  } else if (appState.mode === 'across') {
+    appState.acrossYears.forEach(y => targets.push({ label: y.replace('-','–'), idx: null, yr: y, across: true }));
+  } else if (appState.mode === 'current') {
+    targets.push({ label: yr.replace('-','–') + ' — Current Calendar', idx: null, yr, current: true });
+  }
+
+  if (targets.length === 0) {
+    sub.textContent = 'Nothing to reset in this mode.';
+  }
+
+  targets.forEach(t => {
+    const btn = document.createElement('button');
+    btn.className = 'reset-scenario-btn';
+    btn.textContent = '↺  Clear ' + t.label;
+    btn.addEventListener('click', () => {
+      if (t.across) {
+        crossPlacements[t.yr] = {};
+      } else if (t.current) {
+        currentPlacements[t.yr] = {};
+      } else {
+        placements[t.yr][t.idx] = {};
+      }
+      closeResetModal();
+      renderAll();
+    });
+    btns.appendChild(btn);
+  });
+
+  document.getElementById('reset-backdrop').classList.add('open');
+});
+
+function closeResetModal() {
+  document.getElementById('reset-backdrop').classList.remove('open');
+}
+document.getElementById('reset-cancel').addEventListener('click', closeResetModal);
+document.getElementById('reset-backdrop').addEventListener('click', e => {
+  if (e.target === document.getElementById('reset-backdrop')) closeResetModal();
+});
+
+// Overlay toggle
+document.getElementById('btn-overlay').addEventListener('click', () => {
+  appState.overlayOn = !appState.overlayOn;
+  document.getElementById('btn-overlay').classList.toggle('on', appState.overlayOn);
+  document.getElementById('btn-overlay').textContent = appState.overlayOn ? '⊕ Hide Current' : '⊕ Show Current';
+  renderAll();
+});
+
+// Within-year tab selection
+document.querySelectorAll('.year-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.year-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    appState.withinYear = tab.dataset.year;
+    appState.expandedCol = null;
+    renderAll();
+  });
+});
+
+// Across-years pill toggle
+document.querySelectorAll('.year-pill').forEach(pill => {
+  pill.addEventListener('click', () => {
+    const yr = pill.dataset.year;
+    const idx = appState.acrossYears.indexOf(yr);
+    if (idx === -1) {
+      // Add, max 4
+      if (appState.acrossYears.length < 4) {
+        appState.acrossYears.push(yr);
+        pill.classList.add('active');
+      }
+    } else {
+      // Remove, min 2
+      if (appState.acrossYears.length > 2) {
+        appState.acrossYears.splice(idx, 1);
+        pill.classList.remove('active');
+      }
+    }
+    renderAll();
+  });
+});
+
+// Scenario count buttons
+document.querySelectorAll('.iter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.iter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    appState.scenarioCount = parseInt(btn.dataset.count);
+    appState.expandedCol = null;
+    renderAll();
+  });
+});
+
+// Present button
+document.getElementById('btn-present').addEventListener('click', () => {
+  appState.presenting = true;
+  document.body.classList.add('presenting');
+  renderAll();
+});
+
+// Exit presentation
+document.getElementById('exit-present-btn').addEventListener('click', () => {
+  appState.presenting = false;
+  document.body.classList.remove('presenting');
+  renderAll();
+});
+
+// Saved drawer toggle
+document.getElementById('btn-show-saved').addEventListener('click', () => {
+  appState.savedDrawerOpen = !appState.savedDrawerOpen;
+  document.getElementById('saved-drawer').classList.toggle('hidden', !appState.savedDrawerOpen);
+  document.getElementById('btn-show-saved').classList.toggle('highlight', appState.savedDrawerOpen && savedVariations.length > 0);
+  if (appState.savedDrawerOpen) renderSavedList();
+});
+
+document.getElementById('saved-drawer-close').addEventListener('click', () => {
+  appState.savedDrawerOpen = false;
+  document.getElementById('saved-drawer').classList.add('hidden');
+  document.getElementById('btn-show-saved').classList.remove('highlight');
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// FULLSCREEN
+// ────────────────────────────────────────────────────────────────────────────
+const btnFS = document.getElementById('btn-fullscreen');
+btnFS.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+});
+document.addEventListener('fullscreenchange', () =>{
+  document.body.classList.toggle('is-fullscreen', !!document.fullscreenElement);
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// EVENT BANK COLLAPSE
+// ────────────────────────────────────────────────────────────────────────────
+let bankCollapsed = false;
+
+function toggleEventBank() {
+  bankCollapsed = !bankCollapsed;
+  document.getElementById('scenario-headers').classList.toggle('collapsed', bankCollapsed);
+  document.getElementById('collapsed-bar').classList.toggle('visible', bankCollapsed);
+}
+
+document.getElementById('expand-btn').addEventListener('click', toggleEventBank);
+
+// ────────────────────────────────────────────────────────────────────────────
+// INIT
+// ────────────────────────────────────────────────────────────────────────────
+renderAll();
+</script>
+</body>
+</html>
