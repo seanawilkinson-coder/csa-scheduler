@@ -1472,6 +1472,7 @@ function getShareState() {
       scenarioCount: appState.scenarioCount,
       seasonFilter: appState.seasonFilter,
       acrossYears: JSON.parse(JSON.stringify(appState.acrossYears)),
+      summaryOpen: document.getElementById('summary-backdrop').classList.contains('open'),
     },
   };
 }
@@ -1509,6 +1510,15 @@ function applyShareState(state) {
   document.querySelectorAll('.season-btn').forEach(b => {
     b.classList.toggle('active', b.dataset.season === appState.seasonFilter);
   });
+  // Sync summary button visibility
+  document.getElementById('btn-summary').style.display = appState.seasonFilter !== 'full' ? 'inline-flex' : 'none';
+
+  // Sync summary popup
+  if (remote.summaryOpen) {
+    document.getElementById('btn-summary').click();
+  } else {
+    document.getElementById('summary-backdrop').classList.remove('open');
+  }
 
   renderAll();
   _receivingRemote = false;
@@ -3669,13 +3679,24 @@ document.getElementById('btn-summary').addEventListener('click', () => {
   }
 
   document.getElementById('summary-backdrop').classList.add('open');
+  broadcastSummaryState();
 });
+
+function broadcastSummaryState() {
+  if (!_receivingRemote && shareChannel && (shareActive || isViewer)) {
+    shareChannel.send({ type: "broadcast", event: "state", payload: getShareState() });
+  }
+}
 
 document.getElementById('summary-close').addEventListener('click', () => {
   document.getElementById('summary-backdrop').classList.remove('open');
+  broadcastSummaryState();
 });
 document.getElementById('summary-backdrop').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) document.getElementById('summary-backdrop').classList.remove('open');
+  if (e.target === e.currentTarget) {
+    document.getElementById('summary-backdrop').classList.remove('open');
+    broadcastSummaryState();
+  }
 });
 
 // Within-year tab selection
