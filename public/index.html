@@ -339,8 +339,8 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 }
 .wknd-month {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 6pt; font-weight: 500; letter-spacing: 2.5pt; text-transform: uppercase;
-  color: var(--accent); margin-bottom: 2px;
+  font-size: 8pt; font-weight: 600; letter-spacing: 2.5pt; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 3px;
 }
 .wknd-date {
   font-family: 'Bebas Neue', sans-serif;
@@ -349,14 +349,14 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 }
 .wknd-daynames {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 6pt; font-weight: 500; letter-spacing: 0.8pt; text-transform: uppercase;
-  color: #aaa; margin-top: 2px;
+  font-size: 7.5pt; font-weight: 500; letter-spacing: 0.8pt; text-transform: uppercase;
+  color: #888; margin-top: 3px;
 }
-.wknd-reldate { font-family: 'Barlow Condensed', sans-serif; font-size: 6.5pt; color: #999; margin-top: 3px; }
+.wknd-reldate { font-family: 'Barlow Condensed', sans-serif; font-size: 7.5pt; color: #999; margin-top: 4px; }
 .wknd-marker {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 5.5pt; font-weight: 500; letter-spacing: 0.8pt; text-transform: uppercase;
-  margin-top: 5px; padding: 2px 6px; border-radius: 10px; align-self: flex-start;
+  font-size: 6.5pt; font-weight: 600; letter-spacing: 0.8pt; text-transform: uppercase;
+  margin-top: 5px; padding: 3px 8px; border-radius: 10px; align-self: flex-start;
 }
 .wknd-marker.mlk   { background: #f0e8d4; color: #7a5a20; }
 .wknd-marker.pday  { background: #d8e8f0; color: #1a4a5a; }
@@ -385,7 +385,7 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 .drop-zone.drag-inactive .chip { opacity: 0.28; }
 .drop-hint {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 6pt; color: #d0c9bc; align-self: center; pointer-events: none; letter-spacing: 0.3pt;
+  font-size: 1.5vw; color: #d0c9bc; align-self: center; pointer-events: none; letter-spacing: 0.3pt;
 }
 
 /* ── PER-COLUMN RULE TOGGLES ─────────────────────────────────────────────────── */
@@ -546,7 +546,7 @@ body.presenting .chip:active { transform: none; }
 body.presenting .exit-present-btn { display: block; }
 
 /* ── ACROSS-YEARS ──────────────────────────────────────────────────────────── */
-.wknd-actual { font-family: 'Barlow Condensed', sans-serif; font-size: 6pt; color: #aaa; letter-spacing: 0.3pt; }
+.wknd-actual { font-family: 'Barlow Condensed', sans-serif; font-size: 1.5vw; font-weight: 600; color: #999; letter-spacing: 0.3pt; }
 
 /* ── PLANNER / CURRENT MODE ──────────────────────────────────────────────── */
 .mode-btn-master { border-color: var(--accent) !important; color: var(--accent) !important; }
@@ -1749,100 +1749,100 @@ const ALL_EVENTS = [
 // ────────────────────────────────────────────────────────────────────────────
 const yearData = {
   '2026-27': { weekends: [
-    { key:'oct-2',  label:'Oct 2–4',    month:'October',  relLabel:'Oct W1', season:'fall' },
+    { key:'oct-2',  label:'Oct 2–4',    month:'OCT',  relLabel:'Oct W1', season:'fall' },
     { key:'oct-9',  label:'Oct 9–11',   month:null,       relLabel:'Oct W2', season:'fall', marker:{text:'Columbus Oct 12', cls:'columbus'} },
     { key:'oct-16', label:'Oct 16–18',  month:null,       relLabel:'Oct W3', season:'fall' },
     { key:'oct-23', label:'Oct 23–25',  month:null,       relLabel:'Oct W4', season:'fall' },
     { key:'oct-30', label:'Oct 30–Nov 1', month:null,     relLabel:'Oct W5', season:'fall' },
-    { key:'nov-6',  label:'Nov 6–8',    month:'November', relLabel:'Nov W1', season:'fall' },
+    { key:'nov-6',  label:'Nov 6–8',    month:'NOV', relLabel:'Nov W1', season:'fall' },
     { key:'nov-13', label:'Nov 13–15',  month:null,       relLabel:'Nov W2', season:'fall' },
     { key:'nov-20', label:'Nov 20–22',  month:null,       relLabel:'Nov W3', season:'fall' },
     { key:'nov-27', label:'Nov 27–29',  month:null,       relLabel:'Nov W4', season:'fall', marker:{text:'Thanksgiving Nov 26', cls:'tgiving'} },
-    { key:'dec-4',  label:'Dec 4–6',    month:'December', relLabel:'Dec W1', season:'fall' },
+    { key:'dec-4',  label:'Dec 4–6',    month:'DEC', relLabel:'Dec W1', season:'fall' },
     { key:'dec-11', label:'Dec 11–13',  month:null,       relLabel:'Dec W2', season:'fall' },
-        { key:'jan-1',  label:'Jan 1–3',   month:'January',  relLabel:'Jan W1' },
+        { key:'jan-1',  label:'Jan 1–3',   month:'JAN',  relLabel:'Jan W1' },
     { key:'jan-8',  label:'Jan 8–10',  month:null,     relLabel:'Jan W2' },
     { key:'jan-15', label:'Jan 15–17', month:null,     relLabel:'Jan W3', marker:{text:'MLK Jan 18', cls:'mlk'} },
     { key:'jan-22', label:'Jan 22–24', month:null,     relLabel:'Jan W4', afterMlk:true },
     { key:'jan-29', label:'Jan 29–31', month:null,     relLabel:'Jan W5' },
-    { key:'feb-5',  label:'Feb 5–7',   month:'February', relLabel:'Feb W1' },
-    { key:'feb-12', label:'Feb 12–14', month:null,     relLabel:'Feb W2', marker:{text:'Pres. Feb 15', cls:'pday'} },
+    { key:'feb-5',  label:'Feb 5–7',   month:'FEB', relLabel:'Feb W1' },
+    { key:'feb-12', label:'Feb 12–14', month:null,     relLabel:'Feb W2', presDay:true, marker:{text:'Pres. Feb 15', cls:'pday'} },
     { key:'feb-19', label:'Feb 19–21', month:null,     relLabel:'Feb W3' },
     { key:'feb-26', label:'Feb 26–28', month:null,     relLabel:'Feb W4', lastFeb:true },
-    { key:'mar-5',  label:'Mar 5–7',   month:'March',    relLabel:'Mar W1' },
+    { key:'mar-5',  label:'Mar 5–7',   month:'MAR',    relLabel:'Mar W1' },
     { key:'mar-12', label:'Mar 12–14', month:null,     relLabel:'Mar W2' },
     { key:'mar-19', label:'Mar 19–21', month:null,     relLabel:'Mar W3' },
     { key:'mar-26', label:'Mar 26–28', month:null,     relLabel:'Mar W4' },
   ]},
   '2027-28': { weekends: [
-    { key:'oct-1',  label:'Oct 1–3',    month:'October',  relLabel:'Oct W1', season:'fall' },
+    { key:'oct-1',  label:'Oct 1–3',    month:'OCT',  relLabel:'Oct W1', season:'fall' },
     { key:'oct-8',  label:'Oct 8–10',   month:null,       relLabel:'Oct W2', season:'fall', marker:{text:'Columbus Oct 11', cls:'columbus'} },
     { key:'oct-15', label:'Oct 15–17',  month:null,       relLabel:'Oct W3', season:'fall' },
     { key:'oct-22', label:'Oct 22–24',  month:null,       relLabel:'Oct W4', season:'fall' },
     { key:'oct-29', label:'Oct 29–31',  month:null,       relLabel:'Oct W5', season:'fall' },
-    { key:'nov-5',  label:'Nov 5–7',    month:'November', relLabel:'Nov W1', season:'fall' },
+    { key:'nov-5',  label:'Nov 5–7',    month:'NOV', relLabel:'Nov W1', season:'fall' },
     { key:'nov-12', label:'Nov 12–14',  month:null,       relLabel:'Nov W2', season:'fall' },
     { key:'nov-19', label:'Nov 19–21',  month:null,       relLabel:'Nov W3', season:'fall' },
     { key:'nov-26', label:'Nov 26–28',  month:null,       relLabel:'Nov W4', season:'fall', marker:{text:'Thanksgiving Nov 25', cls:'tgiving'} },
-    { key:'dec-3',  label:'Dec 3–5',    month:'December', relLabel:'Dec W1', season:'fall' },
+    { key:'dec-3',  label:'Dec 3–5',    month:'DEC', relLabel:'Dec W1', season:'fall' },
     { key:'dec-10', label:'Dec 10–12',  month:null,       relLabel:'Dec W2', season:'fall' },
-        { key:'jan-7',  label:'Jan 7–9',   month:'January',  relLabel:'Jan W1' },
+        { key:'jan-7',  label:'Jan 7–9',   month:'JAN',  relLabel:'Jan W1' },
     { key:'jan-14', label:'Jan 14–16', month:null,     relLabel:'Jan W2', marker:{text:'MLK Jan 17', cls:'mlk'} },
     { key:'jan-21', label:'Jan 21–23', month:null,     relLabel:'Jan W3', afterMlk:true },
     { key:'jan-28', label:'Jan 28–30', month:null,     relLabel:'Jan W4' },
-    { key:'feb-4',  label:'Feb 4–6',   month:'February', relLabel:'Feb W1' },
+    { key:'feb-4',  label:'Feb 4–6',   month:'FEB', relLabel:'Feb W1' },
     { key:'feb-11', label:'Feb 11–13', month:null,     relLabel:'Feb W2' },
-    { key:'feb-18', label:'Feb 18–20', month:null,     relLabel:'Feb W3', marker:{text:'Pres. Feb 21', cls:'pday'} },
+    { key:'feb-18', label:'Feb 18–20', month:null,     relLabel:'Feb W3', presDay:true, marker:{text:'Pres. Feb 21', cls:'pday'} },
     { key:'feb-25', label:'Feb 25–27', month:null,     relLabel:'Feb W4', lastFeb:true },
-    { key:'mar-3',  label:'Mar 3–5',   month:'March',    relLabel:'Mar W1' },
+    { key:'mar-3',  label:'Mar 3–5',   month:'MAR',    relLabel:'Mar W1' },
     { key:'mar-10', label:'Mar 10–12', month:null,     relLabel:'Mar W2' },
     { key:'mar-17', label:'Mar 17–19', month:null,     relLabel:'Mar W3' },
     { key:'mar-24', label:'Mar 24–26', month:null,     relLabel:'Mar W4' },
   ]},
   '2028-29': { weekends: [
-    { key:'oct-6',  label:'Oct 6–8',    month:'October',  relLabel:'Oct W1', season:'fall', marker:{text:'Columbus Oct 9', cls:'columbus'} },
+    { key:'oct-6',  label:'Oct 6–8',    month:'OCT',  relLabel:'Oct W1', season:'fall', marker:{text:'Columbus Oct 9', cls:'columbus'} },
     { key:'oct-13', label:'Oct 13–15',  month:null,       relLabel:'Oct W2', season:'fall' },
     { key:'oct-20', label:'Oct 20–22',  month:null,       relLabel:'Oct W3', season:'fall' },
     { key:'oct-27', label:'Oct 27–29',  month:null,       relLabel:'Oct W4', season:'fall' },
-    { key:'nov-3',  label:'Nov 3–5',    month:'November', relLabel:'Nov W1', season:'fall' },
+    { key:'nov-3',  label:'Nov 3–5',    month:'NOV', relLabel:'Nov W1', season:'fall' },
     { key:'nov-10', label:'Nov 10–12',  month:null,       relLabel:'Nov W2', season:'fall' },
     { key:'nov-17', label:'Nov 17–19',  month:null,       relLabel:'Nov W3', season:'fall' },
     { key:'nov-24', label:'Nov 24–26',  month:null,       relLabel:'Nov W4', season:'fall', marker:{text:'Thanksgiving Nov 23', cls:'tgiving'} },
-    { key:'dec-1',  label:'Dec 1–3',    month:'December', relLabel:'Dec W1', season:'fall' },
+    { key:'dec-1',  label:'Dec 1–3',    month:'DEC', relLabel:'Dec W1', season:'fall' },
     { key:'dec-8',  label:'Dec 8–10',   month:null,       relLabel:'Dec W2', season:'fall' },
-        { key:'jan-5',  label:'Jan 5–7',   month:'January',  relLabel:'Jan W1' },
+        { key:'jan-5',  label:'Jan 5–7',   month:'JAN',  relLabel:'Jan W1' },
     { key:'jan-12', label:'Jan 12–14', month:null,     relLabel:'Jan W2', marker:{text:'MLK Jan 15', cls:'mlk'} },
     { key:'jan-19', label:'Jan 19–21', month:null,     relLabel:'Jan W3', afterMlk:true },
     { key:'jan-26', label:'Jan 26–28', month:null,     relLabel:'Jan W4' },
-    { key:'feb-2',  label:'Feb 2–4',   month:'February', relLabel:'Feb W1' },
+    { key:'feb-2',  label:'Feb 2–4',   month:'FEB', relLabel:'Feb W1' },
     { key:'feb-9',  label:'Feb 9–11',  month:null,     relLabel:'Feb W2' },
-    { key:'feb-16', label:'Feb 16–18', month:null,     relLabel:'Feb W3', marker:{text:'Pres. Feb 19', cls:'pday'} },
+    { key:'feb-16', label:'Feb 16–18', month:null,     relLabel:'Feb W3', presDay:true, marker:{text:'Pres. Feb 19', cls:'pday'} },
     { key:'feb-23', label:'Feb 23–25', month:null,     relLabel:'Feb W4', lastFeb:true },
-    { key:'mar-2',  label:'Mar 2–4',   month:'March',    relLabel:'Mar W1' },
+    { key:'mar-2',  label:'Mar 2–4',   month:'MAR',    relLabel:'Mar W1' },
     { key:'mar-9',  label:'Mar 9–11',  month:null,     relLabel:'Mar W2' },
     { key:'mar-16', label:'Mar 16–18', month:null,     relLabel:'Mar W3' },
     { key:'mar-23', label:'Mar 23–25', month:null,     relLabel:'Mar W4' },
   ]},
   '2029-30': { weekends: [
-    { key:'oct-5',  label:'Oct 5–7',    month:'October',  relLabel:'Oct W1', season:'fall', marker:{text:'Columbus Oct 8', cls:'columbus'} },
+    { key:'oct-5',  label:'Oct 5–7',    month:'OCT',  relLabel:'Oct W1', season:'fall', marker:{text:'Columbus Oct 8', cls:'columbus'} },
     { key:'oct-12', label:'Oct 12–14',  month:null,       relLabel:'Oct W2', season:'fall' },
     { key:'oct-19', label:'Oct 19–21',  month:null,       relLabel:'Oct W3', season:'fall' },
     { key:'oct-26', label:'Oct 26–28',  month:null,       relLabel:'Oct W4', season:'fall' },
-    { key:'nov-2',  label:'Nov 2–4',    month:'November', relLabel:'Nov W1', season:'fall' },
+    { key:'nov-2',  label:'Nov 2–4',    month:'NOV', relLabel:'Nov W1', season:'fall' },
     { key:'nov-9',  label:'Nov 9–11',   month:null,       relLabel:'Nov W2', season:'fall' },
     { key:'nov-16', label:'Nov 16–18',  month:null,       relLabel:'Nov W3', season:'fall' },
     { key:'nov-23', label:'Nov 23–25',  month:null,       relLabel:'Nov W4', season:'fall', marker:{text:'Thanksgiving Nov 22', cls:'tgiving'} },
     { key:'nov-30', label:'Nov 30–Dec 2', month:null,     relLabel:'Nov W5', season:'fall' },
-    { key:'dec-7',  label:'Dec 7–9',    month:'December', relLabel:'Dec W1', season:'fall' },
-        { key:'jan-4',  label:'Jan 4–6',   month:'January',  relLabel:'Jan W1' },
+    { key:'dec-7',  label:'Dec 7–9',    month:'DEC', relLabel:'Dec W1', season:'fall' },
+        { key:'jan-4',  label:'Jan 4–6',   month:'JAN',  relLabel:'Jan W1' },
     { key:'jan-11', label:'Jan 11–13', month:null,     relLabel:'Jan W2' },
     { key:'jan-18', label:'Jan 18–20', month:null,     relLabel:'Jan W3', marker:{text:'MLK Jan 21', cls:'mlk'} },
     { key:'jan-25', label:'Jan 25–27', month:null,     relLabel:'Jan W4', afterMlk:true },
-    { key:'feb-1',  label:'Feb 1–3',   month:'February', relLabel:'Feb W1' },
+    { key:'feb-1',  label:'Feb 1–3',   month:'FEB', relLabel:'Feb W1' },
     { key:'feb-8',  label:'Feb 8–10',  month:null,     relLabel:'Feb W2' },
-    { key:'feb-15', label:'Feb 15–17', month:null,     relLabel:'Feb W3', marker:{text:'Pres. Feb 18', cls:'pday'} },
+    { key:'feb-15', label:'Feb 15–17', month:null,     relLabel:'Feb W3', presDay:true, marker:{text:'Pres. Feb 18', cls:'pday'} },
     { key:'feb-22', label:'Feb 22–24', month:null,     relLabel:'Feb W4', lastFeb:true },
-    { key:'mar-1',  label:'Mar 1–3',   month:'March',    relLabel:'Mar W1' },
+    { key:'mar-1',  label:'Mar 1–3',   month:'MAR',    relLabel:'Mar W1' },
     { key:'mar-8',  label:'Mar 8–10',  month:null,     relLabel:'Mar W2' },
     { key:'mar-15', label:'Mar 15–17', month:null,     relLabel:'Mar W3' },
     { key:'mar-22', label:'Mar 22–24', month:null,     relLabel:'Mar W4' },
@@ -1868,7 +1868,7 @@ const masterPlacements = {};
 const masterRules = {};
 ALL_YEARS.forEach(y => {
   masterPlacements[y] = {};
-  masterRules[y] = { keepIndividuals: false, keepHsNationals: false };
+  masterRules[y] = { keepIndividuals: false, keepHsNationals: false, keepConfChamps: false };
 });
 
 // currentPlacements[year][weekendKey] = [eventId, ...] — existing/baseline calendar
@@ -1886,15 +1886,15 @@ ALL_YEARS.forEach(y => { scenarioLabels[y] = ['Option A','Option B','Option C'];
 const scenarioRules = {};
 ALL_YEARS.forEach(yr => {
   scenarioRules[yr] = [
-    { keepIndividuals: false, keepHsNationals: false },
-    { keepIndividuals: false, keepHsNationals: false },
-    { keepIndividuals: false, keepHsNationals: false },
+    { keepIndividuals: false, keepHsNationals: false, keepConfChamps: false },
+    { keepIndividuals: false, keepHsNationals: false, keepConfChamps: false },
+    { keepIndividuals: false, keepHsNationals: false, keepConfChamps: false },
   ];
 });
 // Per-year rules for across-years mode
 const crossRules = {};
 ALL_YEARS.forEach(yr => {
-  crossRules[yr] = { keepIndividuals: false, keepHsNationals: false };
+  crossRules[yr] = { keepIndividuals: false, keepHsNationals: false, keepConfChamps: false };
 });
 
 const appState = {
@@ -1946,11 +1946,17 @@ function getLastFebKey(year) {
   return w ? w.key : null;
 }
 
+function getPresDayKey(year) {
+  const w = yearData[year].weekends.find(w => w.presDay);
+  return w ? w.key : null;
+}
+
 /** Returns set of event IDs that are locked (placed by rule) for a given year and ruleObj */
 function getLockedSet(year, ruleObj) {
   const s = new Set();
   if (ruleObj.keepIndividuals) s.add('individuals');
   if (ruleObj.keepHsNationals) s.add('hs-nationals');
+  if (ruleObj.keepConfChamps) s.add('conf-champs');
   return s;
 }
 
@@ -1965,6 +1971,10 @@ function getLockedMap(year, ruleObj) {
     const key = getLastFebKey(year);
     if (key) m['hs-nationals'] = key;
   }
+  if (ruleObj.keepConfChamps) {
+    const key = getPresDayKey(year);
+    if (key) m['conf-champs'] = key;
+  }
   return m;
 }
 
@@ -1972,7 +1982,7 @@ function getLockedMap(year, ruleObj) {
 function getScenarioRuleObj(year, colIndex, mode) {
   if (mode === 'across') return crossRules[year];
   if (mode === 'master') return masterRules[year];
-  return scenarioRules[year][colIndex] || { keepIndividuals: false, keepHsNationals: false };
+  return scenarioRules[year][colIndex] || { keepIndividuals: false, keepHsNationals: false, keepConfChamps: false };
 }
 
 /** Apply rules: force locked events into their required weekends for a year */
@@ -2401,6 +2411,7 @@ function buildColHeader({ colIndex, renderPos, label, onLabelChange, year, place
     const ruleDefs = [
       { key: 'keepIndividuals', label: 'Keep Individuals' },
       { key: 'keepHsNationals', label: 'Keep HS Nationals' },
+      { key: 'keepConfChamps',  label: 'Keep Conf. Champs' },
     ];
 
     ruleDefs.forEach(({ key, label: ruleLabel }) =>{
@@ -2420,7 +2431,7 @@ function buildColHeader({ colIndex, renderPos, label, onLabelChange, year, place
 
         // If turning OFF, scrub that event from this column's placements
         if (!ruleObj[key]) {
-          const evId = key === 'keepIndividuals' ? 'individuals' : 'hs-nationals';
+          const evId = key === 'keepIndividuals' ? 'individuals' : key === 'keepHsNationals' ? 'hs-nationals' : 'conf-champs';
           if (mode === 'within') {
             Object.keys(placements[year][colIndex]).forEach(k => {
               placements[year][colIndex][k] = (placements[year][colIndex][k] || []).filter(x => x !== evId);
@@ -2507,7 +2518,7 @@ function renderAcrossYearsCalendar(cal) {
   relRows.forEach(relLabel => {
     // Determine month from first word of relLabel
     const month = relLabel.split(' ')[0]; // "Jan","Feb", "Mar"
-    const fullMonth = { Jan: 'January', Feb: 'February', Mar: 'March', Oct: 'October', Nov: 'November', Dec: 'December' }[month] || month;
+    const fullMonth = { Jan: 'JAN', Feb: 'FEB', Mar: 'MAR', Oct: 'OCT', Nov: 'NOV', Dec: 'DEC' }[month] || month;
 
     // Season filter: skip rows where all years' weekends fall outside current filter
     const anyMatch = appState.acrossYears.some(yr => {
@@ -2517,7 +2528,7 @@ function renderAcrossYearsCalendar(cal) {
     if (!anyMatch) return;
 
     if (fullMonth !== lastMonth) {
-      cal.appendChild(makeMonthHeader(fullMonth));
+      cal.appendChild(makeMonthHeader(fullMonth, appState.acrossYears));
       lastMonth = fullMonth;
     }
 
@@ -2530,14 +2541,8 @@ function renderAcrossYearsCalendar(cal) {
     lbl.className = 'wknd-label';
     // relLabel is e.g. "Jan W1" — split into month+ week number
     const relParts = relLabel.split(' '); // ["Jan", "W1"]
-    const relMonth = document.createElement('div');
-    relMonth.className = 'wknd-month';
-    relMonth.textContent = relParts[0];
-    lbl.appendChild(relMonth);
-
     const dateDiv = document.createElement('div');
     dateDiv.className = 'wknd-date';
-    dateDiv.style.fontSize = '13pt'; // slightly smaller for "W1" vs date numbers
     dateDiv.textContent = relParts[1] || relLabel;
     lbl.appendChild(dateDiv);
 
@@ -2577,10 +2582,34 @@ function renderAcrossYearsCalendar(cal) {
   });
 }
 
-function makeMonthHeader(text) {
+function makeMonthHeader(text, years) {
   const mh = document.createElement('div');
-  mh.className = 'month-header';
-  mh.dataset.month = text;
+  if (years && years.length) {
+    // Use weekend-row layout instead of month-header to match column alignment exactly
+    mh.className = 'weekend-row';
+    mh.style.cssText = 'background:var(--navy);position:sticky;top:0;z-index:2;box-shadow:0 3px 12px rgba(0,0,0,0.4);min-height:auto;border-bottom:1px solid rgba(255,255,255,0.05);';
+    const lbl = document.createElement('div');
+    lbl.className = 'wknd-label';
+    lbl.style.cssText = 'background:var(--navy);border-right-color:rgba(255,255,255,0.08);padding:10px 12px;';
+    const monthText = document.createElement('div');
+    monthText.style.cssText = 'font-family:"Bebas Neue",sans-serif;font-size:32pt;line-height:1;letter-spacing:3pt;color:white;';
+    monthText.textContent = text;
+    lbl.appendChild(monthText);
+    mh.appendChild(lbl);
+    years.forEach(yr => {
+      const col = document.createElement('div');
+      col.className = 'drop-zone';
+      col.style.cssText = 'background:var(--navy);border-right-color:rgba(255,255,255,0.08);min-height:auto;justify-content:center;align-items:center;padding:10px 9px;';
+      const yl = document.createElement('span');
+      yl.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:1.1vw;font-weight:600;color:var(--accent);letter-spacing:1.5pt;';
+      yl.textContent = yr.replace('-', '–');
+      col.appendChild(yl);
+      mh.appendChild(col);
+    });
+  } else {
+    mh.className = 'month-header';
+    mh.dataset.month = text;
+  }
   return mh;
 }
 
@@ -2641,6 +2670,9 @@ function makeDropZone(evIds, colIndex, wknd, year, lockedSet, presenting, across
     }
     if (wknd.afterMlk && lockedSet.has('individuals')) {
       sub.textContent += ' \u21D2 Indiv.';
+    }
+    if (wknd.presDay && lockedSet.has('conf-champs')) {
+      sub.textContent += ' \u21D2 Conf.';
     }
     zone.appendChild(sub);
   }
@@ -2813,7 +2845,10 @@ function loadSavedVariation(sv) {
     }
   } else {
     crossPlacements[sv.year] = deepCopy(sv.placements);
-    if (!appState.acrossYears.includes(sv.year)) appState.acrossYears.push(sv.year);
+    if (!appState.acrossYears.includes(sv.year)) {
+      appState.acrossYears.push(sv.year);
+      appState.acrossYears.sort();
+    }
     if (appState.mode !== 'across') setMode('across');
     document.querySelectorAll('.year-pill').forEach(p => {
       p.classList.toggle('active', appState.acrossYears.includes(p.dataset.year));
@@ -3064,7 +3099,7 @@ function renderMasterCalendar(cal) {
 
   relRows.forEach(relLabel => {
     const month = relLabel.split(' ')[0];
-    const fullMonth = { Jan: 'January', Feb: 'February', Mar: 'March', Oct: 'October', Nov: 'November', Dec: 'December' }[month] || month;
+    const fullMonth = { Jan: 'JAN', Feb: 'FEB', Mar: 'MAR', Oct: 'OCT', Nov: 'NOV', Dec: 'DEC' }[month] || month;
     // Season filter
     const anyMatchM = ALL_YEARS.some(yr => {
       const w = yearData[yr].weekends.find(x => x.relLabel === relLabel);
@@ -3072,7 +3107,7 @@ function renderMasterCalendar(cal) {
     });
     if (!anyMatchM) return;
     if (fullMonth !== lastMonth) {
-      cal.appendChild(makeMonthHeader(fullMonth));
+      cal.appendChild(makeMonthHeader(fullMonth, ALL_YEARS));
       lastMonth = fullMonth;
     }
 
@@ -3397,6 +3432,7 @@ document.querySelectorAll('.year-pill').forEach(pill => {
       // Add, max 4
       if (appState.acrossYears.length < 4) {
         appState.acrossYears.push(yr);
+        appState.acrossYears.sort();
         pill.classList.add('active');
       }
     } else {
