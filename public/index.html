@@ -227,8 +227,8 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 
 /* chip bank */
 .scenario-chip-bank {
-  display: flex; flex-wrap: wrap; gap: 5px;
-  padding: 4px 0; align-items: flex-start;
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 6px 0; align-items: flex-start;
 }
 .bank-section-divider { width: 100%; height: 0; margin: 2px 0; }
 .bank-drop-target {
@@ -242,10 +242,10 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 
 /* ── CHIPS ───────────────────────────────────────────────────────────────────── */
 .chip {
-  display: inline-flex; align-items: center; gap: 5px;
+  display: inline-flex; align-items: center; gap: 6px;
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 9pt; font-weight: 500;
-  padding: 5px 11px 5px 8px; border-radius: var(--radius-chip);
+  font-size: 12pt; font-weight: 500;
+  padding: 7px 15px 7px 11px; border-radius: var(--radius-chip);
   cursor: grab; user-select: none;
   transition: opacity 0.12s, transform 0.1s, box-shadow 0.1s;
   line-height: 1.3; white-space: nowrap;
@@ -258,7 +258,7 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 .chip.ivy { background: #1B4332; color: white; border: none; border-left: 4px solid #52B788; }
 .chip-org {
   font-family: 'Barlow Condensed', sans-serif;
-  font-size: 7pt; font-weight: 500; letter-spacing: 1pt;
+  font-size: 9pt; font-weight: 500; letter-spacing: 1pt;
   opacity: 0.52; text-transform: uppercase; margin-right: 4px; flex-shrink: 0;
 }
 .chip.locked {
@@ -2457,7 +2457,7 @@ function buildColHeader({ colIndex, renderPos, label, onLabelChange, year, place
 
       if (csaEvents.length) {
         const lbl = document.createElement('div');
-        lbl.style.cssText = 'font-size:5.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-bottom:1px;';
+        lbl.style.cssText = 'font-size:7.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-bottom:3px;';
         lbl.textContent = 'CSA';
         bank.appendChild(lbl);
         csaEvents.forEach(ev => {
@@ -2469,7 +2469,7 @@ function buildColHeader({ colIndex, renderPos, label, onLabelChange, year, place
 
       if (ivyEvents.length) {
         const lbl = document.createElement('div');
-        lbl.style.cssText = 'font-size:5.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-top:4px;margin-bottom:1px;';
+        lbl.style.cssText = 'font-size:7.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-top:6px;margin-bottom:3px;';
         lbl.textContent = 'IVY';
         bank.appendChild(lbl);
         ivyEvents.forEach(ev => {
@@ -2481,7 +2481,7 @@ function buildColHeader({ colIndex, renderPos, label, onLabelChange, year, place
 
       if (usEvents.length) {
         const lbl = document.createElement('div');
-        lbl.style.cssText = 'font-size:5.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-top:4px;margin-bottom:1px;';
+        lbl.style.cssText = 'font-size:7.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-top:6px;margin-bottom:3px;';
         lbl.textContent = 'US SQUASH';
         bank.appendChild(lbl);
         usEvents.forEach(ev => {
@@ -3506,66 +3506,167 @@ document.querySelectorAll('.season-btn').forEach(btn => {
 });
 
 // Summary popup
+function renderSummaryChips(evIds, container) {
+  if (evIds.length === 0) {
+    const empty = document.createElement('span');
+    empty.className = 'summary-row-empty';
+    empty.textContent = '—';
+    container.appendChild(empty);
+  } else {
+    evIds.forEach(id => {
+      const ev = evById(id);
+      if (!ev) return;
+      const chip = document.createElement('span');
+      chip.className = 'summary-chip ' + (ev.type || 'custom');
+      chip.textContent = ev.name;
+      container.appendChild(chip);
+    });
+  }
+}
+
 document.getElementById('btn-summary').addEventListener('click', () => {
   const season = appState.seasonFilter;
   if (season === 'full') return;
-
-  const yr = appState.withinYear;
-  const data = yearData[yr];
-  const scenIdx = appState.expandedCol !== null ? appState.expandedCol : 0;
   const seasonLabel = season === 'fall' ? 'Fall' : 'Spring';
-
-  document.getElementById('summary-title').textContent = yr.replace('-', '–');
-  document.getElementById('summary-sub').textContent = seasonLabel + ' Season  ·  ' + (scenarioLabels[yr][scenIdx] || 'Scenario ' + (scenIdx + 1));
-
   const body = document.getElementById('summary-body');
   body.innerHTML = '';
 
-  const weekends = data.weekends.filter(w => {
-    if (season === 'fall') return w.season === 'fall';
-    return !w.season;
-  });
+  if (appState.mode === 'across') {
+    // ── Multi-year summary ──
+    const years = appState.acrossYears;
+    document.getElementById('summary-title').textContent = seasonLabel + ' Season';
+    document.getElementById('summary-sub').textContent = years.map(y => y.replace('-', '–')).join('  ·  ');
 
-  const p = placements[yr][scenIdx];
+    // Header row with year labels
+    const hdr = document.createElement('div');
+    hdr.className = 'summary-row';
+    hdr.style.cssText = 'flex:0;background:var(--navy);border-radius:6px;margin-bottom:8px;';
+    const hdrLabel = document.createElement('div');
+    hdrLabel.className = 'summary-row-date';
+    hdrLabel.style.color = 'rgba(255,255,255,0.4)';
+    hdrLabel.textContent = 'Weekend';
+    hdr.appendChild(hdrLabel);
+    years.forEach(yr => {
+      const col = document.createElement('div');
+      col.className = 'summary-row-events';
+      col.style.cssText = 'justify-content:center;';
+      const lbl = document.createElement('span');
+      lbl.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:14pt;font-weight:700;color:var(--accent);letter-spacing:1pt;';
+      lbl.textContent = yr.replace('-', '–');
+      col.appendChild(lbl);
+      hdr.appendChild(col);
+    });
+    body.appendChild(hdr);
 
-  weekends.forEach(wknd => {
-    const row = document.createElement('div');
-    row.className = 'summary-row';
-
-    const dateEl = document.createElement('div');
-    dateEl.className = 'summary-row-date';
-    dateEl.textContent = wknd.label;
-    if (wknd.marker) {
-      const m = document.createElement('span');
-      m.className = 'summary-marker';
-      m.textContent = ' · ' + wknd.marker.text;
-      dateEl.appendChild(m);
-    }
-    row.appendChild(dateEl);
-
-    const evWrap = document.createElement('div');
-    evWrap.className = 'summary-row-events';
-    const evIds = (p[wknd.key] || []).filter(Boolean);
-
-    if (evIds.length === 0) {
-      const empty = document.createElement('span');
-      empty.className = 'summary-row-empty';
-      empty.textContent = '—';
-      evWrap.appendChild(empty);
-    } else {
-      evIds.forEach(id => {
-        const ev = evById(id);
-        if (!ev) return;
-        const chip = document.createElement('span');
-        chip.className = 'summary-chip ' + (ev.type || 'custom');
-        chip.textContent = ev.name;
-        evWrap.appendChild(chip);
+    // Build rows from relative labels
+    const relRows = getRelativeWeekendRows();
+    relRows.forEach(relLabel => {
+      const anyMatch = years.some(yr => {
+        const w = yearData[yr].weekends.find(x => x.relLabel === relLabel);
+        return w && weekendMatchesSeason(w);
       });
+      if (!anyMatch) return;
+
+      const row = document.createElement('div');
+      row.className = 'summary-row';
+
+      const dateEl = document.createElement('div');
+      dateEl.className = 'summary-row-date';
+      dateEl.textContent = relLabel;
+      row.appendChild(dateEl);
+
+      years.forEach(yr => {
+        const wknd = yearData[yr].weekends.find(w => w.relLabel === relLabel);
+        const col = document.createElement('div');
+        col.className = 'summary-row-events';
+
+        if (!wknd) {
+          const na = document.createElement('span');
+          na.className = 'summary-row-empty';
+          na.textContent = '—';
+          col.appendChild(na);
+        } else {
+          // Show actual date as small label
+          const dateSub = document.createElement('span');
+          dateSub.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:9pt;color:#aaa;margin-right:8px;min-width:65px;flex-shrink:0;';
+          dateSub.textContent = wknd.label;
+          if (wknd.marker) dateSub.textContent += ' · ' + wknd.marker.text;
+          col.appendChild(dateSub);
+
+          const evIds = (crossPlacements[yr][wknd.key] || []).filter(Boolean);
+          renderSummaryChips(evIds, col);
+        }
+
+        row.appendChild(col);
+      });
+
+      body.appendChild(row);
+    });
+
+  } else {
+    // ── Within-year summary ──
+    const yr = appState.withinYear;
+    const data = yearData[yr];
+    const count = appState.expandedCol !== null ? 1 : appState.scenarioCount;
+    const idxList = appState.expandedCol !== null ? [appState.expandedCol] : Array.from({length: count}, (_, i) => i);
+
+    document.getElementById('summary-title').textContent = yr.replace('-', '–');
+    document.getElementById('summary-sub').textContent = seasonLabel + ' Season' + (count > 1 ? '  ·  ' + idxList.map(i => scenarioLabels[yr][i] || 'Scenario ' + (i+1)).join(' / ') : '  ·  ' + (scenarioLabels[yr][idxList[0]] || 'Scenario 1'));
+
+    const weekends = data.weekends.filter(w => {
+      if (season === 'fall') return w.season === 'fall';
+      return !w.season;
+    });
+
+    // If multiple scenarios, show column headers
+    if (count > 1) {
+      const hdr = document.createElement('div');
+      hdr.className = 'summary-row';
+      hdr.style.cssText = 'flex:0;background:var(--navy);border-radius:6px;margin-bottom:8px;';
+      const hdrLabel = document.createElement('div');
+      hdrLabel.className = 'summary-row-date';
+      hdrLabel.style.color = 'rgba(255,255,255,0.4)';
+      hdrLabel.textContent = 'Weekend';
+      hdr.appendChild(hdrLabel);
+      idxList.forEach(i => {
+        const col = document.createElement('div');
+        col.className = 'summary-row-events';
+        col.style.cssText = 'justify-content:center;';
+        const lbl = document.createElement('span');
+        lbl.style.cssText = 'font-family:"Barlow Condensed",sans-serif;font-size:14pt;font-weight:700;color:var(--accent);letter-spacing:1pt;';
+        lbl.textContent = scenarioLabels[yr][i] || 'Scenario ' + (i+1);
+        col.appendChild(lbl);
+        hdr.appendChild(col);
+      });
+      body.appendChild(hdr);
     }
 
-    row.appendChild(evWrap);
-    body.appendChild(row);
-  });
+    weekends.forEach(wknd => {
+      const row = document.createElement('div');
+      row.className = 'summary-row';
+
+      const dateEl = document.createElement('div');
+      dateEl.className = 'summary-row-date';
+      dateEl.textContent = wknd.label;
+      if (wknd.marker) {
+        const m = document.createElement('span');
+        m.className = 'summary-marker';
+        m.textContent = ' · ' + wknd.marker.text;
+        dateEl.appendChild(m);
+      }
+      row.appendChild(dateEl);
+
+      idxList.forEach(scenIdx => {
+        const evWrap = document.createElement('div');
+        evWrap.className = 'summary-row-events';
+        const evIds = (placements[yr][scenIdx][wknd.key] || []).filter(Boolean);
+        renderSummaryChips(evIds, evWrap);
+        row.appendChild(evWrap);
+      });
+
+      body.appendChild(row);
+    });
+  }
 
   document.getElementById('summary-backdrop').classList.add('open');
 });
