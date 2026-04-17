@@ -255,6 +255,7 @@ body.is-fullscreen .btn-fullscreen { color: var(--accent); border-color: var(--a
 .chip.dragging { opacity: 0.22; }
 .chip.csa { background: var(--navy); color: white; border: none; border-left: 4px solid var(--accent); }
 .chip.us  { background: #8B1F17; color: white; border: none; border-left: 4px solid #E84C3F; }
+.chip.ivy { background: #1B4332; color: white; border: none; border-left: 4px solid #52B788; }
 .chip-org {
   font-family: 'Barlow Condensed', sans-serif;
   font-size: 7pt; font-weight: 500; letter-spacing: 1pt;
@@ -646,6 +647,71 @@ body.presenting .exit-present-btn { display: block; }
   background: transparent; color: #aaa; cursor: pointer; transition: all 0.12s;
 }
 .reset-cancel-btn:hover { color: var(--navy); border-color: #aaa; }
+
+/* ── SUMMARY MODAL ────────────────────────────────────────────────────────── */
+.summary-backdrop {
+  display: none; position: fixed; inset: 0; z-index: 500;
+  background: rgba(0,0,0,0.55); align-items: center; justify-content: center;
+}
+.summary-backdrop.open { display: flex; }
+.summary-modal {
+  background: var(--bg); border-radius: 14px; padding: 0;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4); width: 98vw; max-width: none; height: 98vh;
+  display: flex; flex-direction: column; overflow: hidden;
+}
+.summary-header {
+  background: var(--navy); padding: 18px 24px 14px;
+  border-bottom: 3px solid var(--accent);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.summary-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24pt; color: white; letter-spacing: 2pt; line-height: 1;
+}
+.summary-sub {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 9pt; color: var(--accent); letter-spacing: 1pt; font-weight: 600;
+}
+.summary-close {
+  background: none; border: none; color: rgba(255,255,255,0.5); font-size: 22pt;
+  cursor: pointer; line-height: 1; padding: 0 4px;
+}
+.summary-close:hover { color: white; }
+.summary-body {
+  overflow-y: auto; padding: 16px 24px 24px; flex: 1;
+  display: flex; flex-direction: column;
+}
+.summary-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  flex: 1;
+}
+.summary-row:last-child { border-bottom: none; }
+.summary-row-date {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16pt; font-weight: 600; color: var(--navy);
+  min-width: 160px; flex-shrink: 0;
+}
+.summary-row-events {
+  display: flex; flex-wrap: wrap; gap: 6px; flex: 1;
+}
+.summary-chip {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14pt; font-weight: 700; letter-spacing: 0.2pt;
+  padding: 8px 18px; border-radius: 5px;
+}
+.summary-chip.csa { background: var(--navy); color: white; border-left: 3px solid var(--accent); }
+.summary-chip.us { background: #8B1F17; color: white; border-left: 3px solid #d44; }
+.summary-chip.ivy { background: #1B4332; color: white; border-left: 3px solid #52B788; }
+.summary-chip.custom { background: #2a6b3c; color: white; border-left: 3px solid #4a9; }
+.summary-row-empty {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 13pt; color: #ccc; font-style: italic;
+}
+.summary-marker {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 11pt; color: #999; margin-left: 6px; font-weight: 500;
+}
 
 /* ── VAULT ─────────────────────────────────────────────────────────────────── */
 .vault-year-section { margin-bottom: 14px; }
@@ -1089,6 +1155,7 @@ body.presenting .exit-present-btn { display: block; }
       <button class="season-btn active" data-season="full">Full</button>
       <button class="season-btn" data-season="spring">Spring</button>
     </div>
+    <button class="btn-small" id="btn-summary" style="display:none;margin-left:6px;">Summary</button>
   </div>
   <div class="bar-divider"></div>
   <!-- Mode -->
@@ -1149,6 +1216,20 @@ body.presenting .exit-present-btn { display: block; }
     <div class="reset-modal-sub" id="reset-modal-sub">Select a scenario to clear all placements</div>
     <div class="reset-modal-btns" id="reset-modal-btns"></div>
     <button class="reset-cancel-btn" id="reset-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- Summary modal -->
+<div class="summary-backdrop" id="summary-backdrop">
+  <div class="summary-modal">
+    <div class="summary-header">
+      <div>
+        <div class="summary-title" id="summary-title">Season Summary</div>
+        <div class="summary-sub" id="summary-sub"></div>
+      </div>
+      <button class="summary-close" id="summary-close">×</button>
+    </div>
+    <div class="summary-body" id="summary-body"></div>
   </div>
 </div>
 
@@ -1729,11 +1810,11 @@ initAuth();
 const ALL_EVENTS = [
   { id: 'individuals', name: 'Individual Championships',  type: 'csa' },
   { id: 'club-champs', name: 'Club Championships',      type: 'csa', location: 'Specter' },
-  { id: 'ivy-champs',  name: 'Ivy Championships',      type: 'csa' },
-  { id: 'ivy-wknd-1',  name: 'Ivy Weekend 1',     type: 'csa' },
-  { id: 'ivy-wknd-2',  name: 'Ivy Weekend 2',     type: 'csa' },
-  { id: 'ivy-split',   name: 'Ivy Split Weekend',     type: 'csa' },
-  { id: 'ivy-travel',  name: 'Ivy Travel Partner',     type: 'csa' },
+  { id: 'ivy-champs',  name: 'Ivy Championships',      type: 'ivy' },
+  { id: 'ivy-wknd-1',  name: 'Ivy Weekend 1',     type: 'ivy' },
+  { id: 'ivy-wknd-2',  name: 'Ivy Weekend 2',     type: 'ivy' },
+  { id: 'ivy-split',   name: 'Ivy Split Weekend',     type: 'ivy' },
+  { id: 'ivy-travel',  name: 'Ivy Travel Partner',     type: 'ivy' },
   { id: 'conf-champs', name: 'Conference Championships',  type: 'csa' },
   { id: 'divisionals', name: 'Divisional Championships',  type: 'csa', location: 'Specter' },
   { id: 'nationals',   name: 'National Championships',    type: 'csa' },
@@ -2062,7 +2143,7 @@ function makeChip(evId, opts = {}) {
   if (!opts.locked) {
     const badge = document.createElement('span');
     badge.className = 'chip-org';
-    badge.textContent = (ev && ev.type === 'us') ? 'USS' : 'CSA';
+    badge.textContent = ev ? (ev.type === 'us' ? 'USS' : ev.type === 'ivy' ? 'IVY' : 'CSA') : 'CSA';
     chip.appendChild(badge);
   }
 
@@ -2371,6 +2452,7 @@ function buildColHeader({ colIndex, renderPos, label, onLabelChange, year, place
       bank.appendChild(empty);
     } else {
       const csaEvents = available.filter(ev => ev.type === 'csa');
+      const ivyEvents = available.filter(ev => ev.type === 'ivy');
       const usEvents  = available.filter(ev => ev.type === 'us');
 
       if (csaEvents.length) {
@@ -2385,9 +2467,19 @@ function buildColHeader({ colIndex, renderPos, label, onLabelChange, year, place
         });
       }
 
+      if (ivyEvents.length) {
+        const lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:5.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-top:4px;margin-bottom:1px;';
+        lbl.textContent = 'IVY';
+        bank.appendChild(lbl);
+        ivyEvents.forEach(ev => {
+          const chip = makeChip(ev.id, { colIndex, year });
+          bindChipDrag(chip, colIndex, null, year);
+          bank.appendChild(chip);
+        });
+      }
+
       if (usEvents.length) {
-        if (csaEvents.length) {
-        }
         const lbl = document.createElement('div');
         lbl.style.cssText = 'font-size:5.5pt;font-weight:900;letter-spacing:1.5pt;text-transform:uppercase;color:#aaa;width:100%;margin-top:4px;margin-bottom:1px;';
         lbl.textContent = 'US SQUASH';
@@ -3408,8 +3500,81 @@ document.querySelectorAll('.season-btn').forEach(btn => {
     document.querySelectorAll('.season-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     appState.seasonFilter = btn.dataset.season;
+    document.getElementById('btn-summary').style.display = btn.dataset.season !== 'full' ? 'inline-flex' : 'none';
     renderAll();
   });
+});
+
+// Summary popup
+document.getElementById('btn-summary').addEventListener('click', () => {
+  const season = appState.seasonFilter;
+  if (season === 'full') return;
+
+  const yr = appState.withinYear;
+  const data = yearData[yr];
+  const scenIdx = appState.expandedCol !== null ? appState.expandedCol : 0;
+  const seasonLabel = season === 'fall' ? 'Fall' : 'Spring';
+
+  document.getElementById('summary-title').textContent = yr.replace('-', '–');
+  document.getElementById('summary-sub').textContent = seasonLabel + ' Season  ·  ' + (scenarioLabels[yr][scenIdx] || 'Scenario ' + (scenIdx + 1));
+
+  const body = document.getElementById('summary-body');
+  body.innerHTML = '';
+
+  const weekends = data.weekends.filter(w => {
+    if (season === 'fall') return w.season === 'fall';
+    return !w.season;
+  });
+
+  const p = placements[yr][scenIdx];
+
+  weekends.forEach(wknd => {
+    const row = document.createElement('div');
+    row.className = 'summary-row';
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'summary-row-date';
+    dateEl.textContent = wknd.label;
+    if (wknd.marker) {
+      const m = document.createElement('span');
+      m.className = 'summary-marker';
+      m.textContent = ' · ' + wknd.marker.text;
+      dateEl.appendChild(m);
+    }
+    row.appendChild(dateEl);
+
+    const evWrap = document.createElement('div');
+    evWrap.className = 'summary-row-events';
+    const evIds = (p[wknd.key] || []).filter(Boolean);
+
+    if (evIds.length === 0) {
+      const empty = document.createElement('span');
+      empty.className = 'summary-row-empty';
+      empty.textContent = '—';
+      evWrap.appendChild(empty);
+    } else {
+      evIds.forEach(id => {
+        const ev = evById(id);
+        if (!ev) return;
+        const chip = document.createElement('span');
+        chip.className = 'summary-chip ' + (ev.type || 'custom');
+        chip.textContent = ev.name;
+        evWrap.appendChild(chip);
+      });
+    }
+
+    row.appendChild(evWrap);
+    body.appendChild(row);
+  });
+
+  document.getElementById('summary-backdrop').classList.add('open');
+});
+
+document.getElementById('summary-close').addEventListener('click', () => {
+  document.getElementById('summary-backdrop').classList.remove('open');
+});
+document.getElementById('summary-backdrop').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('summary-backdrop').classList.remove('open');
 });
 
 // Within-year tab selection
