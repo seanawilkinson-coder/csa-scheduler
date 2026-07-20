@@ -62,7 +62,7 @@ const MAJORS_DATA = {
         { year: 2023, venue: 'Royal Liverpool (Hoylake)', winner: 'Brian Harman',      winningScore: -13, doubles: null, confirmed: false },
         { year: 2024, venue: 'Royal Troon',               winner: 'Xander Schauffele', winningScore:  -9, doubles: 300,  confirmed: true  },
         { year: 2025, venue: 'Royal Portrush',            winner: 'Scottie Scheffler', winningScore: -17, doubles: null, confirmed: false },
-        { year: 2026, venue: 'Royal Birkdale',            winner: 'Scottie Scheffler', winningScore: -17, doubles: null, confirmed: false },
+        { year: 2026, venue: 'Royal Birkdale',            winner: 'Ryan Fox',           winningScore: -10, doubles: null, confirmed: false },
       ],
     },
   ],
