@@ -1,39 +1,32 @@
 /**
- * Golf Majors Double Bogeys — 2022–2025
+ * Golf Majors Double Bogeys — 2022–2026
  *
- * Aggregates double bogeys (or worse) recorded by the full field
- * across the four major championships post-Covid.
+ * Tracks double bogeys (or worse) recorded by the full field
+ * across the four major championships, 2022 onwards.
  *
- * Two values are confirmed from published tournament statistics:
- *   - 2024 Masters: 176  (GolfPost / Today's Golfer)
- *   - 2024 Open Championship: 300  (Today's Golfer / R&A)
+ * confirmed: true  = figure sourced from a published post-tournament
+ *                    statistical report (R&A, USGA, PGA Tour, or major media)
+ * confirmed: false = figure NOT available; doubles is null
  *
- * All other values are estimated by fitting a per-round doubles rate
- * to those confirmed data points, using full-field scoring averages
- * published by the PGA Tour, USGA, and R&A. Field-size differences
- * are accounted for (Masters ≈89 players vs 156 for other majors).
- *
- * Scoring average sources:
- *   - Masters 2022 (+1.86), 2023 (+1.01), 2024 (+0.67), 2025 (+0.68) — PGA Tour
- *   - PGA Championship 2022 (+2.33), 2023 (+2.43), 2024 (≈−0.46), 2025 (+1.46) — PGA Tour
- *   - US Open 2022 (≈+3.0), 2023 (+1.38), 2024 (+2.78), 2025 (≈+3.5) — USGA
- *   - The Open 2022 (≈−0.15), 2023 (+1.43), 2024 (≈+2.5), 2025 (≈+1.5) — R&A
+ * Confirmed figures:
+ *   - 2024 Masters: 176  (Today's Golfer / GolfPost)
+ *   - 2024 Open Championship (Royal Troon): 300  (Today's Golfer / R&A)
  */
 
 const MAJORS_DATA = {
-  years: [2022, 2023, 2024, 2025],
+  years: [2022, 2023, 2024, 2025, 2026],
 
-  // confirmed: true = sourced from published data; false = estimated
   tournaments: [
     {
       name: 'The Masters',
       shortName: 'Masters',
       color: '#1A7A49',
       data: [
-        { year: 2022, venue: 'Augusta National',       winner: 'Scottie Scheffler', winningScore: -10, doubles: 185, confirmed: false },
-        { year: 2023, venue: 'Augusta National',       winner: 'Jon Rahm',          winningScore: -12, doubles: 179, confirmed: false },
-        { year: 2024, venue: 'Augusta National',       winner: 'Scottie Scheffler', winningScore: -11, doubles: 176, confirmed: true  },
-        { year: 2025, venue: 'Augusta National',       winner: 'Rory McIlroy',      winningScore: -11, doubles: 177, confirmed: false },
+        { year: 2022, venue: 'Augusta National',  winner: 'Scottie Scheffler', winningScore: -10, doubles: null, confirmed: false },
+        { year: 2023, venue: 'Augusta National',  winner: 'Jon Rahm',          winningScore: -12, doubles: null, confirmed: false },
+        { year: 2024, venue: 'Augusta National',  winner: 'Scottie Scheffler', winningScore: -11, doubles: 176,  confirmed: true  },
+        { year: 2025, venue: 'Augusta National',  winner: 'Rory McIlroy',      winningScore: -11, doubles: null, confirmed: false },
+        { year: 2026, venue: 'Augusta National',  winner: 'Rory McIlroy',      winningScore: -12, doubles: null, confirmed: false },
       ],
     },
     {
@@ -41,10 +34,11 @@ const MAJORS_DATA = {
       shortName: 'PGA',
       color: '#1C5AB5',
       data: [
-        { year: 2022, venue: 'Southern Hills CC',      winner: 'Justin Thomas',       winningScore:  -5, doubles: 280, confirmed: false },
-        { year: 2023, venue: 'Oak Hill CC',            winner: 'Brooks Koepka',       winningScore:  -9, doubles: 285, confirmed: false },
-        { year: 2024, venue: 'Valhalla GC',            winner: 'Xander Schauffele',   winningScore: -21, doubles: 195, confirmed: false },
-        { year: 2025, venue: 'Quail Hollow Club',      winner: 'Scottie Scheffler',   winningScore: -11, doubles: 225, confirmed: false },
+        { year: 2022, venue: 'Southern Hills CC',   winner: 'Justin Thomas',     winningScore:  -5, doubles: null, confirmed: false },
+        { year: 2023, venue: 'Oak Hill CC',          winner: 'Brooks Koepka',     winningScore:  -9, doubles: null, confirmed: false },
+        { year: 2024, venue: 'Valhalla GC',          winner: 'Xander Schauffele', winningScore: -21, doubles: null, confirmed: false },
+        { year: 2025, venue: 'Quail Hollow Club',    winner: 'Scottie Scheffler', winningScore: -11, doubles: null, confirmed: false },
+        { year: 2026, venue: 'Aronimink GC',         winner: 'Aaron Rai',         winningScore:  -9, doubles: null, confirmed: false },
       ],
     },
     {
@@ -52,10 +46,11 @@ const MAJORS_DATA = {
       shortName: 'US Open',
       color: '#C63038',
       data: [
-        { year: 2022, venue: 'The Country Club, Brookline', winner: 'Matt Fitzpatrick',    winningScore:  -6, doubles: 308, confirmed: false },
-        { year: 2023, venue: 'Los Angeles CC (North)',      winner: 'Wyndham Clark',       winningScore: -10, doubles: 260, confirmed: false },
-        { year: 2024, venue: 'Pinehurst No.2',              winner: 'Bryson DeChambeau',   winningScore:  -6, doubles: 319, confirmed: false },
-        { year: 2025, venue: 'Oakmont CC',                  winner: 'TBC',                 winningScore: null, doubles: 355, confirmed: false },
+        { year: 2022, venue: 'The Country Club, Brookline', winner: 'Matt Fitzpatrick',  winningScore:  -6, doubles: null, confirmed: false },
+        { year: 2023, venue: 'Los Angeles CC (North)',      winner: 'Wyndham Clark',     winningScore: -10, doubles: null, confirmed: false },
+        { year: 2024, venue: 'Pinehurst No. 2',             winner: 'Bryson DeChambeau', winningScore:  -6, doubles: null, confirmed: false },
+        { year: 2025, venue: 'Oakmont CC',                  winner: 'J.J. Spaun',        winningScore:  -1, doubles: null, confirmed: false },
+        { year: 2026, venue: 'Shinnecock Hills',            winner: 'Wyndham Clark',     winningScore:  -4, doubles: null, confirmed: false },
       ],
     },
     {
@@ -63,70 +58,71 @@ const MAJORS_DATA = {
       shortName: 'The Open',
       color: '#B8860E',
       data: [
-        { year: 2022, venue: 'St Andrews (Old Course)',   winner: 'Cameron Smith',       winningScore: -20, doubles: 115, confirmed: false },
-        { year: 2023, venue: 'Royal Liverpool (Hoylake)', winner: 'Brian Harman',        winningScore: -13, doubles: 240, confirmed: false },
-        { year: 2024, venue: 'Royal Troon',               winner: 'Xander Schauffele',   winningScore:  -9, doubles: 300, confirmed: true  },
-        { year: 2025, venue: 'Royal Portrush',            winner: 'Scottie Scheffler',   winningScore: null, doubles: 265, confirmed: false },
+        { year: 2022, venue: 'St Andrews (Old Course)',    winner: 'Cameron Smith',     winningScore: -20, doubles: null, confirmed: false },
+        { year: 2023, venue: 'Royal Liverpool (Hoylake)', winner: 'Brian Harman',      winningScore: -13, doubles: null, confirmed: false },
+        { year: 2024, venue: 'Royal Troon',               winner: 'Xander Schauffele', winningScore:  -9, doubles: 300,  confirmed: true  },
+        { year: 2025, venue: 'Royal Portrush',            winner: 'Scottie Scheffler', winningScore: -17, doubles: null, confirmed: false },
+        { year: 2026, venue: 'Royal Birkdale',            winner: 'Scottie Scheffler', winningScore: -17, doubles: null, confirmed: false },
       ],
     },
   ],
 };
 
 /**
- * Returns summary statistics across all years for a given major.
+ * Returns summary statistics for a major, using only confirmed data points.
  */
 function majorSummary(tournament) {
-  const vals = tournament.data.map(d => d.doubles);
+  const confirmed = tournament.data.filter(d => d.confirmed && d.doubles !== null);
+  if (!confirmed.length) return { name: tournament.name, avg: null, min: null, max: null, range: null, count: 0 };
+  const vals = confirmed.map(d => d.doubles);
   return {
-    name: tournament.name,
-    avg:  Math.round(vals.reduce((a, b) => a + b, 0) / vals.length),
-    min:  Math.min(...vals),
-    max:  Math.max(...vals),
+    name:  tournament.name,
+    avg:   Math.round(vals.reduce((a, b) => a + b, 0) / vals.length),
+    min:   Math.min(...vals),
+    max:   Math.max(...vals),
     range: Math.max(...vals) - Math.min(...vals),
+    count: vals.length,
   };
 }
 
 /**
- * Returns the most dramatic single championship in the dataset
- * (highest doubles count).
+ * Returns the confirmed championship with the most double bogeys.
  */
 function mostPunishing() {
   let best = null;
   for (const t of MAJORS_DATA.tournaments) {
     for (const d of t.data) {
-      if (!best || d.doubles > best.doubles) {
-        best = { major: t.name, ...d };
-      }
+      if (!d.confirmed || d.doubles === null) continue;
+      if (!best || d.doubles > best.doubles) best = { major: t.name, ...d };
     }
   }
   return best;
 }
 
 /**
- * Returns the most benign single championship (fewest doubles).
+ * Returns the confirmed championship with the fewest double bogeys.
  */
 function mostBenign() {
   let best = null;
   for (const t of MAJORS_DATA.tournaments) {
     for (const d of t.data) {
-      if (!best || d.doubles < best.doubles) {
-        best = { major: t.name, ...d };
-      }
+      if (!d.confirmed || d.doubles === null) continue;
+      if (!best || d.doubles < best.doubles) best = { major: t.name, ...d };
     }
   }
   return best;
 }
 
 if (require.main === module) {
-  console.log('\n=== Golf Majors Double Bogeys — 2022–2025 ===\n');
+  console.log('\n=== Golf Majors Double Bogeys — 2022–2026 ===\n');
+  console.log('Only confirmed figures from published tournament statistics are shown.\n');
   MAJORS_DATA.tournaments.forEach(t => {
-    const s = majorSummary(t);
-    console.log(`${s.name.padEnd(24)} avg: ${String(s.avg).padStart(3)}  range: ${s.min}–${s.max}  (±${s.range})`);
+    t.data.forEach(d => {
+      const tag = d.confirmed ? ' ★' : ' (no confirmed data)';
+      const val = d.doubles !== null ? String(d.doubles) : '—';
+      console.log(`  ${t.shortName.padEnd(8)} ${d.year}  ${d.venue.padEnd(30)}  ${val.padStart(4)}${tag}`);
+    });
   });
-  const p = mostPunishing();
-  const b = mostBenign();
-  console.log(`\nMost doubles : ${p.major} ${p.year} @ ${p.venue} — ${p.doubles}${p.confirmed?' ★':''}`);
-  console.log(`Fewest doubles: ${b.major} ${b.year} @ ${b.venue} — ${b.doubles}${b.confirmed?' ★':''}`);
   console.log('\n★ = confirmed from published tournament statistics');
 }
 
