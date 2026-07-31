@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Princeton Flip Intelligence</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0f1117;--surface:#1a1f2e;--surface2:#222840;--border:#2d3454;
+  --gold:#c9a84c;--gold2:#e8c86a;--text:#e8eaf0;--muted:#8892a4;
+  --green:#2ecc71;--red:#e74c3c;--blue:#3498db;--purple:#9b59b6;
+  --orange:#e67e22;--teal:#1abc9c;
+  --font:'Inter',system-ui,sans-serif;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;display:flex;flex-direction:column}
+a{color:var(--gold);text-decoration:none}
+
+/* ── HEADER ── */
+#header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 24px;display:flex;align-items:center;height:56px;gap:24px;position:sticky;top:0;z-index:100}
+#header h1{font-size:18px;font-weight:700;color:var(--gold);white-space:nowrap;letter-spacing:.5px}
+#header h1 span{color:var(--muted);font-weight:400}
+#nav{display:flex;gap:4px;overflow-x:auto}
+.nav-btn{padding:6px 14px;border:none;background:none;color:var(--muted);cursor:pointer;border-radius:6px;font-size:13px;font-weight:500;white-space:nowrap;transition:all .15s}
+.nav-btn:hover{background:var(--surface2);color:var(--text)}
+.nav-btn.active{background:var(--gold);color:#000;font-weight:700}
+
+/* ── LAYOUT ── */
+#main{flex:1;padding:24px;max-width:1400px;width:100%;margin:0 auto}
+.section{display:none}
+.section.active{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.card-grid{display:grid;gap:16px}
+.grid-4{grid-template-columns:repeat(auto-fill,minmax(200px,1fr))}
+.grid-3{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+.grid-2{grid-template-columns:repeat(auto-fill,minmax(400px,1fr))}
+.kpi-val{font-size:28px;font-weight:700;color:var(--gold);line-height:1.1}
+.kpi-label{font-size:12px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+.kpi-sub{font-size:12px;margin-top:6px}
+.up{color:var(--green)}.down{color:var(--red)}.warn{color:var(--orange)}
+
+/* ── SECTION TITLES ── */
+h2{font-size:20px;font-weight:700;margin-bottom:16px;color:var(--text)}
+h3{font-size:15px;font-weight:600;margin-bottom:12px;color:var(--text)}
+h4{font-size:13px;font-weight:600;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+
+/* ── TABLES ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{padding:8px 12px;text-align:left;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+.tbl td{padding:10px 12px;border-bottom:1px solid #1d2235}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--surface2)}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-green{background:#1a3d2b;color:var(--green)}
+.badge-red{background:#3d1a1a;color:var(--red)}
+.badge-orange{background:#3d2a1a;color:var(--orange)}
+.badge-blue{background:#1a2d3d;color:var(--blue)}
+.badge-gold{background:#3d2e1a;color:var(--gold)}
+
+/* ── FORMS ── */
+.form-row{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:16px}
+.field{display:flex;flex-direction:column;gap:6px;flex:1;min-width:180px}
+.field label{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field select{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:14px;outline:none;transition:border .15s}
+.field input:focus,.field select:focus{border-color:var(--gold)}
+.field select option{background:var(--surface2)}
+.btn{padding:10px 20px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--gold);color:#000}
+.btn-primary:hover{background:var(--gold2)}
+.btn-sm{padding:6px 14px;font-size:12px;border-radius:6px}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-red{background:#e74c3c;color:#fff}
+
+/* ── DEAL RESULT ── */
+#deal-result{display:none;margin-top:20px}
+.result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.result-box{background:var(--surface2);border-radius:10px;padding:14px;border:1px solid var(--border)}
+.result-box .val{font-size:22px;font-weight:700;margin-bottom:2px}
+.result-box .lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+.verdict{padding:16px 20px;border-radius:10px;display:flex;align-items:center;gap:12px;font-size:16px;font-weight:700}
+.verdict-go{background:#1a3d2b;border:1px solid #2ecc71;color:var(--green)}
+.verdict-caution{background:#3d2a1a;border:1px solid #e67e22;color:var(--orange)}
+.verdict-nogo{background:#3d1a1a;border:1px solid #e74c3c;color:var(--red)}
+
+/* ── PROJECTS ── */
+.proj-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:12px;cursor:pointer;transition:border .15s}
+.proj-card:hover{border-color:var(--gold)}
+.proj-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:10px}
+.proj-name{font-size:15px;font-weight:700}
+.progress-bar{height:6px;background:var(--border);border-radius:3px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;background:var(--gold);border-radius:3px;transition:width .3s}
+.phase-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.pill{padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.pill.done{background:#1a3d2b;color:var(--green);border-color:var(--green)}
+.pill.active{background:#3d2e1a;color:var(--gold);border-color:var(--gold)}
+
+/* ── MODAL ── */
+#modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:200;align-items:center;justify-content:center}
+#modal-bg.open{display:flex}
+#modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:28px;width:min(700px,96vw);max-height:90vh;overflow-y:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}
+#modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+
+/* ── TIMELINE ── */
+.timeline{position:relative;padding-left:24px}
+.timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:2px;background:var(--border)}
+.tl-item{position:relative;margin-bottom:20px}
+.tl-dot{position:absolute;left:-21px;top:4px;width:12px;height:12px;border-radius:50%;background:var(--border);border:2px solid var(--bg)}
+.tl-dot.done{background:var(--green)}.tl-dot.active{background:var(--gold)}.tl-dot.risk{background:var(--red)}
+.tl-title{font-size:13px;font-weight:600}
+.tl-body{font-size:12px;color:var(--muted);margin-top:3px}
+
+/* ── RISK TABLE ── */
+.risk-row td:nth-child(2){font-weight:700}
+.risk-h{color:var(--red)}.risk-m{color:var(--orange)}.risk-l{color:var(--green)}
+
+/* ── NEIGHBORHOOD ── */
+.nbhd-card{border-left:3px solid var(--gold);padding:14px 16px;background:var(--surface);border-radius:0 10px 10px 0;border-top:1px solid var(--border);border-right:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:10px}
+.nbhd-card.tier1{border-left-color:var(--green)}
+.nbhd-card.tier2{border-left-color:var(--gold)}
+.nbhd-card.tier3{border-left-color:var(--orange)}
+.nbhd-name{font-size:14px;font-weight:700}
+.nbhd-meta{font-size:12px;color:var(--muted);margin-top:4px}
+.tag{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;background:var(--surface2);color:var(--muted);border:1px solid var(--border);margin:2px}
+
+/* ── HOLDING COST CHART ── */
+canvas{display:block}
+.chart-wrap{background:var(--surface2);border-radius:10px;padding:16px}
+.cost-line{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.cost-line:last-child{border-bottom:none;font-weight:700;color:var(--gold)}
+
+/* ── CHECKLIST ── */
+.chk-item{display:flex;gap:10px;align-items:start;padding:8px 0;border-bottom:1px solid #1d2235;font-size:13px}
+.chk-item:last-child{border-bottom:none}
+.chk-item input[type=checkbox]{margin-top:2px;accent-color:var(--gold);width:14px;height:14px;flex-shrink:0;cursor:pointer}
+.chk-cat{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:12px 0 4px}
+
+/* ── SCENARIO TOGGLE ── */
+.scen-tabs{display:flex;gap:8px;margin-bottom:16px}
+.scen-tab{padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600}
+.scen-tab.active{background:var(--gold);border-color:var(--gold);color:#000}
+
+/* ── UTILITY ── */
+.sep{height:1px;background:var(--border);margin:20px 0}
+.mt-4{margin-top:16px}.mt-2{margin-top:8px}.mb-4{margin-bottom:16px}
+.flex{display:flex}.gap-2{gap:8px}.gap-3{gap:12px}.items-center{align-items:center}
+.text-muted{color:var(--muted)}.text-sm{font-size:12px}.text-gold{color:var(--gold)}
+.text-green{color:var(--green)}.text-red{color:var(--red)}.text-right{text-align:right}
+.bold{font-weight:700}.w-full{width:100%}
+.alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:12px}
+.alert-warn{background:#3d2a1a;border:1px solid var(--orange);color:var(--orange)}
+.alert-info{background:#1a2d3d;border:1px solid var(--blue);color:var(--blue)}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <h1>Princeton Flip <span>Intelligence</span></h1>
+  <nav id="nav">
+    <button class="nav-btn active" onclick="show('dash')">Dashboard</button>
+    <button class="nav-btn" onclick="show('deal')">Deal Analyzer</button>
+    <button class="nav-btn" onclick="show('projects')">Projects</button>
+    <button class="nav-btn" onclick="show('market')">Market Intel</button>
+    <button class="nav-btn" onclick="show('model')">Financial Model</button>
+    <button class="nav-btn" onclick="show('playbook')">Playbook</button>
+    <button class="nav-btn" onclick="show('checklist')">Due Diligence</button>
+  </nav>
+</div>
+
+<div id="main">
+
+<!-- ═══════════════════════════════ DASHBOARD ═══════════════════════════════ -->
+<div id="sec-dash" class="section active">
+  <div class="card-grid grid-4 mb-4">
+    <div class="card"><div class="kpi-val" id="kpi-active">0</div><div class="kpi-label">Active Projects</div><div class="kpi-sub text-muted">Click Projects to add</div></div>
+    <div class="card"><div class="kpi-val" id="kpi-capital">$0</div><div class="kpi-label">Capital Deployed</div><div class="kpi-sub text-muted" id="kpi-capital-sub">across all active flips</div></div>
+    <div class="card"><div class="kpi-val text-green" id="kpi-profit">$0</div><div class="kpi-label">Projected Profit</div><div class="kpi-sub text-muted" id="kpi-profit-sub">combined portfolio</div></div>
+    <div class="card"><div class="kpi-val" id="kpi-market">Seller's</div><div class="kpi-label">Market Condition</div><div class="kpi-sub up">Leaning buyer-favorable</div></div>
+  </div>
+
+  <div class="card-grid grid-2">
+    <div class="card">
+      <h3>Princeton Market Snapshot — July 2026</h3>
+      <div class="cost-line"><span>Median Sale Price (Borough)</span><span class="bold">$929K–$1.54M</span></div>
+      <div class="cost-line"><span>Avg Days on Market</span><span class="warn">35 days <small>(+46% YoY)</small></span></div>
+      <div class="cost-line"><span>List-to-Sale Ratio</span><span class="up">100.9%</span></div>
+      <div class="cost-line"><span>YoY Appreciation</span><span class="up">+13.8% (Nov '25)</span></div>
+      <div class="cost-line"><span>Hard Money Rate</span><span class="warn">9.77–10.96% + 2 pts</span></div>
+      <div class="cost-line"><span>Market Trend</span><span class="warn">Softening — watch DOM</span></div>
+    </div>
+    <div class="card">
+      <h3>Top Neighborhood Targets</h3>
+      <table class="tbl">
+        <thead><tr><th>Area</th><th>Buy Range</th><th>Target ARV</th><th>Tier</th></tr></thead>
+        <tbody>
+          <tr><td>Princeton Borough</td><td>$900K–$1.5M</td><td>$1.6M–$2.5M</td><td><span class="badge badge-green">Tier 1</span></td></tr>
+          <tr><td>Montgomery Twp</td><td>$700K–$1.1M</td><td>$1.1M–$1.6M</td><td><span class="badge badge-green">Tier 1</span></td></tr>
+          <tr><td>West Windsor</td><td>$650K–$950K</td><td>$950K–$1.4M</td><td><span class="badge badge-green">Tier 1</span></td></tr>
+          <tr><td>Hopewell Twp</td><td>$500K–$900K</td><td>$800K–$1.3M</td><td><span class="badge badge-gold">Tier 2</span></td></tr>
+          <tr><td>Pennington Borough</td><td>$550K–$850K</td><td>$850K–$1.2M</td><td><span class="badge badge-gold">Tier 2</span></td></tr>
+          <tr><td>Plainsboro</td><td>$500K–$800K</td><td>$800K–$1.1M</td><td><span class="badge badge-blue">Tier 3</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="card-grid grid-3">
+    <div class="card">
+      <h3>⚠️ Critical NJ Tax Alert</h3>
+      <div class="alert alert-warn">Mansion Tax restructured July 10, 2025 — SELLER now pays tiered GPF on $1M+ sales</div>
+      <div class="cost-line"><span>$1.0M–$1.25M sale</span><span class="warn">1.0% of full price</span></div>
+      <div class="cost-line"><span>$1.25M–$1.5M sale</span><span class="warn">1.25% of full price</span></div>
+      <div class="cost-line"><span>$1.5M–$2.0M sale</span><span class="warn">2.0% of full price</span></div>
+      <div class="cost-line"><span>$2.0M–$2.5M sale</span><span class="warn">2.5% of full price</span></div>
+      <div class="cost-line"><span>$2.5M–$3.0M sale</span><span class="warn">3.0% of full price</span></div>
+      <div class="cost-line"><span>Over $3.0M</span><span class="down">3.5% of full price</span></div>
+      <div class="text-sm text-muted mt-2">E.g. $2.1M sale = $42,000 GPF. Factor this into every deal.</div>
+    </div>
+    <div class="card">
+      <h3>Key Risk Flags</h3>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot risk"></div><div class="tl-title">DOM Rising Fast</div><div class="tl-body">Up 46% YoY — luxury buyer pool is thinning. Price correctly from day 1.</div></div>
+        <div class="tl-item"><div class="tl-dot risk"></div><div class="tl-title">Historic District Delays</div><div class="tl-body">Princeton Borough HPC adds 45-day mandatory reviews + monthly hearings. Budget 2-3 months extra.</div></div>
+        <div class="tl-item"><div class="tl-dot risk"></div><div class="tl-title">Underground Oil Tanks</div><div class="tl-body">Pre-1980s homes: ~30% have USTs. Remediation = $15K–$80K+ and stops sale.</div></div>
+        <div class="tl-item"><div class="tl-dot risk"></div><div class="tl-title">Contractor Scarcity</div><div class="tl-body">Princeton area luxury GCs are booked 3-6 months out. Lock in before you close.</div></div>
+        <div class="tl-item"><div class="tl-dot active"></div><div class="tl-title">Dealer Status Risk</div><div class="tl-body">Multiple flips/year → IRS reclassifies as self-employment. Profit taxed at income + 15.3% SE tax.</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Quick Deal Test</h3>
+      <p class="text-sm text-muted mb-4">Enter a potential deal to get instant go/no-go</p>
+      <div class="field mb-4"><label>Purchase Price ($)</label><input type="number" id="qdeal-buy" placeholder="1200000" onInput="quickDeal()"></div>
+      <div class="field mb-4"><label>Renovation Budget ($)</label><input type="number" id="qdeal-reno" placeholder="350000" onInput="quickDeal()"></div>
+      <div class="field mb-4"><label>ARV Estimate ($)</label><input type="number" id="qdeal-arv" placeholder="2000000" onInput="quickDeal()"></div>
+      <div id="quick-result" style="display:none">
+        <div class="sep"></div>
+        <div class="cost-line"><span>All-in Cost (est.)</span><span id="qr-allin" class="bold"></span></div>
+        <div class="cost-line"><span>Gross Profit</span><span id="qr-profit"></span></div>
+        <div class="cost-line"><span>ROI</span><span id="qr-roi"></span></div>
+        <div id="qr-verdict" class="verdict mt-2" style="margin-top:10px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ DEAL ANALYZER ═══════════════════════════ -->
+<div id="sec-deal" class="section">
+  <h2>Deal Analyzer</h2>
+  <div class="alert alert-info">All NJ-specific costs auto-calculated including restructured GPF mansion tax (effective July 10, 2025), RTF, attorney fees, and holding costs.</div>
+
+  <div class="card-grid grid-2">
+    <div class="card">
+      <h3>Deal Inputs</h3>
+      <div class="form-row">
+        <div class="field"><label>Purchase Price ($)</label><input type="number" id="d-buy" placeholder="1200000" value="1200000" oninput="calcDeal()"></div>
+        <div class="field"><label>Renovation Budget ($)</label><input type="number" id="d-reno" placeholder="350000" value="350000" oninput="calcDeal()"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>ARV Estimate ($)</label><input type="number" id="d-arv" placeholder="2000000" value="2000000" oninput="calcDeal()"></div>
+        <div class="field"><label>Hold Period (months)</label><select id="d-hold" onchange="calcDeal()">
+          <option value="12">12 months</option><option value="15" selected>15 months</option>
+          <option value="18">18 months</option><option value="24">24 months</option>
+        </select></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Loan Rate (%)</label><input type="number" id="d-rate" step="0.1" value="10.5" oninput="calcDeal()"></div>
+        <div class="field"><label>LTC (%)</label><input type="number" id="d-ltc" step="1" value="75" oninput="calcDeal()"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Loan Points</label><input type="number" id="d-pts" step="0.5" value="2" oninput="calcDeal()"></div>
+        <div class="field"><label>Contingency (%)</label><input type="number" id="d-cont" step="1" value="15" oninput="calcDeal()"></div>
+      </div>
+      <div class="form-row">
+        <div class="field"><label>Buyer Agent Commission (%)</label><input type="number" id="d-bac" step="0.25" value="2.5" oninput="calcDeal()"></div>
+        <div class="field"><label>Staging / Marketing ($)</label><input type="number" id="d-stage" value="25000" oninput="calcDeal()"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Cost Breakdown</h3>
+      <div id="deal-breakdown">
+        <div class="cost-line"><span>Purchase Price</span><span id="db-buy">—</span></div>
+        <div class="cost-line"><span>Renovation + Contingency</span><span id="db-reno">—</span></div>
+        <div class="cost-line"><span>Loan Points</span><span id="db-pts">—</span></div>
+        <div class="cost-line"><span>Holding Costs (<span id="db-hold-label">15</span> mo)</span><span id="db-hold">—</span></div>
+        <div class="cost-line"><span>NJ RTF (seller)</span><span id="db-rtf">—</span></div>
+        <div class="cost-line"><span>NJ GPF / Mansion Tax</span><span id="db-gpf">—</span></div>
+        <div class="cost-line"><span>NJ Attorney Fees</span><span id="db-atty">—</span></div>
+        <div class="cost-line"><span>Buyer Agent Commission</span><span id="db-bac">—</span></div>
+        <div class="cost-line"><span>Staging &amp; Marketing</span><span id="db-stage">—</span></div>
+        <div class="cost-line"><span>Title, Misc Closing (buy)</span><span id="db-close">—</span></div>
+        <div class="sep" style="margin:8px 0"></div>
+        <div class="cost-line bold"><span>TOTAL ALL-IN COST</span><span id="db-total" class="text-gold">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="deal-result">
+    <div class="result-grid">
+      <div class="result-box"><div class="val text-gold" id="dr-profit">—</div><div class="lbl">Gross Profit</div></div>
+      <div class="result-box"><div class="val" id="dr-roi">—</div><div class="lbl">ROI on Cost</div></div>
+      <div class="result-box"><div class="val" id="dr-coc">—</div><div class="lbl">Cash-on-Cash (equity)</div></div>
+      <div class="result-box"><div class="val" id="dr-equity">—</div><div class="lbl">Equity Required</div></div>
+      <div class="result-box"><div class="val" id="dr-loan">—</div><div class="lbl">Loan Amount</div></div>
+      <div class="result-box"><div class="val text-muted" id="dr-monthly">—</div><div class="lbl">Monthly Carry</div></div>
+    </div>
+    <div id="dr-verdict" class="verdict"></div>
+
+    <div class="card mt-4">
+      <h3>NJ Tax Summary for This Deal</h3>
+      <table class="tbl">
+        <thead><tr><th>Tax / Fee</th><th>Basis</th><th>Rate</th><th>Amount</th><th>Timing</th></tr></thead>
+        <tbody id="nj-tax-table"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PROJECTS ════════════════════════════════ -->
+<div id="sec-projects" class="section">
+  <div class="flex gap-2 items-center mb-4">
+    <h2 style="margin:0">Active Projects</h2>
+    <button class="btn btn-primary btn-sm" style="margin-left:auto" onclick="openNewProject()">+ New Project</button>
+  </div>
+  <div id="project-list"></div>
+  <div id="no-projects" class="card text-muted" style="text-align:center;padding:40px">
+    No projects yet. Click "New Project" to start tracking a flip.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ MARKET INTEL ════════════════════════════ -->
+<div id="sec-market" class="section">
+  <h2>Princeton Area Market Intelligence</h2>
+
+  <div class="card-grid grid-3 mb-4">
+    <div class="card"><div class="kpi-val">$1.2M</div><div class="kpi-label">Borough Median (Nov '25)</div><div class="kpi-sub up">+13.8% YoY</div></div>
+    <div class="card"><div class="kpi-val warn">35 days</div><div class="kpi-label">Avg Days on Market</div><div class="kpi-sub down">+46% vs prior year</div></div>
+    <div class="card"><div class="kpi-val up">100.9%</div><div class="kpi-label">List-to-Sale Ratio</div><div class="kpi-sub text-muted">Still above ask on average</div></div>
+  </div>
+
+  <div class="card-grid grid-2 mb-4">
+    <div class="card">
+      <h3>Neighborhood Analysis</h3>
+      <div class="nbhd-card tier1">
+        <div class="nbhd-name">Princeton Borough / Witherspoon-Jackson</div>
+        <div class="nbhd-meta">ZIP 08540 • Mercer County</div>
+        <div class="mt-2">
+          <span class="tag">Top School District</span>
+          <span class="tag">Historic Constraints</span>
+          <span class="tag">University Demand</span>
+          <span class="tag">Limited Inventory</span>
+        </div>
+        <div class="text-sm mt-2">Buy: $900K–$1.5M | Target ARV: $1.6M–$2.5M | <span class="up">Best premium potential</span></div>
+        <div class="text-sm text-muted mt-1">⚠ Historic Preservation Commission (HPC) adds 45-day reviews. Plan 3-4 month permit runway.</div>
+      </div>
+      <div class="nbhd-card tier1">
+        <div class="nbhd-name">Montgomery Township</div>
+        <div class="nbhd-meta">ZIP 08502 / 08558 • Somerset County</div>
+        <div class="mt-2">
+          <span class="tag">Excellent Schools</span>
+          <span class="tag">Pharma Executives</span>
+          <span class="tag">No Historic Overlay</span>
+          <span class="tag">Newer Stock</span>
+        </div>
+        <div class="text-sm mt-2">Buy: $700K–$1.1M | Target ARV: $1.1M–$1.6M | <span class="up">Best permit speed</span></div>
+        <div class="text-sm text-muted mt-1">No historic district. West Windsor–Plainsboro and Montgomery school districts draw biotech/pharma buyers.</div>
+      </div>
+      <div class="nbhd-card tier1">
+        <div class="nbhd-name">West Windsor Township</div>
+        <div class="nbhd-meta">ZIP 08550 • Mercer County</div>
+        <div class="mt-2">
+          <span class="tag">#1 NJ Schools</span>
+          <span class="tag">Princeton Junction Train</span>
+          <span class="tag">NYC Commuter</span>
+        </div>
+        <div class="text-sm mt-2">Buy: $650K–$950K | Target ARV: $950K–$1.4M | <span class="text-gold">Best exit velocity</span></div>
+        <div class="text-sm text-muted mt-1">WW-Plainsboro SD ranked among NJ's best. NYC commuter demand via NJ Transit keeps floor price firm.</div>
+      </div>
+      <div class="nbhd-card tier2">
+        <div class="nbhd-name">Hopewell Township</div>
+        <div class="nbhd-meta">ZIP 08525 / 08534 • Mercer County</div>
+        <div class="mt-2">
+          <span class="tag">Rural Character</span>
+          <span class="tag">Farmhouses</span>
+          <span class="tag">Slower Exit</span>
+        </div>
+        <div class="text-sm mt-2">Buy: $500K–$900K | Target ARV: $800K–$1.3M | <span class="warn">Narrow buyer pool</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Market Cycle Position — Mid-2026</h3>
+      <div class="alert alert-warn">Transitioning from seller's market to balanced. DOM expanding fast. Price to sell, not to hold.</div>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">2020–2022: Pandemic Surge</div><div class="tl-body">Princeton area +28% price surge. Sub-10 day DOM. Multiple offers on everything. Many flips sold before renovation complete.</div></div>
+        <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">2022–2023: Rate Shock</div><div class="tl-body">Rates hit 7.5%+. Volume dropped 35%. Luxury held better than starter market but DOM doubled.</div></div>
+        <div class="tl-item"><div class="tl-dot done"></div><div class="tl-title">2024–2025: Supply Squeeze</div><div class="tl-body">Inventory stayed tight. YoY appreciation resumed (+13.8% Nov '25). Seller's market in sub-$1.5M. Luxury above $2M softened.</div></div>
+        <div class="tl-item"><div class="tl-dot active"></div><div class="tl-title">2026: Rebalancing</div><div class="tl-body">DOM up 46%. Still above-ask closings but fewer bidding wars. Luxury $2M+ sitting longer. Critical window: get in at right basis and price correctly at exit.</div></div>
+        <div class="tl-item"><div class="tl-dot"></div><div class="tl-title">2027 Outlook</div><div class="tl-body">Fed rate cuts expected to sustain demand. Princeton institutional anchor (University, pharma corridor) provides demand floor. Cautiously optimistic for 18-month hold horizon.</div></div>
+      </div>
+
+      <div class="sep"></div>
+      <h4>Comparable Markets — Lessons</h4>
+      <table class="tbl">
+        <thead><tr><th>Market</th><th>Key Lesson</th></tr></thead>
+        <tbody>
+          <tr><td>Short Hills / Millburn NJ</td><td>Top-decile finishes mandatory. Buyers comparison shop obsessively. No shortcuts.</td></tr>
+          <tr><td>Westfield NJ</td><td>Train proximity = premium. Price per sq ft beats $/home in this market.</td></tr>
+          <tr><td>Ridgewood NJ</td><td>School district is the product. Never cross district lines assuming proximity = value.</td></tr>
+          <tr><td>Greenwich CT</td><td>Off-market sourcing essential. GC lock-in before close, not after. 18-month minimum budget.</td></tr>
+          <tr><td>Westport CT</td><td>Staging ROI is 3:1 at this level. Under-staged = 45+ days. Well-staged = 12 days.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Seasonal Timing Strategy</h3>
+    <table class="tbl">
+      <thead><tr><th>Phase</th><th>Best Month</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td><span class="badge badge-blue">Acquisition</span></td><td>Oct–Jan</td><td>Least competition. Motivated sellers. Estate sales peak in Q4. Negotiate harder.</td></tr>
+        <tr><td><span class="badge badge-gold">Renovation Start</span></td><td>Nov–Feb</td><td>Lock GC in winter. Contractors more available. Spring start = competing with everyone else.</td></tr>
+        <tr><td><span class="badge badge-green">List to Sell</span></td><td>Mar–Jun</td><td>Princeton school-driven buyers decide by June for fall entry. Miss this and wait until Sep.</td></tr>
+        <tr><td><span class="badge badge-orange">Secondary Window</span></td><td>Sep–Oct</td><td>Secondary wave for buyers who missed spring. Still works but smaller pool.</td></tr>
+        <tr><td><span class="badge badge-red">Avoid Listing</span></td><td>Nov–Feb</td><td>Dead market. Only need-buyers active. Sit or overprice at your peril.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ FINANCIAL MODEL ═════════════════════════ -->
+<div id="sec-model" class="section">
+  <h2>Financial Model — Princeton Luxury Flip</h2>
+
+  <div class="scen-tabs">
+    <button class="scen-tab active" onclick="setScen('base')">Base Case</button>
+    <button class="scen-tab" onclick="setScen('bull')">Bull Case</button>
+    <button class="scen-tab" onclick="setScen('bear')">Bear Case</button>
+  </div>
+
+  <div class="card-grid grid-2 mb-4">
+    <div class="card">
+      <h3>Assumptions — <span id="scen-label" class="text-gold">Base Case</span></h3>
+      <table class="tbl">
+        <thead><tr><th>Item</th><th>Value</th></tr></thead>
+        <tbody id="scen-assumptions"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>P&amp;L Summary</h3>
+      <table class="tbl">
+        <thead><tr><th>Category</th><th>Amount</th></tr></thead>
+        <tbody id="scen-pnl"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <h3>Monthly Cash Flow Timeline</h3>
+    <div class="chart-wrap">
+      <canvas id="cashflow-chart" height="160"></canvas>
+    </div>
+  </div>
+
+  <div class="card-grid grid-2">
+    <div class="card">
+      <h3>Holding Cost Detail — Per Month</h3>
+      <p class="text-sm text-muted mb-4">Based on $1.5M purchase, $400K reno, 10.5% hard money</p>
+      <div class="cost-line"><span>Interest (10.5% × $1.425M loan)</span><span class="warn">$12,469/mo</span></div>
+      <div class="cost-line"><span>Property Tax (Princeton ~2.2%/yr)</span><span>$2,750/mo</span></div>
+      <div class="cost-line"><span>Builder's Risk Insurance</span><span>$800/mo</span></div>
+      <div class="cost-line"><span>Utilities (vacant/renovation)</span><span>$400/mo</span></div>
+      <div class="cost-line"><span>Security / Monitoring</span><span>$200/mo</span></div>
+      <div class="cost-line"><span>PM / Admin (10 hrs × $100)</span><span>$1,000/mo</span></div>
+      <div class="cost-line bold"><span>TOTAL MONTHLY CARRY</span><span class="text-gold">~$17,619/mo</span></div>
+      <div class="text-sm text-muted mt-2">15-month hold = $264,285 in carrying costs alone.</div>
+    </div>
+    <div class="card">
+      <h3>Tier Comparison</h3>
+      <table class="tbl">
+        <thead><tr><th>Tier</th><th>Buy</th><th>Reno</th><th>ARV</th><th>Net Profit*</th><th>ROI</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-blue">Entry</span></td><td>$700K</td><td>$200K</td><td>$1.1M</td><td class="text-green">$98K</td><td class="text-green">10.7%</td></tr>
+          <tr><td><span class="badge badge-gold">Mid</span></td><td>$1.0M</td><td>$350K</td><td>$1.7M</td><td class="text-green">$162K</td><td class="text-green">11.8%</td></tr>
+          <tr><td><span class="badge badge-green">Sweet Spot</span></td><td>$1.2M</td><td>$400K</td><td>$2.0M</td><td class="text-green">$211K</td><td class="text-green">12.9%</td></tr>
+          <tr><td><span class="badge badge-orange">Luxury</span></td><td>$1.8M</td><td>$600K</td><td>$3.0M</td><td class="text-green">$278K</td><td class="text-green">10.4%</td></tr>
+          <tr><td><span class="badge badge-red">Ultra</span></td><td>$2.5M</td><td>$800K</td><td>$4.0M</td><td class="warn">$185K</td><td class="warn">5.5%</td></tr>
+        </tbody>
+      </table>
+      <div class="text-sm text-muted mt-2">* After all costs incl. NJ taxes, 15-month hold, 10.5% HML. Ultra-luxury compressed by GPF (3% = $120K on $4M), thin buyer pool, longer DOM.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ PLAYBOOK ════════════════════════════════ -->
+<div id="sec-playbook" class="section">
+  <h2>Princeton Luxury Flip Playbook</h2>
+
+  <div class="card-grid grid-2 mb-4">
+    <div class="card">
+      <h3>✅ What Winners Do</h3>
+      <div class="timeline">
+        <div class="tl-item"><div class="tl-dot done"></div>
+          <div class="tl-title">Source Off-Market Only</div>
+          <div class="tl-body">MLS deals are priced for the market. Winning deals come from estate attorneys, divorce attorneys, probate courts, direct mail to 20yr+ owners. Never compete at auction for luxury.</div>
+        </div>
+        <div class="tl-item"><div class="tl-dot done"></div>
+          <div class="tl-title">Lock GC Before Closing</div>
+          <div class="tl-body">Princeton luxury GCs book 3-6 months out. Sign LOI with your GC during due diligence, not after. Build contractor relationship before you need them urgently.</div>
+        </div>
+        <div class="tl-item"><div class="tl-dot done"></div>
+          <div class="tl-title">Hire a Local Luxury Listing Agent Early</div>
+          <div class="tl-body">The best Princeton agents have buyer lists. Engage them during renovation — not at listing. They tell you what finishes buyers want RIGHT NOW, not what you think looks good.</div>
+        </div>
+        <div class="tl-item"><div class="tl-dot done"></div>
+          <div class="tl-title">Design for the Buyer, Not Yourself</div>
+          <div class="tl-body">Princeton buyers: PhD academics, pharma executives, finance PMs. They want: timeless, not trendy. Quartz over marble (maintenance). Professional-grade appliances. Home office built-in. EV charger. Fiber.</div>
+        </div>
+        <div class="tl-item"><div class="tl-dot done"></div>
+          <div class="tl-title">Build 15% Contingency Into Every Budget</div>
+          <div class="tl-body">James Dainard rule: "Every renovation has surprises. Budget them before they find you." Princeton pre-1970 homes: asbestos, knob-and-tube, USTs, inadequate footings for open-plan demo.</div>
+        </div>
+        <div class="tl-item"><div class="tl-dot done"></div>
+          <div class="tl-title">Spend on Staging — It's Not Optional</div>
+          <div class="tl-body">Westport CT data: staged luxury homes sell in 12 days; unstaged in 45+ days. 33 extra days = $17K+ in carrying costs. Spend $25K-$50K to save $60K in carry. ROI is 3:1.</div>
+        </div>
+        <div class="tl-item"><div class="tl-dot done"></div>
+          <div class="tl-title">Target the $1.2M–$1.6M Buy Range</div>
+          <div class="tl-body">Enough margin for quality renovation. ARV ceiling of $2.0–2.2M is Princeton's most liquid price point. Above $2.5M ARV: buyer pool shrinks dramatically, GPF eats 2.5%+.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>❌ How Flips Fail</h3>
+      <table class="tbl">
+        <thead><tr><th>Failure Mode</th><th>Warning Signs</th><th>Prevention</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="down bold">Over-Improvement</td>
+            <td>Spec'ing $300K kitchens in $1.5M ARV markets</td>
+            <td>Max kitchen spend = 10% of ARV. Research what sold, not what you'd want.</td>
+          </tr>
+          <tr>
+            <td class="down bold">Scope Creep</td>
+            <td>GC finding "while we're at it" items every week</td>
+            <td>Hard scope document. Change orders require written approval. Hold 15% contingency in reserve, not as invitation.</td>
+          </tr>
+          <tr>
+            <td class="down bold">Wrong ARV</td>
+            <td>Using 6-month-old comps in a shifting market. Using neighborhood averages for unique properties.</td>
+            <td>BPO from 2 local agents BEFORE you buy. Focus comps from last 60 days, same school district, same lot size tier.</td>
+          </tr>
+          <tr>
+            <td class="down bold">Timeline Blowout</td>
+            <td>No permit pulled at month 2. GC crew splitting time on other jobs. Design decisions delayed.</td>
+            <td>Permit pulled week 1. Milestone schedule with penalties. Design decisions made before renovation starts.</td>
+          </tr>
+          <tr>
+            <td class="down bold">Exit at Wrong Time</td>
+            <td>Listing Nov–Feb. Listing when market is clearly softening.</td>
+            <td>Engineer the timeline backward from March listing. If that means rushing reno, better than missing the spring window.</td>
+          </tr>
+          <tr>
+            <td class="down bold">Overleveraging</td>
+            <td>Less than 20% equity. No reserve. Single lender.</td>
+            <td>Minimum 25% equity at cost. 6-month interest reserve held in escrow. Always have a second exit (rental cashflow analysis ready).</td>
+          </tr>
+          <tr>
+            <td class="down bold">NJ Tax Surprise</td>
+            <td>Forgetting GPF on $1M+ exit. Not modeling RTF. Dealer status triggering SE tax.</td>
+            <td>Run NJ tax model on Day 1. Use Deal Analyzer on every deal. Structure entity properly (LLC, S-Corp) with NJ CPA.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <h3>Deal Sourcing — Princeton Area Off-Market Channels</h3>
+    <div class="card-grid grid-3">
+      <div>
+        <h4>Professional Relationships</h4>
+        <ul style="font-size:13px;color:var(--muted);padding-left:16px;line-height:2">
+          <li>Estate attorneys (Mercer + Somerset counties)</li>
+          <li>Divorce attorneys (Princeton area family law)</li>
+          <li>Probate court filings (public record)</li>
+          <li>Princeton University housing office (faculty relocation)</li>
+          <li>BMS, Novo Nordisk, Integra LifeSciences relocation</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Direct Marketing</h4>
+        <ul style="font-size:13px;color:var(--muted);padding-left:16px;line-height:2">
+          <li>Direct mail to 20yr+ homeowners in target zips</li>
+          <li>Driving for dollars (deferred maintenance flags)</li>
+          <li>Code violation lists (public, Mercer County)</li>
+          <li>Long-DOM expired listings (price-reduced, frustrated)</li>
+          <li>Pre-foreclosure lists (lis pendens, NJ public record)</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Network</h4>
+        <ul style="font-size:13px;color:var(--muted);padding-left:16px;line-height:2">
+          <li>1-3 agent relationships with "coming soon" pipeline</li>
+          <li>Princeton REIA / NJ Real Estate Investors Assoc</li>
+          <li>Wholesalers active in Mercer/Somerset counties</li>
+          <li>Property managers (know who's tired of landlording)</li>
+          <li>Repeat buyer: follow up every 6 months with past sellers</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Required Team — Princeton Luxury Flip</h3>
+    <table class="tbl">
+      <thead><tr><th>Role</th><th>When to Hire</th><th>Princeton Criteria</th><th>Typical Cost</th></tr></thead>
+      <tbody>
+        <tr><td><strong>NJ Real Estate Attorney</strong></td><td>Before making offer</td><td>Mercer/Somerset county experience. NJ requires attorney for closing.</td><td>$1,500–$3,500/deal</td></tr>
+        <tr><td><strong>NJ CPA (RE Specialist)</strong></td><td>Before first deal</td><td>Must know dealer vs investor status, NJ GPF, S-Corp structure for flippers.</td><td>$3K–$8K/yr</td></tr>
+        <tr><td><strong>General Contractor (Licensed NJ)</strong></td><td>During due diligence</td><td>C13 license NJ. References on $500K+ luxury projects. No absentee GCs.</td><td>10–15% of reno cost</td></tr>
+        <tr><td><strong>Architect / Designer</strong></td><td>Before closing (Historic) / After close (non-historic)</td><td>HPC-approved for Princeton Borough. Luxury residential portfolio required.</td><td>$8K–$25K</td></tr>
+        <tr><td><strong>Luxury Listing Agent</strong></td><td>Month 6–8 of renovation</td><td>Must have $1.5M+ Princeton comp sales. Interview during reno.</td><td>2.5–3% of sale price</td></tr>
+        <tr><td><strong>Home Stager</strong></td><td>4 weeks before listing</td><td>Luxury portfolio. Owns own furniture (not rentals). Local NJ/Princeton market.</td><td>$15K–$50K</td></tr>
+        <tr><td><strong>Environmental Inspector</strong></td><td>Due diligence (before offer accepted)</td><td>UST detection. Radon (Princeton area is Zone 1). Asbestos for pre-1980 homes.</td><td>$1,500–$4,000</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════ DUE DILIGENCE ══════════════════════════ -->
+<div id="sec-checklist" class="section">
+  <h2>Due Diligence Checklist</h2>
+  <div class="flex gap-2 items-center mb-4">
+    <span class="text-sm text-muted">Check off items as completed. Saved locally.</span>
+    <button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="resetChecklist()">Reset</button>
+  </div>
+  <div class="card-grid grid-2">
+    <div class="card" id="dd-col1"></div>
+    <div class="card" id="dd-col2"></div>
+  </div>
+</div>
+
+</div><!-- /#main -->
+
+<!-- ═══════════════════════════════ MODAL ═══════════════════════════════════ -->
+<div id="modal-bg">
+  <div id="modal">
+    <div class="modal-head">
+      <h3 id="modal-title">New Project</h3>
+      <button id="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════════════════
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if (id === 'projects') renderProjects();
+  if (id === 'dash') updateDashKPIs();
+  if (id === 'model') renderModel();
+  if (id === 'checklist') renderChecklist();
+  if (id === 'deal') calcDeal();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  UTILITY
+// ══════════════════════════════════════════════════════════════
+const fmt = (n, decimals=0) => n == null ? '—' : '$' + Math.round(n).toLocaleString();
+const pct = (n) => n == null ? '—' : (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+const get = id => parseFloat(document.getElementById(id)?.value) || 0;
+const set = (id, val) => { const el = document.getElementById(id); if (el) el.innerHTML = val; };
+const cl = (id, ...classes) => { const el = document.getElementById(id); if (el) { el.className = ''; el.classList.add(...classes); } };
+
+function njGPF(salePrice) {
+  if (salePrice < 1_000_000) return 0;
+  if (salePrice < 1_250_000) return salePrice * 0.010;
+  if (salePrice < 1_500_000) return salePrice * 0.0125;
+  if (salePrice < 2_000_000) return salePrice * 0.020;
+  if (salePrice < 2_500_000) return salePrice * 0.025;
+  if (salePrice < 3_000_000) return salePrice * 0.030;
+  return salePrice * 0.035;
+}
+
+function njRTF(salePrice) {
+  // Seller RTF (simplified)
+  let rtf = 0;
+  const thresholds = [[150000,2.0],[150000,3.35],[350000,3.90],[salePrice,4.80]];
+  let remaining = salePrice;
+  for (const [limit, rate] of thresholds) {
+    const chunk = Math.min(remaining, limit);
+    rtf += (chunk / 500) * rate;
+    remaining -= chunk;
+    if (remaining <= 0) break;
+  }
+  return rtf;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DEAL ANALYZER
+// ══════════════════════════════════════════════════════════════
+function calcDeal() {
+  const buy = get('d-buy') || 1200000;
+  const reno = get('d-reno') || 350000;
+  const arv = get('d-arv') || 2000000;
+  const holdMo = get('d-hold') || 15;
+  const rate = (get('d-rate') || 10.5) / 100;
+  const ltcPct = (get('d-ltc') || 75) / 100;
+  const pts = (get('d-pts') || 2) / 100;
+  const contPct = (get('d-cont') || 15) / 100;
+  const bacPct = (get('d-bac') || 2.5) / 100;
+  const staging = get('d-stage') || 25000;
+
+  const renoWithCont = reno * (1 + contPct);
+  const totalProjectCost = buy + renoWithCont;
+  const loanAmt = totalProjectCost * ltcPct;
+  const loanPts = loanAmt * pts;
+  const monthlyInterest = loanAmt * rate / 12;
+  const holdCost = monthlyInterest * holdMo + buy * 0.022 / 12 * holdMo + 800 * holdMo + 400 * holdMo;
+  const rtf = njRTF(arv);
+  const gpf = njGPF(arv);
+  const atty = 3000;
+  const bac = arv * bacPct;
+  const closingBuy = buy * 0.01; // title, misc
+
+  const totalCost = buy + renoWithCont + loanPts + holdCost + rtf + gpf + atty + bac + staging + closingBuy;
+  const grossProfit = arv - totalCost;
+  const roi = (grossProfit / totalCost) * 100;
+  const equity = totalProjectCost - loanAmt;
+  const coc = (grossProfit / equity) * 100;
+
+  set('db-buy', fmt(buy));
+  set('db-reno', fmt(renoWithCont) + ` <span class="text-muted text-sm">(+${Math.round(contPct*100)}% cont)</span>`);
+  set('db-pts', fmt(loanPts));
+  set('db-hold', fmt(holdCost));
+  set('db-hold-label', holdMo);
+  set('db-rtf', fmt(rtf));
+  set('db-gpf', fmt(gpf) + (gpf > 0 ? ` <span class="warn text-sm">(${((gpf/arv)*100).toFixed(2)}%)</span>` : ' <span class="text-muted text-sm">N/A sub-$1M</span>'));
+  set('db-atty', fmt(atty));
+  set('db-bac', fmt(bac));
+  set('db-stage', fmt(staging));
+  set('db-close', fmt(closingBuy));
+  set('db-total', fmt(totalCost));
+
+  document.getElementById('deal-result').style.display = 'block';
+
+  const profitColor = grossProfit > 0 ? 'text-green' : 'text-red';
+  set('dr-profit', fmt(grossProfit));
+  document.getElementById('dr-profit').className = 'val ' + profitColor;
+  set('dr-roi', pct(roi));
+  document.getElementById('dr-roi').className = 'val ' + (roi > 15 ? 'text-green' : roi > 8 ? 'warn' : 'text-red');
+  set('dr-coc', pct(coc));
+  document.getElementById('dr-coc').className = 'val ' + (coc > 20 ? 'text-green' : coc > 10 ? 'warn' : 'text-red');
+  set('dr-equity', fmt(equity));
+  set('dr-loan', fmt(loanAmt));
+  set('dr-monthly', fmt(monthlyInterest + buy * 0.022 / 12 + 1200) + '/mo');
+
+  const verd = document.getElementById('dr-verdict');
+  if (roi >= 15 && grossProfit >= 150000) {
+    verd.className = 'verdict verdict-go';
+    verd.innerHTML = '✓ GO — Deal pencils. ROI meets minimum 15% threshold.';
+  } else if (roi >= 8 && grossProfit >= 75000) {
+    verd.className = 'verdict verdict-caution';
+    verd.innerHTML = '⚠ CAUTION — Marginal. Verify ARV conservatively. Reduce reno budget if possible.';
+  } else {
+    verd.className = 'verdict verdict-nogo';
+    verd.innerHTML = '✕ NO-GO — Does not meet minimum thresholds. Walk or renegotiate basis.';
+  }
+
+  // NJ Tax table
+  const taxRows = [
+    ['NJ Realty Transfer Fee (RTF)', fmt(arv) + ' sale price', 'Tiered ~0.4–1%', fmt(rtf), 'At closing (seller)'],
+    ['NJ Graduated Percent Fee (Mansion Tax)', gpf > 0 ? fmt(arv) : 'N/A — under $1M', gpf > 0 ? ((gpf/arv*100).toFixed(2)+'% of full price') : '—', fmt(gpf), gpf > 0 ? 'At closing (seller — as of Jul 10, 2025)' : 'N/A'],
+    ['NJ State Income Tax on Profit', 'Estimated profit', '~6.37–8.97%', fmt(grossProfit * 0.08), 'Tax filing'],
+    ['Federal Income Tax (dealer status risk)', 'Estimated profit', '22–37%', fmt(grossProfit * 0.30), 'Tax filing'],
+    ['SE Tax (if dealer status)', 'Net profit', '15.3%', fmt(grossProfit * 0.153), 'Tax filing — consult CPA'],
+    ['NJ Attorney Fee (closing)', 'Per transaction', 'Flat', fmt(atty), 'At closing'],
+    ['Title Insurance (buyer side)', fmt(buy) + ' purchase', '~0.5–1%', fmt(closingBuy), 'At purchase closing'],
+  ];
+  document.getElementById('nj-tax-table').innerHTML = taxRows.map(r =>
+    `<tr>${r.map((c,i) => `<td${i===3?' class="bold text-gold"':''}>${c}</td>`).join('')}</tr>`
+  ).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  QUICK DEAL (DASHBOARD)
+// ══════════════════════════════════════════════════════════════
+function quickDeal() {
+  const buy = parseFloat(document.getElementById('qdeal-buy').value) || 0;
+  const reno = parseFloat(document.getElementById('qdeal-reno').value) || 0;
+  const arv = parseFloat(document.getElementById('qdeal-arv').value) || 0;
+  if (!buy || !reno || !arv) { document.getElementById('quick-result').style.display = 'none'; return; }
+  const allin = buy + reno * 1.15 + buy * 0.01 + arv * 0.025 + njGPF(arv) + njRTF(arv) + buy * 0.022 / 12 * 15 + arv * 0.025 * 0.105 / 12 * 15 + 25000;
+  const profit = arv - allin;
+  const roi = (profit / allin) * 100;
+  document.getElementById('quick-result').style.display = 'block';
+  set('qr-allin', fmt(allin));
+  set('qr-profit', `<span class="${profit > 0 ? 'up' : 'down'}">${fmt(profit)}</span>`);
+  set('qr-roi', `<span class="${roi > 15 ? 'up' : roi > 8 ? 'warn' : 'down'}">${pct(roi)}</span>`);
+  const verd = document.getElementById('qr-verdict');
+  if (roi >= 15) { verd.className = 'verdict verdict-go'; verd.innerHTML = '✓ Looks interesting — run full analysis'; }
+  else if (roi >= 8) { verd.className = 'verdict verdict-caution'; verd.innerHTML = '⚠ Marginal — negotiate price down'; }
+  else { verd.className = 'verdict verdict-nogo'; verd.innerHTML = '✕ Doesn\'t pencil at current basis'; }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  PROJECTS (localStorage)
+// ══════════════════════════════════════════════════════════════
+const PHASES = ['Sourcing','Under Contract','Due Diligence','Permits','Renovation','Staging','Listed','Sold'];
+function loadProjects() { try { return JSON.parse(localStorage.getItem('flip-projects') || '[]'); } catch { return []; } }
+function saveProjects(p) { localStorage.setItem('flip-projects', JSON.stringify(p)); }
+
+function renderProjects() {
+  const projects = loadProjects();
+  const list = document.getElementById('project-list');
+  const none = document.getElementById('no-projects');
+  if (!projects.length) { list.innerHTML = ''; none.style.display = 'block'; return; }
+  none.style.display = 'none';
+  list.innerHTML = projects.map((p, i) => {
+    const phaseIdx = PHASES.indexOf(p.phase);
+    const progress = Math.round((phaseIdx + 1) / PHASES.length * 100);
+    const daysSince = Math.round((Date.now() - p.created) / 86400000);
+    const budgetUsed = (p.spent || 0);
+    const budgetTotal = (p.budget || 0);
+    return `<div class="proj-card" onclick="openProject(${i})">
+      <div class="proj-header">
+        <div>
+          <div class="proj-name">${p.address}</div>
+          <div class="text-sm text-muted mt-2">${p.municipality || ''} • ${daysSince} days since acquisition</div>
+        </div>
+        <div class="text-right">
+          <div class="bold text-gold">${fmt(p.arv)} ARV</div>
+          <div class="text-sm text-muted">Buy: ${fmt(p.buy)}</div>
+        </div>
+      </div>
+      <div class="phase-pills">
+        ${PHASES.map((ph, j) => `<span class="pill ${j < phaseIdx ? 'done' : j === phaseIdx ? 'active' : ''}">${ph}</span>`).join('')}
+      </div>
+      <div class="progress-bar mt-2"><div class="progress-fill" style="width:${progress}%"></div></div>
+      <div class="flex gap-3 mt-2">
+        <span class="text-sm text-muted">Budget: ${fmt(budgetUsed)} / ${fmt(budgetTotal)}</span>
+        ${budgetTotal ? `<span class="text-sm ${budgetUsed > budgetTotal ? 'text-red' : 'text-muted'}">${budgetTotal ? Math.round(budgetUsed/budgetTotal*100) : 0}% used</span>` : ''}
+        <span class="text-sm text-muted" style="margin-left:auto">Hold: ~${fmt(17619 * daysSince / 30)}</span>
+      </div>
+    </div>`;
+  }).join('');
+  updateDashKPIs();
+}
+
+function updateDashKPIs() {
+  const projects = loadProjects();
+  const active = projects.filter(p => p.phase !== 'Sold');
+  const capital = active.reduce((s, p) => s + (p.buy || 0) + (p.budget || 0), 0);
+  const profit = active.reduce((s, p) => {
+    const allin = (p.buy||0) + (p.budget||0) * 1.15 + njGPF(p.arv||0) + njRTF(p.arv||0) + (p.buy||0)*0.022/12*15;
+    return s + ((p.arv||0) - allin);
+  }, 0);
+  set('kpi-active', active.length);
+  set('kpi-capital', fmt(capital));
+  set('kpi-profit', fmt(profit));
+}
+
+function openNewProject() {
+  document.getElementById('modal-title').textContent = 'New Project';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-row"><div class="field w-full"><label>Property Address</label><input id="np-addr" placeholder="123 Nassau St, Princeton NJ 08540"></div></div>
+    <div class="form-row">
+      <div class="field"><label>Municipality</label><select id="np-muni">
+        <option>Princeton Borough</option><option>Montgomery Township</option><option>West Windsor Township</option>
+        <option>Hopewell Township</option><option>Pennington Borough</option><option>Plainsboro Township</option>
+        <option>South Brunswick</option><option>Other</option>
+      </select></div>
+      <div class="field"><label>Current Phase</label><select id="np-phase">
+        ${PHASES.map(p => `<option>${p}</option>`).join('')}
+      </select></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Purchase Price ($)</label><input type="number" id="np-buy" placeholder="1200000"></div>
+      <div class="field"><label>Renovation Budget ($)</label><input type="number" id="np-budget" placeholder="350000"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>ARV Estimate ($)</label><input type="number" id="np-arv" placeholder="2000000"></div>
+      <div class="field"><label>Target List Date</label><input type="date" id="np-list"></div>
+    </div>
+    <div class="field mb-4"><label>Notes</label><input id="np-notes" placeholder="Key risks, contractor status, etc."></div>
+    <button class="btn btn-primary w-full" onclick="saveNewProject()">Save Project</button>
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function saveNewProject() {
+  const projects = loadProjects();
+  projects.push({
+    address: document.getElementById('np-addr').value || 'Unnamed Property',
+    municipality: document.getElementById('np-muni').value,
+    phase: document.getElementById('np-phase').value,
+    buy: parseFloat(document.getElementById('np-buy').value) || 0,
+    budget: parseFloat(document.getElementById('np-budget').value) || 0,
+    arv: parseFloat(document.getElementById('np-arv').value) || 0,
+    listDate: document.getElementById('np-list').value,
+    notes: document.getElementById('np-notes').value,
+    spent: 0,
+    created: Date.now(),
+  });
+  saveProjects(projects);
+  closeModal();
+  renderProjects();
+}
+
+function openProject(i) {
+  const projects = loadProjects();
+  const p = projects[i];
+  document.getElementById('modal-title').textContent = p.address;
+  const phaseIdx = PHASES.indexOf(p.phase);
+  document.getElementById('modal-body').innerHTML = `
+    <div class="card-grid grid-2 mb-4">
+      <div><div class="kpi-val text-gold">${fmt(p.arv)}</div><div class="kpi-label">ARV</div></div>
+      <div><div class="kpi-val">${fmt((p.arv||0) - (p.buy||0) - (p.budget||0)*1.15 - njGPF(p.arv||0) - njRTF(p.arv||0))}</div><div class="kpi-label">Est. Profit</div></div>
+    </div>
+    <div class="mb-4">
+      <h4>Update Phase</h4>
+      <div class="phase-pills">${PHASES.map((ph, j) => `<span class="pill ${j < phaseIdx ? 'done' : j === phaseIdx ? 'active' : ''}" style="cursor:pointer" onclick="updatePhase(${i},'${ph}')">${ph}</span>`).join('')}</div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Spent to Date ($)</label><input type="number" id="ep-spent" value="${p.spent||0}"></div>
+      <div class="field"><label>ARV Update ($)</label><input type="number" id="ep-arv" value="${p.arv||0}"></div>
+    </div>
+    <div class="field mb-4"><label>Notes</label><input id="ep-notes" value="${p.notes||''}"></div>
+    <div class="flex gap-2">
+      <button class="btn btn-primary" onclick="updateProject(${i})">Save Changes</button>
+      <button class="btn btn-red btn-sm" onclick="deleteProject(${i})">Delete</button>
+    </div>
+    ${p.notes ? `<div class="alert alert-info mt-4">${p.notes}</div>` : ''}
+  `;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function updatePhase(i, phase) {
+  const projects = loadProjects();
+  projects[i].phase = phase;
+  saveProjects(projects);
+  openProject(i);
+  renderProjects();
+}
+
+function updateProject(i) {
+  const projects = loadProjects();
+  projects[i].spent = parseFloat(document.getElementById('ep-spent').value) || 0;
+  projects[i].arv = parseFloat(document.getElementById('ep-arv').value) || 0;
+  projects[i].notes = document.getElementById('ep-notes').value;
+  saveProjects(projects);
+  closeModal();
+  renderProjects();
+}
+
+function deleteProject(i) {
+  if (!confirm('Delete this project?')) return;
+  const projects = loadProjects();
+  projects.splice(i, 1);
+  saveProjects(projects);
+  closeModal();
+  renderProjects();
+}
+
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === e.currentTarget) closeModal(); });
+
+// ══════════════════════════════════════════════════════════════
+//  FINANCIAL MODEL
+// ══════════════════════════════════════════════════════════════
+const SCENARIOS = {
+  base: {
+    label: 'Base Case',
+    buy: 1200000, reno: 380000, arv: 2000000, holdMo: 15, rate: 10.5, ltc: 75,
+    assumptions: [
+      ['Purchase Price', '$1,200,000'],
+      ['Renovation Cost', '$380,000 (+15% cont = $437K)'],
+      ['ARV', '$2,000,000'],
+      ['Hold Period', '15 months'],
+      ['Hard Money Rate', '10.5%'],
+      ['LTC', '75% ($1.2M loan)'],
+      ['Appreciation During Hold', '5%'],
+      ['Days on Market', '35 days'],
+    ]
+  },
+  bull: {
+    label: 'Bull Case',
+    buy: 1150000, reno: 340000, arv: 2150000, holdMo: 12, rate: 9.5, ltc: 75,
+    assumptions: [
+      ['Purchase Price', '$1,150,000 (below ask off-market)'],
+      ['Renovation Cost', '$340,000 (on-budget)'],
+      ['ARV', '$2,150,000 (+7.5% appreciation)'],
+      ['Hold Period', '12 months'],
+      ['Hard Money Rate', '9.5%'],
+      ['LTC', '75%'],
+      ['Market Conditions', 'Spring seller\'s market'],
+      ['Days on Market', '18 days'],
+    ]
+  },
+  bear: {
+    label: 'Bear Case',
+    buy: 1200000, reno: 450000, arv: 1850000, holdMo: 22, rate: 11.5, ltc: 70,
+    assumptions: [
+      ['Purchase Price', '$1,200,000'],
+      ['Renovation Cost', '$450,000 (30% over budget)'],
+      ['ARV', '$1,850,000 (market softening)'],
+      ['Hold Period', '22 months (permit delays + slow exit)'],
+      ['Hard Money Rate', '11.5% (rates risen)'],
+      ['LTC', '70%'],
+      ['Market Conditions', 'Buyer\'s market'],
+      ['Days on Market', '65 days'],
+    ]
+  }
+};
+
+let currentScen = 'base';
+function setScen(s) {
+  currentScen = s;
+  document.querySelectorAll('.scen-tab').forEach(t => t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  renderModel();
+}
+
+function renderModel() {
+  const s = SCENARIOS[currentScen];
+  set('scen-label', s.label);
+  document.getElementById('scen-assumptions').innerHTML = s.assumptions.map(([k,v]) =>
+    `<tr><td class="text-muted">${k}</td><td class="bold">${v}</td></tr>`).join('');
+
+  const buy = s.buy, reno = s.reno * 1.15, arv = s.arv, holdMo = s.holdMo;
+  const loanAmt = (buy + reno) * (s.ltc / 100);
+  const loanPts = loanAmt * 0.02;
+  const monthly = loanAmt * s.rate / 100 / 12 + buy * 0.022 / 12 + 1200;
+  const holdCost = monthly * holdMo;
+  const rtf = njRTF(arv);
+  const gpf = njGPF(arv);
+  const bac = arv * 0.025;
+  const staging = 30000;
+  const atty = 3000;
+  const closingBuy = buy * 0.01;
+  const totalCost = buy + reno + loanPts + holdCost + rtf + gpf + bac + staging + atty + closingBuy;
+  const profit = arv - totalCost;
+  const roi = (profit / totalCost) * 100;
+  const equity = (buy + reno) - loanAmt;
+  const coc = (profit / equity) * 100;
+
+  const pnlRows = [
+    ['<strong>REVENUE</strong>', ''],
+    ['Sale Price (ARV)', `<span class="text-green bold">${fmt(arv)}</span>`],
+    ['<strong>COSTS</strong>', ''],
+    ['Purchase Price', fmt(buy)],
+    ['Renovation (w/ contingency)', fmt(reno)],
+    ['Loan Points (2%)', fmt(loanPts)],
+    [`Holding Costs (${holdMo} mo @ ${fmt(monthly)}/mo)`, `<span class="warn">${fmt(holdCost)}</span>`],
+    ['NJ RTF (seller)', fmt(rtf)],
+    [`NJ GPF / Mansion Tax`, `<span class="warn">${fmt(gpf)}</span>`],
+    ['Buyer Agent Commission (2.5%)', fmt(bac)],
+    ['Staging & Marketing', fmt(staging)],
+    ['Attorney + Misc Closing', fmt(atty + closingBuy)],
+    ['<strong>TOTAL COST</strong>', `<span class="bold">${fmt(totalCost)}</span>`],
+    ['<hr style="border-color:var(--border)">', ''],
+    [`<strong>GROSS PROFIT</strong>`, `<span class="${profit > 0 ? 'text-green' : 'text-red'} bold" style="font-size:16px">${fmt(profit)}</span>`],
+    ['ROI on Total Cost', `<span class="${roi > 15 ? 'text-green' : roi > 8 ? 'warn' : 'text-red'}">${pct(roi)}</span>`],
+    ['Cash-on-Cash (equity deployed)', `<span class="${coc > 20 ? 'text-green' : 'warn'}">${pct(coc)}</span>`],
+    ['Equity Required', fmt(equity)],
+  ];
+  document.getElementById('scen-pnl').innerHTML = pnlRows.map(([k,v]) =>
+    `<tr><td>${k}</td><td class="text-right">${v}</td></tr>`).join('');
+
+  drawCashflow(s, { buy, reno, loanAmt, monthly, arv, holdMo, profit });
+}
+
+function drawCashflow(s, d) {
+  const canvas = document.getElementById('cashflow-chart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.parentElement.offsetWidth - 32;
+  canvas.height = 160;
+  const W = canvas.width, H = canvas.height;
+
+  const months = Array.from({length: d.holdMo + 2}, (_, i) => i);
+  const equity = (d.buy + d.reno) - d.loanAmt;
+  const cashflows = months.map(m => {
+    if (m === 0) return -equity;
+    if (m === d.holdMo + 1) return d.arv - d.loanAmt - (d.monthly * d.holdMo * 0.3); // simplified exit
+    return -d.monthly;
+  });
+
+  const minV = Math.min(...cashflows), maxV = Math.max(...cashflows);
+  const range = maxV - minV;
+  const pad = 30;
+  const barW = (W - pad * 2) / months.length * 0.7;
+  const barGap = (W - pad * 2) / months.length;
+  const zeroY = H - pad - (-minV / range) * (H - pad * 2);
+
+  ctx.clearRect(0, 0, W, H);
+  ctx.strokeStyle = '#2d3454'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(pad, zeroY); ctx.lineTo(W - pad, zeroY); ctx.stroke();
+  ctx.fillStyle = '#8892a4'; ctx.font = '10px system-ui';
+  ctx.fillText('$0', 2, zeroY + 4);
+
+  months.forEach((m, i) => {
+    const x = pad + i * barGap;
+    const v = cashflows[i];
+    const barH = Math.abs(v / range) * (H - pad * 2);
+    const y = v >= 0 ? zeroY - barH : zeroY;
+    ctx.fillStyle = v >= 0 ? '#2ecc71' : (m === 0 ? '#9b59b6' : '#e74c3c');
+    ctx.fillRect(x, y, barW, barH);
+    ctx.fillStyle = '#8892a4';
+    ctx.fillText(m === d.holdMo + 1 ? 'Exit' : `M${m}`, x, H - 6);
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DUE DILIGENCE CHECKLIST
+// ══════════════════════════════════════════════════════════════
+const DD_ITEMS = [
+  { cat: 'Financial / Deal', items: [
+    'Run full Deal Analyzer (purchase, reno, ARV, hold, NJ taxes)',
+    'BPO from 2 local agents — comps from last 60 days, same school district',
+    'Worst-case ARV scenario modeled (10% below estimate)',
+    'Minimum 20% profit margin on worst-case scenario confirmed',
+    'Exit strategies modeled: sell, rent, refinance',
+    'NJ GPF mansion tax calculated for exit price',
+    'Entity structure confirmed with NJ CPA (LLC, S-Corp)',
+    'Capital stack secured: HML commitment letter in hand',
+    'Interest reserve held (6 months minimum)',
+  ]},
+  { cat: 'Physical / Environmental', items: [
+    'Full home inspection — licensed NJ inspector',
+    'Underground storage tank sweep (pre-1985 homes — mandatory)',
+    'Radon test (Princeton is Zone 1 — high risk)',
+    'Lead paint disclosure / test (pre-1978 homes)',
+    'Asbestos assessment (pre-1980: floor tiles, insulation, pipe wrap)',
+    'Foundation inspection (basement cracks, waterproofing, settlement)',
+    'Electrical panel assessment (knob-and-tube, FPE/Zinsco panels — red flags)',
+    'Roof condition and remaining life assessment',
+    'HVAC age and condition (full replacement budget if 15yr+)',
+    'Septic / sewer scope (if well/septic — test perc)',
+    'Wetlands and flood zone check (FEMA map, township zoning)',
+  ]},
+  { cat: 'Legal / Title', items: [
+    'Title search — confirm clear title, no liens',
+    'Deed restriction review (HOA covenants, historic easements)',
+    'Survey — confirm lot lines, setbacks, encroachments',
+    'Open permits research — none should be open from prior work',
+    'Certificate of Occupancy history — any outstanding violations',
+    'NJ attorney engaged (required for closing)',
+    'Zoning confirmed: use, setback, FAR, height, accessory structures',
+  ]},
+  { cat: 'Renovation Planning', items: [
+    'GC walk-through and preliminary scope of work',
+    'GC reference checks — 3 recent comparable projects',
+    'GC license confirmed (NJ C13)',
+    'Preliminary renovation budget with 15% contingency',
+    'Historic Preservation Commission review required? (Princeton Borough)',
+    'Permit timeline confirmed with township (4-12 wks Princeton, 2-4 wks others)',
+    'Architect / designer engaged for permit drawings',
+    'Key subcontractor availability confirmed (plumber, electrician, HVAC)',
+  ]},
+  { cat: 'Market / Exit', items: [
+    'Target buyer profile defined (pharma exec, academic, finance, NYC commuter)',
+    'Competing listings analyzed (active + sold last 90 days)',
+    'Listing agent relationship established — get feedback on finish level',
+    'Target list date confirmed (aim for March-June window)',
+    'Staging plan confirmed — budget $25K-$50K for luxury',
+    'Carrying cost modeled to target list date + 45 days',
+    'Absorbed into deal: worst-case 75-day market time',
+  ]},
+];
+
+function renderChecklist() {
+  const saved = JSON.parse(localStorage.getItem('flip-dd-checklist') || '{}');
+  const col1El = document.getElementById('dd-col1');
+  const col2El = document.getElementById('dd-col2');
+  const cats = DD_ITEMS;
+  const mid = Math.ceil(cats.length / 2);
+
+  [col1El, col2El].forEach((el, colIdx) => {
+    const myCats = cats.slice(colIdx === 0 ? 0 : mid, colIdx === 0 ? mid : cats.length);
+    el.innerHTML = myCats.map(cat => `
+      <div class="chk-cat">${cat.cat}</div>
+      ${cat.items.map(item => {
+        const key = cat.cat + '|' + item;
+        const checked = saved[key] ? 'checked' : '';
+        return `<div class="chk-item"><input type="checkbox" ${checked} onchange="saveCheck('${key.replace(/'/g,"\\'")}', this.checked)"><span>${item}</span></div>`;
+      }).join('')}
+    `).join('');
+  });
+}
+
+function saveCheck(key, val) {
+  const saved = JSON.parse(localStorage.getItem('flip-dd-checklist') || '{}');
+  saved[key] = val;
+  localStorage.setItem('flip-dd-checklist', JSON.stringify(saved));
+}
+
+function resetChecklist() {
+  if (confirm('Reset all checklist items?')) {
+    localStorage.removeItem('flip-dd-checklist');
+    renderChecklist();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════════════
+calcDeal();
+updateDashKPIs();
+</script>
+</body>
+</html>
