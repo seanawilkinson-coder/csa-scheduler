@@ -153,6 +153,13 @@ canvas{display:block}
 .alert{padding:12px 16px;border-radius:8px;font-size:13px;margin-bottom:12px}
 .alert-warn{background:#3d2a1a;border:1px solid var(--orange);color:var(--orange)}
 .alert-info{background:#1a2d3d;border:1px solid var(--blue);color:var(--blue)}
+
+/* ── PROJECT DETAIL ── */
+.pd-tab-btn{padding:6px 16px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);cursor:pointer;font-size:13px;font-weight:600;margin-right:4px;transition:all .15s}
+.pd-tab-btn.active{background:var(--gold);border-color:var(--gold);color:#000}
+.pd-tab-btn:hover:not(.active){background:var(--surface2);color:var(--text)}
+.pd-tab-content{margin-top:0}
+tfoot tr td{padding:10px 12px;font-size:13px}
 </style>
 </head>
 <body>
@@ -340,8 +347,28 @@ canvas{display:block}
   </div>
   <div id="project-list"></div>
   <div id="no-projects" class="card text-muted" style="text-align:center;padding:40px">
-    No projects yet. Click "New Project" to start tracking a flip.
+    No projects yet. Click "+ New Project" to start tracking a flip — expenses, carrying costs, and full P&amp;L included.
   </div>
+</div>
+
+<!-- ════════════════════════════ PROJECT DETAIL ══════════════════════════════ -->
+<div id="sec-proj-detail" class="section">
+  <div class="flex items-center gap-3 mb-4">
+    <button class="btn btn-ghost btn-sm" onclick="goToProjects()">← Projects</button>
+    <h2 id="pd-title" style="margin:0;flex:1"></h2>
+    <span id="pd-phase-badge" class="pill active"></span>
+  </div>
+  <div class="card-grid mb-4" id="pd-kpis" style="grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px"></div>
+  <div style="margin-bottom:16px">
+    <button class="pd-tab-btn active" data-tab="overview" onclick="pdTab('overview')">Overview</button>
+    <button class="pd-tab-btn" data-tab="expenses" onclick="pdTab('expenses')">Expenses</button>
+    <button class="pd-tab-btn" data-tab="exit" onclick="pdTab('exit')">Exit Analysis</button>
+    <button class="pd-tab-btn" data-tab="carry" onclick="pdTab('carry')">Carrying Costs</button>
+  </div>
+  <div id="pd-tab-overview" class="pd-tab-content"></div>
+  <div id="pd-tab-expenses" class="pd-tab-content" style="display:none"></div>
+  <div id="pd-tab-exit" class="pd-tab-content" style="display:none"></div>
+  <div id="pd-tab-carry" class="pd-tab-content" style="display:none"></div>
 </div>
 
 <!-- ═══════════════════════════════ MARKET INTEL ════════════════════════════ -->
@@ -919,11 +946,30 @@ function quickDeal() {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  PROJECTS (localStorage)
+//  PROJECTS (localStorage) — full expense + P&L tracking
 // ══════════════════════════════════════════════════════════════
 const PHASES = ['Sourcing','Under Contract','Due Diligence','Permits','Renovation','Staging','Listed','Sold'];
+const EXP_CATS = {
+  purchase:'Purchase / Closing', structural:'Foundation / Structural',
+  plumbing:'Plumbing', electrical:'Electrical', hvac:'HVAC',
+  kitchen:'Kitchen', baths:'Bathrooms', flooring:'Flooring',
+  winDoors:'Windows / Doors', exterior:'Exterior / Roofing',
+  landscape:'Landscaping', permits:'Permits / Fees',
+  staging:'Staging / Marketing', carry:'Carrying Costs', other:'Other',
+};
+let currentProjIdx = -1;
+
 function loadProjects() { try { return JSON.parse(localStorage.getItem('flip-projects') || '[]'); } catch { return []; } }
 function saveProjects(p) { localStorage.setItem('flip-projects', JSON.stringify(p)); }
+
+function goToProjects() {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById('sec-projects').classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick') === "show('projects')");
+  });
+  renderProjects();
+}
 
 function renderProjects() {
   const projects = loadProjects();
@@ -934,18 +980,29 @@ function renderProjects() {
   list.innerHTML = projects.map((p, i) => {
     const phaseIdx = PHASES.indexOf(p.phase);
     const progress = Math.round((phaseIdx + 1) / PHASES.length * 100);
-    const daysSince = Math.round((Date.now() - p.created) / 86400000);
-    const budgetUsed = (p.spent || 0);
-    const budgetTotal = (p.budget || 0);
+    const closeTs = p.closeDate || p.created;
+    const holdDays = Math.round((Date.now() - closeTs) / 86400000);
+    const expenses = p.expenses || [];
+    const expTotal = expenses.reduce((s, e) => s + (e.amount || 0), 0);
+    const budgetTotal = p.budget || 0;
+    const hmlP = ((p.buy || 0) + budgetTotal) * (p.hmlLtc || 75) / 100;
+    const monthlyCarry = hmlP * (p.hmlRate || 11) / 100 / 12
+      + (p.buy || 0) * 0.0251 / 12 + (p.buy || 0) * 0.0008 / 12 + 875;
+    const totalCarrySoFar = monthlyCarry * holdDays / 30;
+    const gpf = njGPF(p.arv || 0);
+    const rtf = njRTF(p.arv || 0);
+    const comm = (p.arv || 0) * (p.agentComm || 5) / 100;
+    const allIn = (p.buy||0) + (p.buy||0)*0.022 + (p.budget||0)*1.15 + totalCarrySoFar;
+    const netProfit = (p.arv||0) - allIn - gpf - rtf - comm - 5000 - (p.stagingBudget||20000);
     return `<div class="proj-card" onclick="openProject(${i})">
       <div class="proj-header">
         <div>
           <div class="proj-name">${p.address}</div>
-          <div class="text-sm text-muted mt-2">${p.municipality || ''} • ${daysSince} days since acquisition</div>
+          <div class="text-sm text-muted mt-2">${p.municipality || ''} · ${holdDays}d held · <span class="warn">${fmt(monthlyCarry)}/mo carry</span></div>
         </div>
         <div class="text-right">
           <div class="bold text-gold">${fmt(p.arv)} ARV</div>
-          <div class="text-sm text-muted">Buy: ${fmt(p.buy)}</div>
+          <div class="text-sm ${netProfit >= 150000 ? 'text-green' : netProfit >= 0 ? 'warn' : 'text-red'}">${fmt(netProfit)} est. net</div>
         </div>
       </div>
       <div class="phase-pills">
@@ -953,9 +1010,9 @@ function renderProjects() {
       </div>
       <div class="progress-bar mt-2"><div class="progress-fill" style="width:${progress}%"></div></div>
       <div class="flex gap-3 mt-2">
-        <span class="text-sm text-muted">Budget: ${fmt(budgetUsed)} / ${fmt(budgetTotal)}</span>
-        ${budgetTotal ? `<span class="text-sm ${budgetUsed > budgetTotal ? 'text-red' : 'text-muted'}">${budgetTotal ? Math.round(budgetUsed/budgetTotal*100) : 0}% used</span>` : ''}
-        <span class="text-sm text-muted" style="margin-left:auto">Hold: ~${fmt(17619 * daysSince / 30)}</span>
+        <span class="text-sm text-muted">Reno: ${fmt(expTotal)} logged / ${fmt(budgetTotal)} budget</span>
+        ${budgetTotal ? `<span class="text-sm ${expTotal > budgetTotal ? 'text-red' : 'text-muted'}">${Math.round(expTotal/budgetTotal*100)}%</span>` : ''}
+        <span class="text-sm text-muted" style="margin-left:auto">Carry so far: ${fmt(totalCarrySoFar)}</span>
       </div>
     </div>`;
   }).join('');
@@ -967,8 +1024,13 @@ function updateDashKPIs() {
   const active = projects.filter(p => p.phase !== 'Sold');
   const capital = active.reduce((s, p) => s + (p.buy || 0) + (p.budget || 0), 0);
   const profit = active.reduce((s, p) => {
-    const allin = (p.buy||0) + (p.budget||0) * 1.15 + njGPF(p.arv||0) + njRTF(p.arv||0) + (p.buy||0)*0.022/12*15;
-    return s + ((p.arv||0) - allin);
+    const closeTs = p.closeDate || p.created;
+    const holdMo = Math.round((Date.now() - closeTs) / 86400000) / 30;
+    const hmlP = ((p.buy||0) + (p.budget||0)) * (p.hmlLtc||75) / 100;
+    const carry = (hmlP*(p.hmlRate||11)/100/12 + (p.buy||0)*0.0251/12 + (p.buy||0)*0.0008/12 + 875) * holdMo;
+    const allIn = (p.buy||0) + (p.buy||0)*0.022 + (p.budget||0)*1.15 + carry;
+    const exit = njGPF(p.arv||0) + njRTF(p.arv||0) + (p.arv||0)*(p.agentComm||5)/100 + 25000;
+    return s + ((p.arv||0) - allIn - exit);
   }, 0);
   set('kpi-active', active.length);
   set('kpi-capital', fmt(capital));
@@ -995,15 +1057,25 @@ function openNewProject() {
     </div>
     <div class="form-row">
       <div class="field"><label>ARV Estimate ($)</label><input type="number" id="np-arv" placeholder="2000000"></div>
-      <div class="field"><label>Target List Date</label><input type="date" id="np-list"></div>
+      <div class="field"><label>Acquisition / Close Date</label><input type="date" id="np-close" value="${new Date().toISOString().slice(0,10)}"></div>
     </div>
-    <div class="field mb-4"><label>Notes</label><input id="np-notes" placeholder="Key risks, contractor status, etc."></div>
-    <button class="btn btn-primary w-full" onclick="saveNewProject()">Save Project</button>
+    <div class="form-row">
+      <div class="field"><label>Target List Date</label><input type="date" id="np-list"></div>
+      <div class="field"><label>HML Rate (%)</label><input type="number" id="np-rate" value="11.0" step="0.25"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>LTC (%)</label><input type="number" id="np-ltc" value="75"></div>
+      <div class="field"><label>Agent Commission (%)</label><input type="number" id="np-comm" value="5.0" step="0.25"></div>
+      <div class="field"><label>Staging Budget ($)</label><input type="number" id="np-staging" value="20000"></div>
+    </div>
+    <div class="field mb-4"><label>Notes / Key Risks</label><input id="np-notes" placeholder="Key risks, contractor status, HPC flags, etc."></div>
+    <button class="btn btn-primary w-full" onclick="saveNewProject()">Create Project</button>
   `;
   document.getElementById('modal-bg').classList.add('open');
 }
 
 function saveNewProject() {
+  const closeVal = document.getElementById('np-close').value;
   const projects = loadProjects();
   projects.push({
     address: document.getElementById('np-addr').value || 'Unnamed Property',
@@ -1012,41 +1084,441 @@ function saveNewProject() {
     buy: parseFloat(document.getElementById('np-buy').value) || 0,
     budget: parseFloat(document.getElementById('np-budget').value) || 0,
     arv: parseFloat(document.getElementById('np-arv').value) || 0,
+    closeDate: closeVal ? new Date(closeVal).getTime() : Date.now(),
     listDate: document.getElementById('np-list').value,
+    hmlRate: parseFloat(document.getElementById('np-rate').value) || 11.0,
+    hmlLtc: parseFloat(document.getElementById('np-ltc').value) || 75,
+    agentComm: parseFloat(document.getElementById('np-comm').value) || 5.0,
+    stagingBudget: parseFloat(document.getElementById('np-staging').value) || 20000,
     notes: document.getElementById('np-notes').value,
-    spent: 0,
     created: Date.now(),
+    expenses: [],
+    budgetCats: {},
   });
   saveProjects(projects);
   closeModal();
   renderProjects();
 }
 
+// ── Navigate to project detail view ───────────────────────────
 function openProject(i) {
+  currentProjIdx = i;
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => {
+    b.classList.toggle('active', b.getAttribute('onclick') === "show('projects')");
+  });
+  document.getElementById('sec-proj-detail').classList.add('active');
+  // Reset tab to overview on fresh open
+  document.querySelectorAll('.pd-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'overview'));
+  document.querySelectorAll('.pd-tab-content').forEach(t => t.style.display = t.id === 'pd-tab-overview' ? 'block' : 'none');
+  renderProjectDetail(i);
+  renderOverviewTab(loadProjects()[i], i);
+}
+
+function renderProjectDetail(i) {
   const projects = loadProjects();
   const p = projects[i];
-  document.getElementById('modal-title').textContent = p.address;
-  const phaseIdx = PHASES.indexOf(p.phase);
-  document.getElementById('modal-body').innerHTML = `
-    <div class="card-grid grid-2 mb-4">
-      <div><div class="kpi-val text-gold">${fmt(p.arv)}</div><div class="kpi-label">ARV</div></div>
-      <div><div class="kpi-val">${fmt((p.arv||0) - (p.buy||0) - (p.budget||0)*1.15 - njGPF(p.arv||0) - njRTF(p.arv||0))}</div><div class="kpi-label">Est. Profit</div></div>
+  const closeTs = p.closeDate || p.created;
+  const holdDays = Math.round((Date.now() - closeTs) / 86400000);
+  const holdMo = holdDays / 30;
+  const hmlPrincipal = ((p.buy||0) + (p.budget||0)) * (p.hmlLtc||75) / 100;
+  const mInt = hmlPrincipal * (p.hmlRate||11) / 100 / 12;
+  const mTax = (p.buy||0) * 0.0251 / 12;
+  const mIns = (p.buy||0) * 0.0008 / 12;
+  const monthlyCarry = mInt + mTax + mIns + 875;
+  const totalCarry = monthlyCarry * holdMo;
+  const expenses = p.expenses || [];
+  const totalExp = expenses.reduce((s, e) => s + (e.amount||0), 0);
+  const closingIn = (p.buy||0) * 0.022;
+  const contingency = (p.budget||0) * 0.15;
+  const allIn = (p.buy||0) + closingIn + (p.budget||0) + contingency + totalCarry;
+  const gpf = njGPF(p.arv||0);
+  const rtf = njRTF(p.arv||0);
+  const comm = (p.arv||0) * (p.agentComm||5) / 100;
+  const totalExit = gpf + rtf + comm + 5000 + (p.stagingBudget||20000);
+  const netProfit = (p.arv||0) - allIn - totalExit;
+  const roi = p.buy ? netProfit / ((p.buy||0) + (p.budget||0)) * 100 : 0;
+
+  document.getElementById('pd-title').textContent = p.address;
+  document.getElementById('pd-phase-badge').textContent = p.phase;
+  document.getElementById('pd-kpis').innerHTML = `
+    <div class="card" style="padding:14px"><div class="kpi-val text-gold" style="font-size:22px">${fmt(p.arv)}</div><div class="kpi-label">ARV Target</div><div class="kpi-sub text-muted">Projected exit price</div></div>
+    <div class="card" style="padding:14px"><div class="kpi-val ${netProfit>=150000?'up':netProfit>=0?'warn':'down'}" style="font-size:22px">${fmt(netProfit)}</div><div class="kpi-label">Est. Net Profit</div><div class="kpi-sub ${roi>=0?'up':'down'}">${roi.toFixed(1)}% ROI on capital deployed</div></div>
+    <div class="card" style="padding:14px"><div class="kpi-val warn" style="font-size:22px">${fmt(monthlyCarry)}<span style="font-size:12px;color:var(--muted)">/mo</span></div><div class="kpi-label">Monthly Carry</div><div class="kpi-sub text-muted">${holdDays}d held · ${fmt(totalCarry)} accrued</div></div>
+    <div class="card" style="padding:14px"><div class="kpi-val" style="font-size:22px">${fmt(totalExp)}</div><div class="kpi-label">Expenses Logged</div><div class="kpi-sub ${totalExp>(p.budget||0)?'down':'text-muted'}">${expenses.length} entries · ${fmt((p.budget||0)-totalExp)} remaining</div></div>
+    <div class="card" style="padding:14px"><div class="kpi-val warn" style="font-size:22px">${fmt(totalExit)}</div><div class="kpi-label">Exit Fees</div><div class="kpi-sub text-muted">GPF+RTF+comm+attorney+staging</div></div>
+    <div class="card" style="padding:14px"><div class="kpi-val" style="font-size:22px">${fmt(allIn)}</div><div class="kpi-label">All-In Cost</div><div class="kpi-sub text-muted">Incl. ${holdMo.toFixed(1)}mo carry + 15% contingency</div></div>
+  `;
+}
+
+function pdTab(tab) {
+  document.querySelectorAll('.pd-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.pd-tab-content').forEach(t => t.style.display = t.id === 'pd-tab-' + tab ? 'block' : 'none');
+  const i = currentProjIdx;
+  if (i < 0) return;
+  const p = loadProjects()[i];
+  if (tab === 'overview') renderOverviewTab(p, i);
+  else if (tab === 'expenses') renderExpensesTab(p, i);
+  else if (tab === 'exit') renderExitTab(p, i);
+  else if (tab === 'carry') renderCarryTab(p, i);
+}
+
+function renderOverviewTab(p, i) {
+  const expenses = p.expenses || [];
+  const budgetCats = p.budgetCats || {};
+  const actual = {};
+  expenses.forEach(e => { actual[e.cat] = (actual[e.cat]||0) + (e.amount||0); });
+  const actualTotal = expenses.reduce((s, e) => s + (e.amount||0), 0);
+  const rows = Object.entries(EXP_CATS).filter(([k]) => k !== 'purchase' && k !== 'carry').map(([k, lbl]) => {
+    const b = budgetCats[k]||0, a = actual[k]||0;
+    if (!b && !a) return '';
+    return `<tr><td>${lbl}</td><td class="text-right">${b ? fmt(b) : '<span class="text-muted">—</span>'}</td>
+      <td class="text-right ${a>0?'':'text-muted'}">${a ? fmt(a) : '—'}</td>
+      <td class="text-right ${b&&(b-a)<0?'down':a>0?'up':'text-muted'}">${b ? fmt(b-a) : '—'}</td></tr>`;
+  }).join('');
+  document.getElementById('pd-tab-overview').innerHTML = `
+    <div class="card-grid grid-2">
+      <div class="card">
+        <div class="flex items-center mb-4">
+          <h3 style="margin:0;flex:1">Budget vs Actual</h3>
+          <button class="btn btn-sm btn-ghost" onclick="editBudgetCategories(${i})">Set Category Budgets</button>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Category</th><th class="text-right">Budget</th><th class="text-right">Actual</th><th class="text-right">Remaining</th></tr></thead>
+          <tbody>
+            ${rows || '<tr><td colspan="4" class="text-muted" style="text-align:center;padding:16px">Log expenses or set category budgets to see breakdown.</td></tr>'}
+            <tr style="background:var(--surface2);font-weight:700">
+              <td>TOTAL RENOVATION</td>
+              <td class="text-right">${fmt(p.budget)}</td>
+              <td class="text-right">${fmt(actualTotal)}</td>
+              <td class="text-right ${actualTotal>(p.budget||0)?'down':'up'}">${fmt((p.budget||0)-actualTotal)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <div class="flex items-center mb-4">
+          <h3 style="margin:0;flex:1">Project Settings</h3>
+          <button class="btn btn-sm btn-ghost" onclick="editProjectSettings(${i})">Edit</button>
+        </div>
+        <table class="tbl">
+          <tbody>
+            <tr><td class="text-muted">Purchase Price</td><td class="text-right bold">${fmt(p.buy)}</td></tr>
+            <tr><td class="text-muted">Acquisition Date</td><td class="text-right">${new Date(p.closeDate||p.created).toLocaleDateString()}</td></tr>
+            <tr><td class="text-muted">Renovation Budget</td><td class="text-right bold">${fmt(p.budget)}</td></tr>
+            <tr><td class="text-muted">ARV Estimate</td><td class="text-right bold">${fmt(p.arv)}</td></tr>
+            <tr><td class="text-muted">Target List Date</td><td class="text-right">${p.listDate||'—'}</td></tr>
+            <tr><td class="text-muted">HML Rate / LTC</td><td class="text-right">${p.hmlRate||11}% / ${p.hmlLtc||75}%</td></tr>
+            <tr><td class="text-muted">Agent Commission</td><td class="text-right">${p.agentComm||5}%</td></tr>
+            <tr><td class="text-muted">Staging Budget</td><td class="text-right">${fmt(p.stagingBudget||20000)}</td></tr>
+            <tr><td class="text-muted">Municipality</td><td class="text-right">${p.municipality||'—'}</td></tr>
+          </tbody>
+        </table>
+        ${p.notes ? `<div class="alert alert-info mt-4" style="white-space:pre-wrap">${p.notes}</div>` : ''}
+        <div class="flex gap-2 mt-4">
+          <button class="btn btn-primary btn-sm" onclick="updatePhaseModal(${i})">Update Phase</button>
+          <button class="btn btn-ghost btn-sm" onclick="editProjectSettings(${i})">Edit Settings</button>
+          <button class="btn btn-red btn-sm" onclick="deleteProjectConfirm(${i})">Delete Project</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderExpensesTab(p, i) {
+  const expenses = p.expenses || [];
+  const total = expenses.reduce((s, e) => s + (e.amount||0), 0);
+  const catOptions = Object.entries(EXP_CATS).map(([k,v]) => `<option value="${k}">${v}</option>`).join('');
+  const ledger = expenses.length
+    ? [...expenses].map((e, idx) => `<tr>
+        <td>${e.date||'—'}</td>
+        <td>${EXP_CATS[e.cat]||e.cat}</td>
+        <td>${e.vendor||'—'}</td>
+        <td class="text-right bold">${fmt(e.amount)}</td>
+        <td class="text-muted">${e.notes||''}</td>
+        <td><button onclick="deleteExpense(${i},${idx})" style="background:#3d1a1a;border:none;color:var(--red);padding:2px 8px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700">×</button></td>
+      </tr>`).reverse().join('')
+    : `<tr><td colspan="6" class="text-muted" style="text-align:center;padding:20px">No expenses logged yet.</td></tr>`;
+  document.getElementById('pd-tab-expenses').innerHTML = `
+    <div class="card mb-4">
+      <h3>Log Expense</h3>
+      <div class="form-row">
+        <div class="field" style="min-width:140px"><label>Date</label><input type="date" id="exp-date" value="${new Date().toISOString().slice(0,10)}"></div>
+        <div class="field"><label>Category</label><select id="exp-cat">${catOptions}</select></div>
+        <div class="field"><label>Vendor / Payee</label><input id="exp-vendor" placeholder="Contractor, supplier..."></div>
+        <div class="field" style="min-width:130px"><label>Amount ($)</label><input type="number" id="exp-amount" placeholder="0" min="0"></div>
+      </div>
+      <div class="field mb-4"><label>Notes</label><input id="exp-notes" placeholder="Work description, check #, invoice #..."></div>
+      <button class="btn btn-primary btn-sm" onclick="addExpense(${i})">Add Expense</button>
     </div>
-    <div class="mb-4">
-      <h4>Update Phase</h4>
-      <div class="phase-pills">${PHASES.map((ph, j) => `<span class="pill ${j < phaseIdx ? 'done' : j === phaseIdx ? 'active' : ''}" style="cursor:pointer" onclick="updatePhase(${i},'${ph}')">${ph}</span>`).join('')}</div>
+    <div class="card">
+      <div class="flex items-center mb-4">
+        <h3 style="margin:0;flex:1">Expense Ledger</h3>
+        <span class="text-gold bold">${fmt(total)} total &nbsp;·&nbsp; ${expenses.length} entries &nbsp;·&nbsp; <span class="${total>(p.budget||0)?'down':'up'}">${fmt((p.budget||0)-total)} remaining budget</span></span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Date</th><th>Category</th><th>Vendor</th><th class="text-right">Amount</th><th>Notes</th><th></th></tr></thead>
+          <tbody>${ledger}</tbody>
+        </table>
+      </div>
+    </div>`;
+}
+
+function renderExitTab(p, i) {
+  const closeTs = p.closeDate||p.created;
+  const holdDays = Math.round((Date.now()-closeTs)/86400000);
+  const holdMo = holdDays/30;
+  const closingIn = (p.buy||0)*0.022;
+  const contingency = (p.budget||0)*0.15;
+  const hmlP = ((p.buy||0)+(p.budget||0))*(p.hmlLtc||75)/100;
+  const mInt = hmlP*(p.hmlRate||11)/100/12;
+  const mTax = (p.buy||0)*0.0251/12;
+  const mIns = (p.buy||0)*0.0008/12;
+  const monthlyCarry = mInt+mTax+mIns+875;
+  const totalCarry = monthlyCarry*holdMo;
+  const gpf = njGPF(p.arv||0);
+  const rtf = njRTF(p.arv||0);
+  const comm = (p.arv||0)*(p.agentComm||5)/100;
+  const stagingCost = p.stagingBudget||20000;
+  const totalExit = gpf+rtf+comm+5000+stagingCost;
+  const allIn = (p.buy||0)+closingIn+(p.budget||0)+contingency+totalCarry;
+  const netProfit = (p.arv||0)-allIn-totalExit;
+  const roi = p.buy ? netProfit/((p.buy||0)+(p.budget||0))*100 : 0;
+  const equityIn = (p.buy||0)*(1-(p.hmlLtc||75)/100)+(p.budget||0)*0.25;
+  const coc = equityIn ? netProfit/equityIn*100 : 0;
+  const arv70 = (p.arv||0)*0.70, arv65 = (p.arv||0)*0.65;
+  const verdictCls = netProfit>150000?'verdict-go':netProfit>0?'verdict-caution':'verdict-nogo';
+  const verdictIcon = netProfit>150000?'✅':netProfit>0?'⚠️':'🚫';
+  const row = (lbl, val, cls='', indent=false) => `<div class="cost-line"><span style="${indent?'padding-left:16px;font-size:12px;color:var(--muted)':'font-weight:500'}">${lbl}</span><span class="${cls}">${fmt(val)}</span></div>`;
+  document.getElementById('pd-tab-exit').innerHTML = `
+    <div class="card-grid grid-2">
+      <div class="card">
+        <h3>Full P&L Breakdown</h3>
+        <div class="cost-line" style="font-weight:700;color:var(--green);font-size:15px;padding:8px 0 14px"><span>REVENUE — Sale Price (ARV)</span><span>${fmt(p.arv)}</span></div>
+        <h4 style="margin-bottom:8px">ACQUISITION</h4>
+        ${row('Purchase Price', p.buy||0)}
+        ${row('Purchase Closing Costs (2.2%)', closingIn, '', true)}
+        ${row('Renovation Budget', p.budget||0)}
+        ${row('Renovation Contingency (15%)', contingency, 'warn', true)}
+        <h4 style="margin:14px 0 8px">CARRYING COSTS — ${holdMo.toFixed(1)} months</h4>
+        ${row('HML Interest @ '+(p.hmlRate||11)+'%', mInt*holdMo)}
+        ${row('NJ Property Tax (2.51%/yr)', mTax*holdMo, '', true)}
+        ${row('Hazard Insurance (0.08%/yr)', mIns*holdMo, '', true)}
+        ${row('Utilities + Security ($875/mo)', 875*holdMo, '', true)}
+        <h4 style="margin:14px 0 8px">EXIT FEES</h4>
+        ${row('NJ GPF — Mansion Tax', gpf, gpf>0?'warn':'')}
+        ${row('NJ RTF — Seller Transfer Fee', rtf, '', true)}
+        ${row('Agent Commission ('+(p.agentComm||5)+'%)', comm, '', true)}
+        ${row('Attorney Fees — both sides', 5000, '', true)}
+        ${row('Staging + Marketing', stagingCost, '', true)}
+        <div class="sep"></div>
+        <div class="cost-line" style="font-size:16px;padding:12px 0;font-weight:700"><span>NET PROFIT (LOSS)</span><span class="${netProfit>=0?'up':'down'}" style="font-size:22px">${fmt(netProfit)}</span></div>
+        <div class="cost-line"><span class="text-muted">ROI on Deployed Capital</span><span class="${roi>=0?'up':'down'}">${roi.toFixed(1)}%</span></div>
+        <div class="cost-line"><span class="text-muted">Cash-on-Cash Return</span><span class="${coc>=0?'up':'down'}">${coc.toFixed(1)}%</span></div>
+      </div>
+      <div class="card">
+        <h3>Deal Verdict</h3>
+        <div class="verdict ${verdictCls} mb-4">${verdictIcon}&nbsp; ${netProfit>150000?fmt(netProfit)+' net profit — PROCEED':netProfit>0?fmt(netProfit)+' profit — below $150K minimum':fmt(Math.abs(netProfit))+' projected LOSS'}</div>
+        <h4 style="margin-bottom:8px">ARV Rule Checks</h4>
+        <table class="tbl mb-4">
+          <tbody>
+            <tr><td>70% ARV Rule — max all-in</td><td class="text-right">${fmt(arv70)}</td><td class="bold ${allIn<=arv70?'up':'down'}">${allIn<=arv70?'✓ Pass':'✗ Fail'}</td></tr>
+            <tr><td>65% ARV Rule ($1.5M+ exits)</td><td class="text-right">${fmt(arv65)}</td><td class="bold ${allIn<=arv65?'up':'down'}">${allIn<=arv65?'✓ Pass':'✗ Fail'}</td></tr>
+            <tr><td>$150K Minimum Profit</td><td class="text-right">${fmt(150000)}</td><td class="bold ${netProfit>=150000?'up':'down'}">${netProfit>=150000?'✓ Met':'✗ Below'}</td></tr>
+            <tr><td class="text-muted">Current All-In</td><td class="text-right bold">${fmt(allIn)}</td><td class="text-muted">${((allIn/(p.arv||1))*100).toFixed(0)}% of ARV</td></tr>
+            <tr><td class="text-muted">Total Exit Fees</td><td class="text-right">${fmt(totalExit)}</td><td class="text-muted">${((totalExit/(p.arv||1))*100).toFixed(1)}% of ARV</td></tr>
+          </tbody>
+        </table>
+        <h4 style="margin-bottom:8px">Timeline</h4>
+        <table class="tbl">
+          <tbody>
+            <tr><td class="text-muted">Acquisition Date</td><td class="text-right">${new Date(p.closeDate||p.created).toLocaleDateString()}</td></tr>
+            <tr><td class="text-muted">Days Held</td><td class="text-right ${holdDays>365?'warn':''}">${holdDays}d (${holdMo.toFixed(1)} months)</td></tr>
+            <tr><td class="text-muted">Target List Date</td><td class="text-right">${p.listDate||'Not set'}</td></tr>
+            <tr><td class="text-muted">Days to Listing</td><td class="text-right">${p.listDate?Math.round((new Date(p.listDate)-Date.now())/86400000)+' days':'—'}</td></tr>
+          </tbody>
+        </table>
+        <button class="btn btn-ghost btn-sm mt-4" onclick="editProjectSettings(${i})">Update ARV / Dates / Rates</button>
+      </div>
+    </div>`;
+}
+
+function renderCarryTab(p, i) {
+  const closeTs = p.closeDate||p.created;
+  const listDate = p.listDate ? new Date(p.listDate) : null;
+  const targetMos = listDate ? Math.ceil((listDate-closeTs)/(30*86400000)) : 18;
+  const hmlP = ((p.buy||0)+(p.budget||0))*(p.hmlLtc||75)/100;
+  const mInt = hmlP*(p.hmlRate||11)/100/12;
+  const mTax = (p.buy||0)*0.0251/12;
+  const mIns = (p.buy||0)*0.0008/12;
+  const mTotal = mInt+mTax+mIns+875;
+  const rows = Array.from({length: Math.min(targetMos,24)}, (_,mo) => {
+    const dt = new Date(closeTs); dt.setMonth(dt.getMonth()+mo);
+    const isPast = dt <= new Date();
+    return `<tr style="${isPast?'background:rgba(255,255,255,.03)':'opacity:.55'}">
+      <td>${isPast?'<span class="up" style="font-size:10px">✓</span> ':''} Mo ${mo+1} — ${dt.toLocaleString('default',{month:'short',year:'numeric'})}</td>
+      <td class="text-right">${fmt(mInt)}</td><td class="text-right">${fmt(mTax)}</td>
+      <td class="text-right">${fmt(mIns)}</td><td class="text-right">${fmt(875)}</td>
+      <td class="text-right bold">${fmt(mTotal)}</td>
+      <td class="text-right text-muted">${fmt(mTotal*(mo+1))}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('pd-tab-carry').innerHTML = `
+    <div class="card">
+      <div class="flex items-center mb-4">
+        <h3 style="margin:0;flex:1">Monthly Carry — ${targetMos}-Month Projection</h3>
+        <span class="text-gold bold">${fmt(mTotal)}/mo × ${targetMos} mo = ${fmt(mTotal*targetMos)}</span>
+      </div>
+      <div class="card-grid grid-4 mb-4" style="gap:12px">
+        <div class="card" style="padding:14px"><div class="kpi-val warn" style="font-size:20px">${fmt(mInt)}</div><div class="kpi-label">HML Interest/mo</div><div class="kpi-sub text-muted">${fmt(hmlP)} @ ${p.hmlRate||11}%</div></div>
+        <div class="card" style="padding:14px"><div class="kpi-val" style="font-size:20px">${fmt(mTax)}</div><div class="kpi-label">Property Tax/mo</div><div class="kpi-sub text-muted">2.51% NJ rate on ${fmt(p.buy)}</div></div>
+        <div class="card" style="padding:14px"><div class="kpi-val" style="font-size:20px">${fmt(mIns)}</div><div class="kpi-label">Insurance/mo</div><div class="kpi-sub text-muted">0.08%/yr vacant coverage</div></div>
+        <div class="card" style="padding:14px"><div class="kpi-val" style="font-size:20px">${fmt(875)}</div><div class="kpi-label">Util + Security/mo</div><div class="kpi-sub text-muted">Flat estimate</div></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr><th>Period</th><th class="text-right">HML Interest</th><th class="text-right">Prop Tax</th><th class="text-right">Insurance</th><th class="text-right">Util/Sec</th><th class="text-right">Monthly Total</th><th class="text-right">Running Total</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr style="font-weight:700;background:var(--surface2)">
+            <td>TOTAL (${targetMos} months)</td>
+            <td class="text-right">${fmt(mInt*targetMos)}</td><td class="text-right">${fmt(mTax*targetMos)}</td>
+            <td class="text-right">${fmt(mIns*targetMos)}</td><td class="text-right">${fmt(875*targetMos)}</td>
+            <td class="text-right warn">${fmt(mTotal*targetMos)}</td><td class="text-right warn">${fmt(mTotal*targetMos)}</td>
+          </tr></tfoot>
+        </table>
+      </div>
+    </div>`;
+}
+
+function addExpense(i) {
+  const amt = parseFloat(document.getElementById('exp-amount').value);
+  if (!amt || amt <= 0) { alert('Enter a valid amount.'); return; }
+  const projects = loadProjects();
+  if (!projects[i].expenses) projects[i].expenses = [];
+  projects[i].expenses.push({
+    id: Date.now(),
+    date: document.getElementById('exp-date').value,
+    cat: document.getElementById('exp-cat').value,
+    vendor: document.getElementById('exp-vendor').value,
+    amount: amt,
+    notes: document.getElementById('exp-notes').value,
+  });
+  saveProjects(projects);
+  renderProjectDetail(i);
+  renderExpensesTab(projects[i], i);
+}
+
+function deleteExpense(i, idx) {
+  if (!confirm('Delete this expense?')) return;
+  const projects = loadProjects();
+  projects[i].expenses.splice(idx, 1);
+  saveProjects(projects);
+  renderProjectDetail(i);
+  renderExpensesTab(loadProjects()[i], i);
+}
+
+function editProjectSettings(i) {
+  const p = loadProjects()[i];
+  const closeDateVal = new Date(p.closeDate||p.created).toISOString().slice(0,10);
+  document.getElementById('modal-title').textContent = 'Edit Project Settings';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="form-row"><div class="field w-full"><label>Property Address</label><input id="ep-addr" value="${p.address||''}"></div></div>
+    <div class="form-row">
+      <div class="field"><label>Municipality</label><select id="ep-muni">
+        ${['Princeton Borough','Montgomery Township','West Windsor Township','Hopewell Township','Pennington Borough','Plainsboro Township','South Brunswick','Other'].map(m=>`<option ${m===p.municipality?'selected':''}>${m}</option>`).join('')}
+      </select></div>
+      <div class="field"><label>Current Phase</label><select id="ep-phase">
+        ${PHASES.map(ph=>`<option ${ph===p.phase?'selected':''}>${ph}</option>`).join('')}
+      </select></div>
     </div>
     <div class="form-row">
-      <div class="field"><label>Spent to Date ($)</label><input type="number" id="ep-spent" value="${p.spent||0}"></div>
-      <div class="field"><label>ARV Update ($)</label><input type="number" id="ep-arv" value="${p.arv||0}"></div>
+      <div class="field"><label>Purchase Price ($)</label><input type="number" id="ep-buy" value="${p.buy||0}"></div>
+      <div class="field"><label>Renovation Budget ($)</label><input type="number" id="ep-budget" value="${p.budget||0}"></div>
     </div>
-    <div class="field mb-4"><label>Notes</label><input id="ep-notes" value="${p.notes||''}"></div>
+    <div class="form-row">
+      <div class="field"><label>ARV Estimate ($)</label><input type="number" id="ep-arv" value="${p.arv||0}"></div>
+      <div class="field"><label>Acquisition / Close Date</label><input type="date" id="ep-close" value="${closeDateVal}"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>Target List Date</label><input type="date" id="ep-list" value="${p.listDate||''}"></div>
+      <div class="field"><label>HML Rate (%)</label><input type="number" id="ep-rate" value="${p.hmlRate||11.0}" step="0.25"></div>
+    </div>
+    <div class="form-row">
+      <div class="field"><label>LTC (%)</label><input type="number" id="ep-ltc" value="${p.hmlLtc||75}"></div>
+      <div class="field"><label>Agent Commission (%)</label><input type="number" id="ep-comm" value="${p.agentComm||5.0}" step="0.25"></div>
+      <div class="field"><label>Staging Budget ($)</label><input type="number" id="ep-staging" value="${p.stagingBudget||20000}"></div>
+    </div>
+    <div class="field mb-4"><label>Notes</label><textarea id="ep-notes" rows="3" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:8px;font-size:14px;resize:vertical;width:100%;font-family:var(--font)">${p.notes||''}</textarea></div>
     <div class="flex gap-2">
-      <button class="btn btn-primary" onclick="updateProject(${i})">Save Changes</button>
-      <button class="btn btn-red btn-sm" onclick="deleteProject(${i})">Delete</button>
-    </div>
-    ${p.notes ? `<div class="alert alert-info mt-4">${p.notes}</div>` : ''}
-  `;
+      <button class="btn btn-primary" onclick="saveProjectSettings(${i})">Save Settings</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>`;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function saveProjectSettings(i) {
+  const projects = loadProjects();
+  const p = projects[i];
+  const cv = document.getElementById('ep-close').value;
+  p.address = document.getElementById('ep-addr').value || p.address;
+  p.municipality = document.getElementById('ep-muni').value;
+  p.phase = document.getElementById('ep-phase').value;
+  p.buy = parseFloat(document.getElementById('ep-buy').value)||0;
+  p.budget = parseFloat(document.getElementById('ep-budget').value)||0;
+  p.arv = parseFloat(document.getElementById('ep-arv').value)||0;
+  if (cv) p.closeDate = new Date(cv).getTime();
+  p.listDate = document.getElementById('ep-list').value;
+  p.hmlRate = parseFloat(document.getElementById('ep-rate').value)||11.0;
+  p.hmlLtc = parseFloat(document.getElementById('ep-ltc').value)||75;
+  p.agentComm = parseFloat(document.getElementById('ep-comm').value)||5.0;
+  p.stagingBudget = parseFloat(document.getElementById('ep-staging').value)||20000;
+  p.notes = document.getElementById('ep-notes').value;
+  saveProjects(projects);
+  closeModal();
+  renderProjectDetail(i);
+  renderOverviewTab(projects[i], i);
+  pdTab('overview');
+}
+
+function editBudgetCategories(i) {
+  const p = loadProjects()[i];
+  const cats = p.budgetCats||{};
+  const fields = Object.entries(EXP_CATS).filter(([k])=>k!=='purchase'&&k!=='carry').map(([k,lbl])=>
+    `<div class="field" style="min-width:155px"><label>${lbl}</label><input type="number" id="bc-${k}" value="${cats[k]||''}" placeholder="0"></div>`
+  ).join('');
+  document.getElementById('modal-title').textContent = 'Set Category Budgets';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="alert alert-info mb-4">Total Renovation Budget: <strong>${fmt(p.budget)}</strong> — allocate below. Unallocated categories still track actual expenses.</div>
+    <div class="form-row" style="flex-wrap:wrap">${fields}</div>
+    <div class="flex gap-2 mt-4">
+      <button class="btn btn-primary" onclick="saveBudgetCategories(${i})">Save Budgets</button>
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+    </div>`;
+  document.getElementById('modal-bg').classList.add('open');
+}
+
+function saveBudgetCategories(i) {
+  const projects = loadProjects();
+  const budgetCats = {};
+  Object.keys(EXP_CATS).forEach(k => {
+    const el = document.getElementById('bc-'+k);
+    if (el) { const v = parseFloat(el.value); if (v) budgetCats[k] = v; }
+  });
+  projects[i].budgetCats = budgetCats;
+  saveProjects(projects);
+  closeModal();
+  renderProjectDetail(i);
+  renderOverviewTab(projects[i], i);
+  pdTab('overview');
+}
+
+function updatePhaseModal(i) {
+  const p = loadProjects()[i];
+  const phaseIdx = PHASES.indexOf(p.phase);
+  document.getElementById('modal-title').textContent = 'Update Phase';
+  document.getElementById('modal-body').innerHTML = `
+    <p class="text-muted mb-4">Current: <strong class="text-gold">${p.phase}</strong></p>
+    <div class="phase-pills">${PHASES.map((ph,j)=>`<span class="pill ${j<phaseIdx?'done':j===phaseIdx?'active':''}" style="cursor:pointer;margin:4px" onclick="updatePhase(${i},'${ph}')">${ph}</span>`).join('')}</div>`;
   document.getElementById('modal-bg').classList.add('open');
 }
 
@@ -1054,27 +1526,17 @@ function updatePhase(i, phase) {
   const projects = loadProjects();
   projects[i].phase = phase;
   saveProjects(projects);
-  openProject(i);
-  renderProjects();
-}
-
-function updateProject(i) {
-  const projects = loadProjects();
-  projects[i].spent = parseFloat(document.getElementById('ep-spent').value) || 0;
-  projects[i].arv = parseFloat(document.getElementById('ep-arv').value) || 0;
-  projects[i].notes = document.getElementById('ep-notes').value;
-  saveProjects(projects);
   closeModal();
-  renderProjects();
+  renderProjectDetail(i);
+  renderOverviewTab(projects[i], i);
 }
 
-function deleteProject(i) {
-  if (!confirm('Delete this project?')) return;
+function deleteProjectConfirm(i) {
+  if (!confirm('Delete this project and all expense data? This cannot be undone.')) return;
   const projects = loadProjects();
   projects.splice(i, 1);
   saveProjects(projects);
-  closeModal();
-  renderProjects();
+  goToProjects();
 }
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
