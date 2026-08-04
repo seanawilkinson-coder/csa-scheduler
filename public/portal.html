@@ -55,7 +55,7 @@
     /* The sign-in surface is a field, not a centered SaaS card. */
     .auth-gate { min-height: 100dvh; background: var(--navy); color: var(--white); padding: 42px 6vw; display: grid; align-items: center; }
     .auth-shell { width: min(1180px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 9vw; align-items: center; }
-    .auth-mark { display: inline-grid; place-items: center; width: 42px; height: 42px; background: var(--maroon); color: var(--white); font: 500 13px/1 var(--data); letter-spacing: -.08em; }
+    .auth-logo { display: block; width: 126px; height: auto; }
     .auth-brandline { display: flex; align-items: center; gap: 13px; }
     .auth-brandline strong { font-size: 14px; letter-spacing: -.01em; }
     .auth-brandline span { display: block; color: rgba(255,255,255,.52); font-size: 11px; margin-top: 2px; }
@@ -85,7 +85,7 @@
     .app { min-height: 100dvh; display: grid; grid-template-columns: 224px minmax(0, 1fr); }
     .sidebar { display: flex; flex-direction: column; padding: 26px 18px 18px; background: var(--navy); color: var(--white); }
     .brand { display: flex; align-items: center; gap: 12px; padding: 0 10px 35px; }
-    .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; background: var(--maroon); color: var(--white); font: 500 13px/1 var(--data); letter-spacing: -.08em; }
+    .brand-logo { display: block; width: 66px; height: auto; }
     .brand-title { font: 600 18px/1 var(--serif); }
     .brand-sub { margin-top: 4px; color: rgba(255,255,255,.48); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; }
     .side-label { padding: 0 11px; color: rgba(255,255,255,.4); font: 500 10px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
@@ -188,6 +188,14 @@
     .activity-text { font-size: 12px; }
     .activity-text strong { font-weight: 700; }
     .activity-time { color: var(--quiet); font: 500 10px/1.3 var(--data); white-space: nowrap; }
+    .module-panel { margin-top: 40px; padding-top: 26px; border-top: 1px solid var(--ink); }
+    .module-register { margin-top: 18px; border-top: 1px solid var(--ink); }
+    .module-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 22px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--rule); }
+    .module-row-label { color: var(--gold); font: 500 10px/1.35 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .module-row-value { font-size: 13px; font-weight: 700; }
+    .module-row-copy { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .module-note { margin-top: 18px; max-width: 58ch; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .module-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
 
     /* The cycle sidebar is a vertical rail, not a stack of milestone cards. */
     .timeline { padding-left: 23px; border-left: 1px solid var(--rule); }
@@ -234,10 +242,13 @@
     .admin-signal-value { font: 600 24px/.95 var(--serif); letter-spacing: -.03em; }
     .admin-signal-label { margin-top: 7px; color: var(--muted); font: 500 10px/1.3 var(--data); letter-spacing: .08em; text-transform: uppercase; }
     .admin-signal-note { margin-top: 5px; color: var(--muted); font-size: 11px; }
-    .admin-workflow-line { display: flex; flex-wrap: wrap; align-items: center; gap: 9px 18px; margin-top: 18px; padding: 13px 0 14px; border-bottom: 1px solid var(--rule); color: var(--muted); font: 500 10px/1.35 var(--data); letter-spacing: .06em; text-transform: uppercase; }
-    .admin-workflow-line .workflow-label { color: var(--gold); }
-    .admin-workflow-line .workflow-item:not(:last-child)::after { content: '·'; margin-left: 18px; color: var(--gold); }
-    .admin-workspace { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(320px, .78fr); gap: 46px; margin-top: 40px; }
+    .admin-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 0 23px; margin-top: 28px; border-bottom: 1px solid var(--rule); }
+    .admin-tabs-label { margin-right: 3px; color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .14em; text-transform: uppercase; }
+    .admin-tab { min-height: 43px; border: 0; border-bottom: 2px solid transparent; padding: 0 0 11px; background: transparent; color: var(--muted); font-size: 12px; }
+    .admin-tab:hover, .admin-tab.active { border-bottom-color: var(--gold); color: var(--ink); }
+    .admin-tab.active { font-weight: 700; }
+    .admin-pane { margin-top: 32px; }
+    .admin-pane-split { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(320px, .78fr); gap: 46px; }
     .admin-section { min-width: 0; }
     .admin-rail { padding-left: 28px; border-left: 1px solid var(--rule); }
     .admin-queue { margin-top: 19px; border-top: 1px solid var(--ink); }
@@ -384,7 +395,7 @@
       .timeline { padding: 25px 0 0 23px; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
       .access-row, .cycle-control-row { grid-template-columns: 1fr 1fr; }
       .access-row > :first-child, .access-row > :last-child { grid-column: 1 / -1; }
-      .admin-workspace { grid-template-columns: 1fr; gap: 40px; }
+      .admin-pane-split { grid-template-columns: 1fr; gap: 40px; }
       .admin-rail { padding-left: 0; padding-top: 28px; border-top: 1px solid var(--rule); border-left: 0; }
       .invite-form { grid-template-columns: 1fr 1fr; }
       .invite-form .button { grid-column: 1 / -1; justify-self: start; }
@@ -414,7 +425,7 @@
     @media (max-width: 480px) {
       .auth-gate { padding: 28px 20px; }
       .auth-copy h1 { font-size: 58px; }
-      .brand-mark { width: 34px; height: 34px; font-size: 11px; }
+      .brand-logo { width: 58px; }
       .sidebar { padding-top: 18px; }
       .top-actions .top-link { font-size: 11px; }
       .cycle-strip { padding: 23px 20px 27px; }
@@ -434,6 +445,8 @@
       .admin-queue-row { grid-template-columns: 1fr auto; gap: 8px 14px; }
       .admin-queue-status { grid-column: 2; grid-row: 1; }
       .admin-queue-next { grid-column: 1 / -1; text-align: left; }
+      .module-row { grid-template-columns: 1fr; gap: 8px; }
+      .module-row .button { justify-self: start; }
       .admin-config-fields, .policy-fields, .invite-form { grid-template-columns: 1fr; }
       .admin-config-fields .form-label.full, .invite-form .form-label.wide, .invite-form .invite-permissions { grid-column: auto; }
       .invite-form .button { grid-column: auto; }
@@ -451,10 +464,10 @@
   <section class="auth-gate" id="auth-gate">
     <div class="auth-shell">
       <div class="auth-copy">
-        <div class="auth-brandline"><span class="auth-mark" aria-hidden="true">CSA</span><div><strong>College Squash Association</strong><span>Portal visual constitution</span></div></div>
+        <div class="auth-brandline"><img class="auth-logo" src="/assets/csa-logo.png" alt="CSA" /><div><strong>College Squash Association</strong><span>Legislative portal</span></div></div>
         <p class="kicker" style="margin-top: 46px; color: var(--gold);">The record of the cycle</p>
         <h1>Sign in to the record.</h1>
-        <p class="lede">Use your approved email address. The portal keeps proposals, comments, documents, and decisions together.</p>
+        <p class="lede">Approved members only.</p>
       </div>
       <div class="auth-panel">
         <p class="kicker">Member access</p>
@@ -471,7 +484,7 @@
         </form>
         <section class="auth-dev-panel" id="auth-dev-panel" hidden>
           <div class="auth-dev-title">Development access</div>
-          <p class="auth-dev-copy">Commissioner workspace for development and controlled rehearsal. This path appears only when explicitly enabled for the environment.</p>
+          <p class="auth-dev-copy">Commissioner access for controlled rehearsal.</p>
           <form class="auth-form auth-dev-form" id="auth-dev-form">
             <label class="form-label"><strong>Username</strong><input class="field" id="auth-dev-username" autocomplete="username" required /></label>
             <label class="form-label"><strong>Password</strong><input class="field" id="auth-dev-password" type="password" autocomplete="current-password" required /></label>
@@ -485,7 +498,7 @@
 
   <div class="app">
     <aside class="sidebar">
-      <div class="brand"><div class="brand-mark" aria-hidden="true">CSA</div><div><div class="brand-title">CSA Portal</div><div class="brand-sub">Member workspace</div></div></div>
+      <div class="brand"><img class="brand-logo" src="/assets/csa-logo.png" alt="CSA" /><div><div class="brand-title">CSA Portal</div><div class="brand-sub">Member workspace</div></div></div>
       <div class="side-label">Workspace</div>
       <nav class="nav" aria-label="Primary navigation">
         <button class="active" data-view="overview"><span class="nav-icon circle" aria-hidden="true"></span><span>Overview</span></button>
@@ -495,7 +508,7 @@
         <button data-view="feedback"><span class="nav-icon corner" aria-hidden="true"></span><span>Feedback</span></button>
         <button data-view="documents"><span class="nav-icon square" aria-hidden="true"></span><span>Documents</span></button>
       </nav>
-      <div class="side-label" style="margin-top: 28px;">Coming later</div>
+      <div class="side-label" style="margin-top: 28px;">Later</div>
       <nav class="nav" aria-label="Future modules">
         <button data-view="scheduler"><span class="nav-icon square" aria-hidden="true"></span><span>Scheduler</span></button>
         <button data-view="awards"><span class="nav-icon circle" aria-hidden="true"></span><span>Awards</span></button>
@@ -515,45 +528,64 @@
       </header>
 
       <div class="content">
-        <section class="page-head">
-          <div><p class="kicker">2026–27 · Annual Legislative Cycle</p><h1>Annual Legislative Cycle</h1><p class="lede">Proposals move from submission to discussion to decision. This is the shared record.</p></div>
+        <section class="page-head" id="page-head">
+          <div><p class="kicker" id="page-kicker">2026–27 · Annual Legislative Cycle</p><h1 id="page-title">Annual Legislative Cycle</h1><p class="lede" id="page-lede">Cycle status, proposals, and next actions.</p></div>
           <button class="button gold" id="new-proposal">New proposal</button>
         </section>
 
-        <section class="cycle-strip" aria-label="Current cycle status">
+        <section class="cycle-strip" id="cycle-strip" aria-label="Current cycle status">
           <div><div class="cycle-kicker" id="cycle-status">Current phase</div><div class="cycle-name" id="cycle-name">Annual Legislative Cycle</div><div class="cycle-detail" id="cycle-detail">Loading the current cycle record.</div></div>
           <div class="cycle-progress"><div class="progress-labels"><span id="cycle-start">—</span><strong id="cycle-phase">—</strong><span id="cycle-end">—</span></div><div class="progress-track" aria-hidden="true"><span></span></div></div>
           <div class="cycle-next"><div class="cycle-next-label">Next deadline</div><div class="cycle-next-date" id="cycle-next-date">—</div><div class="cycle-next-action" id="cycle-next-action">Loading</div></div>
         </section>
 
-        <section class="stats" aria-label="Cycle summary">
+        <section class="stats" id="cycle-stats" aria-label="Cycle summary">
           <div class="stat"><span class="stat-value" id="stat-active">4</span><span class="stat-label">active proposals</span><span class="stat-note">2 need your review</span></div>
           <div class="stat"><span class="stat-value">4</span><span class="stat-label">open comment threads</span><span class="stat-note">18 comments this week</span></div>
           <div class="stat"><span class="stat-value">May</span><span class="stat-label">next formal vote</span><span class="stat-note">quorum visible at vote</span></div>
           <div class="stat"><span class="stat-value" id="stat-program">1</span><span class="stat-label">active program account</span></div>
         </section>
 
-        <div class="workspace" id="proposal-workspace">
+        <section class="module-panel" id="overview-panel" hidden>
+          <div class="section-head"><div><div class="section-title">At a glance</div><div class="section-sub">The few things worth acting on first.</div></div></div>
+          <div class="module-register" id="overview-register"></div>
+        </section>
+
+        <div class="workspace" id="proposal-workspace" hidden>
           <section>
-            <div class="section-head"><div><div class="section-title">Proposal register</div><div class="section-sub">Every accepted proposal in the 2026–27 cycle.</div></div><button class="button secondary" id="view-all">View register</button></div>
+            <div class="section-head"><div><div class="section-title" id="workspace-title">Proposal register</div><div class="section-sub" id="workspace-sub">Current proposals and their next actions.</div></div><button class="button secondary" id="view-all">View register</button></div>
             <div class="tabs" role="tablist"><button class="tab active" data-filter="all" role="tab" aria-selected="true">All proposals</button><button class="tab" data-filter="attention" role="tab" aria-selected="false">Needs attention</button><button class="tab" data-filter="mine" role="tab" aria-selected="false">My proposals</button></div>
             <div class="proposal-list" id="proposal-list"></div>
             <div class="activity"><div class="section-head"><div><div class="section-title">Recent activity</div><div class="section-sub">The audit trail, in plain view.</div></div></div><div class="activity-list" id="activity-list"></div></div>
           </section>
 
-          <aside class="timeline"><div class="timeline-head"><div class="section-title">This cycle</div><div class="section-sub">Configured milestone dates</div></div><div id="cycle-timeline"></div>
+          <aside class="timeline"><div class="timeline-head"><div class="section-title">Deadlines</div><div class="section-sub">Cycle dates</div></div><div id="cycle-timeline"></div>
           </aside>
         </div>
+        <section class="module-panel" id="module-panel" hidden>
+          <div class="section-head"><div><div class="section-title" id="module-title">Feedback</div><div class="section-sub" id="module-sub">Cycle notes and open requests.</div></div></div>
+          <div id="module-content"></div>
+        </section>
+
         <section class="admin-panel access-panel" id="access-panel" hidden>
-          <div class="section-head"><div><div class="section-title">Administration</div><div class="section-sub">Govern the active cycle, route records, and keep access attributable.</div></div></div>
+          <div class="section-head"><div><div class="section-title">Administration</div><div class="section-sub">Queue, policy, access, and audit.</div></div></div>
           <div class="admin-overview" id="admin-overview"></div>
-          <div class="admin-workflow-line" aria-label="Commissioner workflows"><span class="workflow-label">Commissioner workflows</span><span class="workflow-item">Review</span><span class="workflow-item">Distribute</span><span class="workflow-item">Vote close</span><span class="workflow-item">Decision</span><span class="workflow-item">Cycle policy</span><span class="workflow-item">Access</span><span class="workflow-item">Audit</span></div>
-          <div class="admin-workspace">
-            <section class="admin-section"><div class="section-head"><div><div class="section-title">Governance queue</div><div class="section-sub">The next records that require a governance action.</div></div></div><div class="admin-queue" id="admin-queue"></div></section>
-            <aside class="admin-section admin-rail"><div class="section-head"><div><div class="section-title">Cycle and policy</div><div class="section-sub">The active rules behind every route.</div></div></div><div id="cycle-controls"></div></aside>
+          <div class="admin-tabs" id="admin-tabs" aria-label="Commissioner workflows">
+            <span class="admin-tabs-label">Commissioner workflows</span>
+            <button class="admin-tab active" data-admin-tab="queue">Review queue</button>
+            <button class="admin-tab" data-admin-tab="cycle">Cycle &amp; policy</button>
+            <button class="admin-tab" data-admin-tab="access">Access</button>
+            <button class="admin-tab" data-admin-tab="audit">Audit</button>
           </div>
-          <section class="admin-section"><div class="section-head"><div><div class="section-title">Access register</div><div class="section-sub">Approved identities, program scope, and explicit legislative permissions.</div></div></div><div class="access-invite" id="access-invite"></div><div class="access-list" id="access-list"></div></section>
-          <section class="admin-section"><div class="section-head"><div><div class="section-title">Audit register</div><div class="section-sub">Configuration, access, and proposal events in one attributable sequence.</div></div></div><div class="admin-audit" id="admin-audit"></div></section>
+          <div class="admin-pane admin-pane-split" data-admin-pane="queue">
+            <section class="admin-section"><div class="section-head"><div><div class="section-title">Governance queue</div><div class="section-sub">Records waiting for a governance action.</div></div></div><div class="admin-queue" id="admin-queue"></div></section>
+            <aside class="admin-section admin-rail"><div class="section-head"><div><div class="section-title">Next deadline</div><div class="section-sub">Cycle context.</div></div></div><div class="module-register" id="admin-next-deadline"></div></aside>
+          </div>
+          <div class="admin-pane" data-admin-pane="cycle" hidden>
+            <section class="admin-section"><div class="section-head"><div><div class="section-title">Cycle and policy</div><div class="section-sub">Active rules and milestone dates.</div></div></div><div id="cycle-controls"></div></section>
+          </div>
+          <section class="admin-pane admin-section" data-admin-pane="access" hidden><div class="section-head"><div><div class="section-title">Access register</div><div class="section-sub">Approved identities and permissions.</div></div></div><div class="access-invite" id="access-invite"></div><div class="access-list" id="access-list"></div></section>
+          <section class="admin-pane admin-section" data-admin-pane="audit" hidden><div class="section-head"><div><div class="section-title">Audit register</div><div class="section-sub">Configuration, access, and proposal events.</div></div></div><div class="admin-audit" id="admin-audit"></div></section>
         </section>
       </div>
     </main>
@@ -603,6 +635,8 @@
     let authEmail = '';
     let cycle = null;
     let adminOverview = null;
+    let currentView = 'overview';
+    let currentAdminPanel = 'queue';
     const $ = (s) => document.querySelector(s);
     const esc = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
     const save = () => localStorage.setItem(storeKey, JSON.stringify(proposals));
@@ -670,7 +704,7 @@
       const first = deadlines[0]; const last = deadlines[deadlines.length - 1];
       $('#cycle-status').textContent = `${cycle.status || 'active'} phase`;
       $('#cycle-name').textContent = `${cycle.id} · ${cycle.name}`;
-      $('#cycle-detail').textContent = `${cycle.note || 'Configured cycle record.'} Policy ${cycle.policyVersion || cycle.policy?.version || '—'} · quorum ${cycle.policy?.quorumRequired || '—'} · ${cycle.policy?.thresholdPercent || '—'}% threshold.`;
+      $('#cycle-detail').textContent = `Policy ${cycle.policyVersion || cycle.policy?.version || '—'} · quorum ${cycle.policy?.quorumRequired || '—'} · threshold ${cycle.policy?.thresholdPercent || '—'}%.`;
       $('#cycle-start').textContent = first ? formatDate(first.date) : '—';
       $('#cycle-phase').textContent = phaseLabels[cycle.phase] || cycle.phase || '—';
       $('#cycle-end').textContent = last ? formatDate(last.date, { year: true }) : '—';
@@ -715,7 +749,7 @@
       const deadlines = cycle.deadlines || [];
       const phases = ['submission', 'review', 'comment', 'vote', 'board', 'decision', 'complete'];
       const policyHistory = adminOverview?.policyHistory || [];
-      node.innerHTML = `<div class="admin-config"><div class="admin-config-intro">Changes apply to the active cycle and create a configuration event. Historical votes keep the policy captured when they opened.</div><div class="admin-config-fields"><label class="form-label"><strong>Cycle status</strong><select data-cycle-status>${['pilot', 'active', 'paused', 'closed'].map(value => `<option value="${value}" ${cycle.status === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label><label class="form-label"><strong>Current phase</strong><select data-cycle-phase>${phases.map(value => `<option value="${value}" ${cycle.phase === value ? 'selected' : ''}>${esc(phaseLabels[value] || value)}</option>`).join('')}</select></label><label class="form-label"><strong>Timezone</strong><input data-cycle-timezone value="${esc(cycle.timeZone || 'America/New_York')}" /></label><label class="form-label full"><strong>Commissioner note</strong><textarea data-cycle-note>${esc(cycle.note || '')}</textarea></label></div><div class="policy-rule"><div class="policy-rule-title">Policy ${esc(policy.version || cycle.policyVersion || '—')}</div><div class="policy-fields"><label class="form-label"><strong>Version</strong><input data-policy-version value="${esc(policy.version || '')}" /></label><label class="form-label"><strong>Effective date</strong><input type="date" data-policy-effective value="${esc(policy.effectiveDate || '')}" /></label><label class="form-label"><strong>Proxy registration hours</strong><input type="number" min="1" data-policy-proxy value="${esc(policy.proxyRegistrationHours ?? '')}" /></label><label class="form-label"><strong>Quorum</strong><input type="number" min="1" max="${memberPrograms.length}" data-policy-quorum value="${esc(policy.quorumRequired ?? '')}" /></label><label class="form-label"><strong>Threshold percent</strong><input type="number" min="0" max="100" data-policy-threshold value="${esc(policy.thresholdPercent ?? '')}" /></label></div><fieldset class="policy-units"><legend>Eligible voting units</legend><div class="policy-unit-list">${memberPrograms.map(unit => `<label class="policy-unit"><input type="checkbox" data-policy-unit value="${esc(unit)}" ${(policy.eligibleVotingUnits || []).includes(unit) ? 'checked' : ''} />${esc(unit)}</label>`).join('')}</div></fieldset></div>${policyHistory.length ? `<div class="policy-history"><div class="policy-rule-title" style="margin-top:18px;">Retired policy history</div>${policyHistory.slice().reverse().map(item => `<div class="version-row"><div class="version-row-head"><strong>${esc(item.version || 'Policy')}</strong><span>Retired ${esc(formatWhen(item.retiredAt))}</span></div><div class="version-row-copy">Effective ${esc(formatDate(item.effectiveDate, { year: true }))} · ${esc(item.retiredBy || 'CSA governance')} · quorum ${esc(item.quorumRequired)} · ${esc(item.thresholdPercent)}% threshold</div></div>`).join('')}</div>` : '<div class="version-note" style="margin-top:18px;">No retired policy versions.</div>'}<div class="admin-config-footer"><span class="deadline-note">${esc(cycle.timeZone || 'America/New_York')} · ${deadlines.length} configured deadlines</span><button class="button secondary" data-save-cycle ${canManageConfiguration() ? '' : 'disabled'}>Save governance configuration</button></div><div class="cycle-control-list">${deadlines.map(item => `<label class="cycle-control-row"><span class="cycle-control-label">${esc(item.label)}</span><span class="cycle-control-stage">${esc(phaseLabels[item.stage] || item.stage)}</span><input type="date" data-cycle-deadline="${esc(item.id)}" value="${esc(item.date)}" aria-label="${esc(item.label)} date" /></label>`).join('')}</div></div>`;
+      node.innerHTML = `<div class="admin-config"><div class="admin-config-intro">Edits create a configuration event. Votes retain their opening policy.</div><div class="admin-config-fields"><label class="form-label"><strong>Cycle status</strong><select data-cycle-status>${['pilot', 'active', 'paused', 'closed'].map(value => `<option value="${value}" ${cycle.status === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label><label class="form-label"><strong>Current phase</strong><select data-cycle-phase>${phases.map(value => `<option value="${value}" ${cycle.phase === value ? 'selected' : ''}>${esc(phaseLabels[value] || value)}</option>`).join('')}</select></label><label class="form-label"><strong>Timezone</strong><input data-cycle-timezone value="${esc(cycle.timeZone || 'America/New_York')}" /></label><label class="form-label full"><strong>Commissioner note</strong><textarea data-cycle-note>${esc(cycle.note || '')}</textarea></label></div><div class="policy-rule"><div class="policy-rule-title">Policy ${esc(policy.version || cycle.policyVersion || '—')}</div><div class="policy-fields"><label class="form-label"><strong>Version</strong><input data-policy-version value="${esc(policy.version || '')}" /></label><label class="form-label"><strong>Effective date</strong><input type="date" data-policy-effective value="${esc(policy.effectiveDate || '')}" /></label><label class="form-label"><strong>Proxy hours</strong><input type="number" min="1" data-policy-proxy value="${esc(policy.proxyRegistrationHours ?? '')}" /></label><label class="form-label"><strong>Quorum</strong><input type="number" min="1" max="${memberPrograms.length}" data-policy-quorum value="${esc(policy.quorumRequired ?? '')}" /></label><label class="form-label"><strong>Threshold</strong><input type="number" min="0" max="100" data-policy-threshold value="${esc(policy.thresholdPercent ?? '')}" /></label></div><fieldset class="policy-units"><legend>Voting units</legend><div class="policy-unit-list">${memberPrograms.map(unit => `<label class="policy-unit"><input type="checkbox" data-policy-unit value="${esc(unit)}" ${(policy.eligibleVotingUnits || []).includes(unit) ? 'checked' : ''} />${esc(unit)}</label>`).join('')}</div></fieldset></div>${policyHistory.length ? `<div class="policy-history"><div class="policy-rule-title" style="margin-top:18px;">Retired policy history</div>${policyHistory.slice().reverse().map(item => `<div class="version-row"><div class="version-row-head"><strong>${esc(item.version || 'Policy')}</strong><span>Retired ${esc(formatWhen(item.retiredAt))}</span></div><div class="version-row-copy">Effective ${esc(formatDate(item.effectiveDate, { year: true }))} · ${esc(item.retiredBy || 'CSA governance')} · quorum ${esc(item.quorumRequired)} · ${esc(item.thresholdPercent)}% threshold</div></div>`).join('')}</div>` : '<div class="version-note" style="margin-top:18px;">No retired policy versions.</div>'}<div class="admin-config-footer"><span class="deadline-note">${esc(cycle.timeZone || 'America/New_York')} · ${deadlines.length} deadlines</span><button class="button secondary" data-save-cycle ${canManageConfiguration() ? '' : 'disabled'}>Save changes</button></div><div class="cycle-control-list">${deadlines.map(item => `<label class="cycle-control-row"><span class="cycle-control-label">${esc(item.label)}</span><span class="cycle-control-stage">${esc(phaseLabels[item.stage] || item.stage)}</span><input type="date" data-cycle-deadline="${esc(item.id)}" value="${esc(item.date)}" aria-label="${esc(item.label)} date" /></label>`).join('')}</div></div>`;
       node.querySelector('[data-save-cycle]')?.addEventListener('click', async (event) => {
         const button = event.currentTarget;
         const updatedDeadlines = Array.from(node.querySelectorAll('[data-cycle-deadline]')).map(input => { const source = deadlines.find(item => item.id === input.dataset.cycleDeadline); return { ...source, date: input.value }; });
@@ -738,7 +772,7 @@
       try {
         adminOverview = await api('/api/admin/overview');
         cycle = adminOverview.cycle;
-        renderCycle(); renderAdminOverview(); renderAdminQueue(); renderAdminCycle(); renderAdminAudit();
+        renderCycle(); renderAdminOverview(); renderAdminQueue(); renderAdminCycle(); renderAdminAudit(); renderAdminNextDeadline(); setAdminPanel(currentAdminPanel);
         await renderAccess();
       } catch (error) { toast(`Could not load administration: ${error.message}`); }
     }
@@ -752,7 +786,7 @@
     }
     async function bootAuth() {
       await loadAuthConfig();
-      try { const session = await api('/api/auth/me'); applyAuthUser(session.user); await loadCycle(); await loadProposals(); }
+      try { const session = await api('/api/auth/me'); applyAuthUser(session.user); await loadCycle(); await loadProposals(); setView('overview'); }
       catch (error) { document.body.classList.remove('authenticated'); }
     }
 
@@ -776,6 +810,83 @@
       const recent = proposals.slice(0, 4);
       $('#activity-list').innerHTML = recent.map(p => `<div class="activity-item"><span class="activity-mark" aria-hidden="true"></span><div class="activity-text"><strong>${esc(p.activity)}</strong><br><span>${esc(p.title)}</span></div><div class="activity-time">${esc(p.time)}</div></div>`).join('');
     }
+    function renderOverview() {
+      const next = cycle?.nextDeadline;
+      const attention = proposals.filter(item => ['review', 'vote', 'board', 'decision'].includes(item.status));
+      const recent = proposals[0];
+      $('#overview-register').innerHTML = [
+        { label: 'Next action', value: next?.label || 'No deadline', copy: next ? formatDate(next.date, { year: true }) : 'Cycle schedule is clear.' },
+        { label: 'Needs attention', value: `${attention.length} record${attention.length === 1 ? '' : 's'}`, copy: attention[0]?.title || 'Nothing waiting.' },
+        { label: 'Latest record', value: recent?.title || 'No proposal records', copy: recent ? `${recent.statusLabel} · ${recent.program}` : '—' }
+      ].map(row => `<div class="module-row"><div class="module-row-label">${esc(row.label)}</div><div><div class="module-row-value">${esc(row.value)}</div><div class="module-row-copy">${esc(row.copy)}</div></div></div>`).join('');
+    }
+    function renderModule(view) {
+      const node = $('#module-content');
+      if (!node) return;
+      const openProposals = `<div class="module-actions"><button class="button secondary" data-jump="proposals">Open proposals</button></div>`;
+      if (view === 'feedback') {
+        const threads = proposals.reduce((total, item) => total + (item.comments || []).length, 0);
+        $('#module-title').textContent = 'Feedback';
+        $('#module-sub').textContent = 'Comments stay with the proposal record.';
+        node.innerHTML = `<div class="module-register"><div class="module-row"><div class="module-row-label">Open threads</div><div><div class="module-row-value">${threads}</div><div class="module-row-copy">Across the current proposal set.</div></div></div><div class="module-row"><div class="module-row-label">Where to respond</div><div><div class="module-row-value">Proposal records</div><div class="module-row-copy">Open a proposal to read or add a comment.</div></div></div></div>${openProposals}`;
+      } else if (view === 'documents') {
+        const documents = proposals.flatMap(item => (item.files || []).map(file => ({ file, title: item.title, id: item.id })));
+        $('#module-title').textContent = 'Documents';
+        $('#module-sub').textContent = 'Files attached to proposal records.';
+        node.innerHTML = documents.length ? `<div class="module-register">${documents.map(doc => `<div class="module-row"><div class="module-row-label">File</div><div><div class="module-row-value">${esc(doc.file)}</div><div class="module-row-copy">${esc(doc.title)}</div></div><button class="button secondary" data-open-proposal="${esc(doc.id)}">Open record</button></div>`).join('')}</div>` : '<div class="empty">No documents attached.</div>';
+      } else {
+        const title = view === 'scheduler' ? 'Scheduler' : 'Awards';
+        const copy = view === 'scheduler' ? 'Scheduling is mapped for a later release.' : 'Awards is mapped for a later release.';
+        $('#module-title').textContent = title;
+        $('#module-sub').textContent = 'Coming later.';
+        node.innerHTML = `<p class="module-note">${esc(copy)}</p><div class="module-actions"><button class="button secondary" data-jump="overview">Back to overview</button></div>`;
+      }
+      node.querySelectorAll('[data-jump]').forEach(button => button.addEventListener('click', () => setView(button.dataset.jump)));
+      node.querySelectorAll('[data-open-proposal]').forEach(button => button.addEventListener('click', () => openDrawer(button.dataset.openProposal)));
+    }
+    function setAdminPanel(panel = 'queue') {
+      currentAdminPanel = panel;
+      document.querySelectorAll('[data-admin-pane]').forEach(node => { node.hidden = node.dataset.adminPane !== panel; });
+      document.querySelectorAll('[data-admin-tab]').forEach(button => button.classList.toggle('active', button.dataset.adminTab === panel));
+    }
+    function renderAdminNextDeadline() {
+      const node = $('#admin-next-deadline');
+      const next = adminOverview?.cycle?.nextDeadline;
+      if (!node) return;
+      node.innerHTML = next ? `<div class="module-row"><div><div class="module-row-value">${esc(formatDate(next.date, { year: true }))}</div><div class="module-row-copy">${esc(next.label)}</div></div></div>` : '<div class="empty">No deadline.</div>';
+    }
+    function setView(view) {
+      currentView = view;
+      const configs = {
+        overview: ['2026–27 · Cycle', 'Annual Legislative Cycle', 'Status, proposals, and next actions.'],
+        proposals: ['2026–27 · Proposals', 'Proposals', 'Submit and track the legislative record.'],
+        review: ['2026–27 · Review', 'Review queue', 'Records that need a governance action.'],
+        admin: ['2026–27 · Administration', 'Administration', 'Cycle, access, and audit.'],
+        feedback: ['2026–27 · Feedback', 'Feedback', 'Comments and requests.'],
+        documents: ['2026–27 · Documents', 'Documents', 'Files attached to records.'],
+        scheduler: ['2026–27 · Scheduler', 'Scheduler', 'Coming later.'],
+        awards: ['2026–27 · Awards', 'Awards', 'Coming later.']
+      };
+      const [kicker, title, lede] = configs[view] || configs.overview;
+      $('#page-kicker').textContent = kicker;
+      $('#page-title').textContent = title;
+      $('#page-lede').textContent = lede;
+      $('#crumb-view').textContent = title;
+      document.querySelectorAll('.nav button').forEach(button => button.classList.toggle('active', button.dataset.view === view));
+      $('#cycle-strip').hidden = view !== 'overview';
+      $('#cycle-stats').hidden = view !== 'overview';
+      $('#overview-panel').hidden = view !== 'overview';
+      $('#proposal-workspace').hidden = !['proposals', 'review'].includes(view);
+      $('#module-panel').hidden = !['feedback', 'documents', 'scheduler', 'awards'].includes(view);
+      $('#access-panel').hidden = view !== 'admin';
+      $('#new-proposal').style.display = ['proposals', 'review'].includes(view) && canSubmit() ? '' : 'none';
+      if (view === 'overview') renderOverview();
+      if (view === 'proposals') { currentFilter = 'all'; $('#workspace-title').textContent = 'Proposal register'; $('#workspace-sub').textContent = 'Current proposals and next actions.'; renderProposals(); }
+      if (view === 'review') { currentFilter = 'attention'; $('#workspace-title').textContent = 'Review queue'; $('#workspace-sub').textContent = 'Records that need a governance action.'; renderProposals(); }
+      if (view === 'admin') { setAdminPanel('queue'); loadAdmin(); }
+      if (['feedback', 'documents', 'scheduler', 'awards'].includes(view)) renderModule(view);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
     async function renderAccess() {
       if (!canManageAccess()) return;
       const list = $('#access-list');
@@ -786,7 +897,7 @@
         const inviteRoles = `<option value="" selected disabled>Select role</option>${roles}`;
         const permissions = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:access', 'legislative:configuration', 'legislative:records', 'legislative:moderation', 'legislative:board'];
         const programs = ['CSA', ...memberPrograms];
-        $('#access-invite').innerHTML = `<form class="invite-form" id="access-invite-form"><label class="form-label"><strong>Name</strong><input name="name" required placeholder="Full name" /></label><label class="form-label"><strong>Email</strong><input name="email" type="email" required placeholder="name@institution.edu" /></label><label class="form-label"><strong>Role</strong><select name="role" required>${inviteRoles}</select></label><label class="access-active"><input type="checkbox" name="active" checked /> Active</label><label class="form-label wide"><strong>Program scope</strong><select name="programs" multiple>${programs.map(program => `<option value="${esc(program)}">${esc(program)}</option>`).join('')}</select><span class="form-help">Select only the accounts this identity may act for.</span></label><label class="form-label invite-permissions"><strong>Permissions</strong><select name="permissions" multiple>${permissions.map(permission => `<option value="${esc(permission)}">${esc(permission)}</option>`).join('')}</select><span class="form-help">No permission is implied by adding an identity.</span></label><button class="button" type="submit">Add approved identity</button></form>`;
+        $('#access-invite').innerHTML = `<form class="invite-form" id="access-invite-form"><label class="form-label"><strong>Name</strong><input name="name" required placeholder="Full name" /></label><label class="form-label"><strong>Email</strong><input name="email" type="email" required placeholder="name@institution.edu" /></label><label class="form-label"><strong>Role</strong><select name="role" required>${inviteRoles}</select></label><label class="access-active"><input type="checkbox" name="active" checked /> Active</label><label class="form-label wide"><strong>Program scope</strong><select name="programs" multiple>${programs.map(program => `<option value="${esc(program)}">${esc(program)}</option>`).join('')}</select><span class="form-help">Acting scope.</span></label><label class="form-label invite-permissions"><strong>Permissions</strong><select name="permissions" multiple>${permissions.map(permission => `<option value="${esc(permission)}">${esc(permission)}</option>`).join('')}</select><span class="form-help">Explicit only.</span></label><button class="button" type="submit">Add identity</button></form>`;
         $('#access-invite-form').addEventListener('submit', async event => {
           event.preventDefault();
           const form = event.currentTarget;
@@ -947,7 +1058,8 @@
       } catch (error) { toast(`Could not save proposal: ${error.message}`); }
     }
 
-    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const view = btn.dataset.view; $('#crumb-view').textContent = btn.textContent.trim(); if (view === 'admin') { $('#proposal-workspace').hidden = true; $('#access-panel').hidden = false; loadAdmin(); return; } $('#proposal-workspace').hidden = false; $('#access-panel').hidden = true; if (view === 'review') { currentFilter = 'attention'; renderProposals(); } if (['scheduler','awards','feedback','documents'].includes(view)) toast(`${view === 'scheduler' ? 'Scheduler' : view === 'awards' ? 'Awards' : view === 'feedback' ? 'Feedback' : 'Documents'} is mapped for a later release.`); }));
+    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+    document.querySelectorAll('[data-admin-tab]').forEach(btn => btn.addEventListener('click', () => setAdminPanel(btn.dataset.adminTab)));
     document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => { currentFilter = tab.dataset.filter; renderProposals(); }));
     $('#program-select').addEventListener('change', () => { $('#stat-program').textContent = '1'; if (currentFilter === 'mine') renderProposals(); });
     $('#role-select').addEventListener('change', () => { if (authUser) toast(`Authorized role: ${roleLabel(authUser)}. Role changes are managed in the access register.`); });
@@ -959,9 +1071,9 @@
     $('#help-button').addEventListener('click', () => toast('Policy guide: approved rules are versioned by the Commissioner.'));
     $('#logout-button').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }).catch(() => {}); document.body.classList.remove('authenticated'); window.location.reload(); });
     $('#auth-request-form').addEventListener('submit', async (event) => { event.preventDefault(); authEmail = $('#auth-email').value.trim().toLowerCase(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/request-code', { method: 'POST', body: JSON.stringify({ email: authEmail }) }); $('#auth-request-form').style.display = 'none'; $('#auth-verify-form').classList.add('visible'); if (result.devCode) { $('#auth-dev-hint').hidden = false; $('#auth-dev-hint').textContent = `Local development code: ${result.devCode}`; } $('#auth-code').focus(); } catch (error) { $('#auth-error').textContent = error.message; } });
-    $('#auth-verify-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ email: authEmail, code: $('#auth-code').value.trim() }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); } catch (error) { $('#auth-error').textContent = error.message; } });
+    $('#auth-verify-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ email: authEmail, code: $('#auth-code').value.trim() }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); setView('overview'); } catch (error) { $('#auth-error').textContent = error.message; } });
     $('#auth-back').addEventListener('click', () => { $('#auth-verify-form').classList.remove('visible'); $('#auth-request-form').style.display = 'grid'; $('#auth-code').value = ''; $('#auth-dev-hint').hidden = true; });
-    $('#auth-dev-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-dev-error').textContent = ''; try { const result = await api('/api/auth/dev-login', { method: 'POST', body: JSON.stringify({ username: $('#auth-dev-username').value.trim(), password: $('#auth-dev-password').value }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); } catch (error) { $('#auth-dev-error').textContent = error.message; } });
+    $('#auth-dev-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-dev-error').textContent = ''; try { const result = await api('/api/auth/dev-login', { method: 'POST', body: JSON.stringify({ username: $('#auth-dev-username').value.trim(), password: $('#auth-dev-password').value }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); setView('overview'); } catch (error) { $('#auth-dev-error').textContent = error.message; } });
     bootAuth();
   </script>
 </body>
