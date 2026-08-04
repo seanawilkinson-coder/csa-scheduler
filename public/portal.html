@@ -6,317 +6,426 @@
   <title>CSA Portal — Legislative Cycle</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --ink: #172435;
-      --muted: #718091;
-      --faint: #aeb8c2;
-      --paper: #f4f1ea;
-      --surface: #fbfaf7;
-      --line: #dfe2df;
       --navy: #152b43;
-      --navy-2: #203d5c;
+      --navy-soft: #203d5c;
+      --maroon: #8b1f2b;
       --gold: #c59a58;
-      --gold-soft: #f1e6d3;
-      --sage: #dce8dd;
-      --sage-ink: #3a6547;
+      --paper: #fbfaf7;
+      --tray: #eef0ee;
+      --white: #ffffff;
+      --muted: #687580;
+      --quiet: #9aa5ac;
+      --rule: rgba(23, 36, 53, .16);
+      --green: #3a6547;
+      --green-soft: #e0ebe1;
+      --blue: #315f78;
       --blue-soft: #e1ebf2;
-      --blue-ink: #315f78;
-      --rose-soft: #f3e1dc;
-      --rose-ink: #91574d;
-      --shadow: 0 16px 42px rgba(31, 45, 57, .08);
-      --radius: 12px;
+      --rust: #91574d;
+      --rust-soft: #f3e1dc;
+      --serif: 'Newsreader', Georgia, serif;
+      --sans: 'DM Sans', system-ui, sans-serif;
+      --data: 'DM Mono', ui-monospace, monospace;
+      --ease-out: cubic-bezier(.22, .8, .25, 1);
+      --ease-in: cubic-bezier(.7, 0, .84, 0);
+      --z-nav: 10;
+      --z-scrim: 40;
+      --z-sheet: 50;
+      --z-toast: 60;
     }
+
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
-    body { background: var(--paper); color: var(--ink); font: 14px/1.5 'DM Sans', sans-serif; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--paper); color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+    body, button, input, textarea, select { text-wrap: pretty; }
     button, input, textarea, select { font: inherit; }
-    button { cursor: pointer; }
-    .app { min-height: 100vh; display: grid; grid-template-columns: 244px minmax(0, 1fr); }
-    .sidebar { background: var(--navy); color: #fff; display: flex; flex-direction: column; padding: 24px 18px 18px; }
-    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 30px; }
-    .brand-mark { width: 33px; height: 33px; border: 1px solid rgba(255,255,255,.45); display: grid; place-items: center; color: var(--gold); font: 600 12px/1 'DM Mono', monospace; letter-spacing: -.06em; }
-    .brand-title { font: 600 15px/1.05 'Newsreader', serif; letter-spacing: .01em; }
-    .brand-sub { margin-top: 4px; color: rgba(255,255,255,.45); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
-    .side-label { padding: 0 11px; color: rgba(255,255,255,.38); font: 500 10px/1 'DM Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
-    .nav { margin-top: 12px; display: grid; gap: 3px; }
-    .nav button { border: 0; border-left: 2px solid transparent; color: rgba(255,255,255,.63); background: transparent; text-align: left; padding: 11px 11px; display: flex; align-items: center; gap: 11px; border-radius: 2px; transition: .18s ease; }
-    .nav button:hover { color: #fff; background: rgba(255,255,255,.06); }
-    .nav button.active { color: #fff; border-left-color: var(--gold); background: rgba(255,255,255,.09); }
-    .nav-icon { width: 16px; color: var(--gold); font: 14px/1 'DM Mono', monospace; }
-    .side-bottom { margin-top: auto; border-top: 1px solid rgba(255,255,255,.12); padding: 18px 10px 0; }
-    .identity { display: flex; gap: 10px; align-items: center; }
-    .avatar { width: 34px; height: 34px; background: var(--gold); color: var(--navy); display: grid; place-items: center; border-radius: 50%; font-weight: 700; }
-    .identity-name { color: #fff; font-size: 12px; font-weight: 600; }
-    .identity-role { color: rgba(255,255,255,.45); font-size: 11px; margin-top: 2px; }
-    .main { min-width: 0; background: var(--surface); }
-    .topbar { height: 70px; border-bottom: 1px solid var(--line); padding: 0 42px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
-    .crumb { color: var(--muted); font-size: 12px; }
-    .crumb strong { color: var(--ink); font-weight: 600; }
-    .top-actions { display: flex; align-items: center; gap: 16px; }
-    .top-link { border: 0; background: transparent; color: var(--muted); font-size: 12px; }
-    .top-link:hover { color: var(--ink); }
-    .program-select { border: 1px solid var(--line); color: var(--ink); background: var(--surface); padding: 8px 30px 8px 11px; border-radius: 5px; font-size: 12px; }
-    .role-select { border: 1px solid var(--line); color: var(--muted); background: var(--surface); padding: 8px 25px 8px 10px; border-radius: 5px; font-size: 11px; }
-    .content { max-width: 1480px; padding: 37px 42px 70px; margin: 0 auto; }
-    .eyebrow { color: var(--gold); font: 500 10px/1 'DM Mono', monospace; letter-spacing: .15em; text-transform: uppercase; }
-    .page-head { display: flex; align-items: end; justify-content: space-between; gap: 20px; margin-bottom: 27px; }
+    button { cursor: pointer; touch-action: manipulation; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
     h1, h2, h3, p { margin: 0; }
-    h1 { margin-top: 8px; font: 600 clamp(30px, 4vw, 47px)/1.04 'Newsreader', serif; letter-spacing: -.035em; }
-    .lede { max-width: 570px; color: var(--muted); margin-top: 12px; font-size: 14px; }
-    .button { border: 1px solid var(--navy); background: var(--navy); color: #fff; border-radius: 5px; padding: 11px 15px; font-weight: 600; font-size: 12px; transition: .18s ease; }
-    .button:hover { background: var(--navy-2); transform: translateY(-1px); }
-    .button:disabled { cursor: not-allowed; opacity: .45; transform: none; }
-    .button.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
-    .button.secondary:hover { background: var(--paper); }
-    .button.gold { background: var(--gold); border-color: var(--gold); color: var(--navy); }
-    .cycle-strip { background: var(--navy); color: #fff; border-radius: var(--radius); padding: 22px 24px; display: grid; grid-template-columns: minmax(230px, 1.15fr) 2fr auto; gap: 24px; align-items: center; box-shadow: var(--shadow); }
-    .cycle-kicker { color: var(--gold); font: 500 10px/1 'DM Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }
-    .cycle-name { font: 600 20px/1.15 'Newsreader', serif; margin-top: 7px; }
-    .cycle-detail { color: rgba(255,255,255,.6); font-size: 11px; margin-top: 7px; }
-    .cycle-progress { display: grid; gap: 8px; }
-    .progress-labels { display: flex; justify-content: space-between; color: rgba(255,255,255,.62); font: 10px 'DM Mono', monospace; }
-    .progress-labels strong { color: #fff; font-weight: 500; }
-    .progress-track { height: 6px; background: rgba(255,255,255,.15); overflow: hidden; border-radius: 9px; }
-    .progress-track span { height: 100%; width: 56%; display: block; background: var(--gold); }
-    .cycle-next { border-left: 1px solid rgba(255,255,255,.16); padding-left: 23px; min-width: 145px; }
-    .cycle-next-label { color: rgba(255,255,255,.45); font: 10px 'DM Mono', monospace; text-transform: uppercase; letter-spacing: .08em; }
-    .cycle-next-date { margin-top: 5px; font-size: 18px; font-weight: 600; }
-    .cycle-next-action { color: var(--gold); font-size: 11px; margin-top: 2px; }
-    .stats { display: grid; grid-template-columns: repeat(4, 1fr); border-bottom: 1px solid var(--line); margin-top: 25px; }
-    .stat { padding: 0 20px 20px 0; margin-right: 20px; border-right: 1px solid var(--line); }
-    .stat:last-child { border-right: 0; }
-    .stat-label { color: var(--muted); font-size: 11px; }
-    .stat-value { margin-top: 6px; font: 500 28px/1 'Newsreader', serif; }
-    .stat-note { color: var(--sage-ink); font-size: 11px; margin-top: 5px; }
-    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 34px; margin-top: 30px; }
-    .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-    .section-title { font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
-    .section-sub { color: var(--muted); font-size: 11px; margin-top: 3px; }
-    .tabs { display: flex; gap: 20px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
-    .tab { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 0 0 10px; color: var(--muted); font-size: 12px; }
-    .tab.active { border-bottom-color: var(--gold); color: var(--ink); font-weight: 600; }
-    .proposal-list { border-top: 1px solid var(--line); }
-    .proposal-row { display: grid; grid-template-columns: minmax(200px, 2fr) 130px 108px 120px; gap: 14px; align-items: center; padding: 18px 4px; border-bottom: 1px solid var(--line); cursor: pointer; transition: .15s ease; }
-    .proposal-row:hover { background: #f7f5f0; padding-left: 10px; padding-right: 10px; }
-    .proposal-title { font-size: 13px; font-weight: 600; }
-    .proposal-meta { color: var(--muted); font-size: 11px; margin-top: 4px; }
-    .status, .bucket { display: inline-flex; align-items: center; width: fit-content; gap: 6px; padding: 5px 8px; border-radius: 3px; font-size: 10px; font-weight: 600; white-space: nowrap; }
-    .status::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
-    .status.review { color: var(--blue-ink); background: var(--blue-soft); }
-    .status.comment { color: var(--sage-ink); background: var(--sage); }
-    .status.vote { color: #886627; background: var(--gold-soft); }
-    .status.closed { color: var(--muted); background: #edf0ef; }
-    .bucket { color: var(--navy); background: #eef0ef; font: 10px 'DM Mono', monospace; }
-    .next-action { color: var(--muted); font-size: 11px; }
-    .next-action strong { color: var(--ink); display: block; font-size: 11px; }
-    .timeline { border-left: 1px solid var(--line); padding-left: 21px; }
-    .timeline-head { margin-bottom: 18px; }
-    .timeline-item { position: relative; padding: 0 0 22px 14px; border-bottom: 1px solid var(--line); margin-bottom: 18px; }
-    .timeline-item::before { content: ''; position: absolute; width: 7px; height: 7px; border: 2px solid var(--gold); background: var(--surface); border-radius: 50%; left: -26px; top: 3px; }
-    .timeline-item.done::before { background: var(--gold); }
-    .timeline-date { color: var(--gold); font: 10px 'DM Mono', monospace; text-transform: uppercase; }
-    .timeline-title { font-size: 12px; font-weight: 600; margin-top: 4px; }
-    .timeline-copy { color: var(--muted); font-size: 11px; margin-top: 4px; }
-    .activity { margin-top: 38px; }
-    .activity-item { display: grid; grid-template-columns: 30px 1fr auto; gap: 10px; padding: 11px 0; border-bottom: 1px solid var(--line); align-items: start; }
-    .activity-icon { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 50%; background: var(--gold-soft); color: #8b682e; font: 11px 'DM Mono', monospace; }
-    .activity-text { font-size: 11px; }
-    .activity-text strong { font-weight: 600; }
-    .activity-time { color: var(--faint); font-size: 10px; white-space: nowrap; }
-    .empty { color: var(--muted); padding: 30px 4px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-    .drawer-backdrop, .modal-backdrop { position: fixed; inset: 0; background: rgba(14, 27, 41, .42); z-index: 10; opacity: 0; pointer-events: none; transition: opacity .2s ease; }
-    .drawer-backdrop.open, .modal-backdrop.open { opacity: 1; pointer-events: auto; }
-    .drawer { position: fixed; z-index: 11; top: 0; right: 0; bottom: 0; width: min(620px, 100%); background: var(--surface); transform: translateX(100%); transition: transform .25s ease; display: flex; flex-direction: column; box-shadow: -14px 0 35px rgba(0,0,0,.13); }
-    .drawer.open { transform: translateX(0); }
-    .drawer-head { border-bottom: 1px solid var(--line); padding: 24px 28px 20px; }
-    .drawer-close { float: right; border: 0; background: transparent; color: var(--muted); font-size: 22px; line-height: 1; }
-    .drawer-title { font: 600 29px/1.1 'Newsreader', serif; max-width: 470px; margin-top: 7px; }
-    .drawer-meta { display: flex; gap: 8px; align-items: center; margin-top: 13px; }
-    .drawer-scroll { overflow: auto; padding: 25px 28px 40px; }
-    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding-bottom: 23px; border-bottom: 1px solid var(--line); }
-    .detail-label { color: var(--muted); font: 10px 'DM Mono', monospace; letter-spacing: .08em; text-transform: uppercase; }
-    .detail-value { font-size: 12px; margin-top: 4px; }
-    .review-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 8px; padding: 16px 0 20px; border-bottom: 1px solid var(--line); }
-    .review-actions .form-label { min-width: 145px; flex: 1; }
-    .review-actions .button { padding: 9px 11px; }
-    .review-note { color: var(--muted); font-size: 11px; width: 100%; }
-    .stage-line { display: flex; align-items: center; margin: 25px 0 28px; }
-    .stage { display: flex; align-items: center; flex: 1; color: var(--faint); font-size: 10px; }
-    .stage span { width: 21px; height: 21px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; margin-right: 6px; font: 10px 'DM Mono', monospace; }
-    .stage:not(:last-child)::after { content: ''; height: 1px; background: var(--line); flex: 1; margin: 0 8px; }
-    .stage.done, .stage.current { color: var(--ink); }
-    .stage.done span { background: var(--gold); border-color: var(--gold); color: var(--navy); }
-    .stage.current span { border-color: var(--gold); color: var(--gold); }
-    .drawer-section { margin-top: 25px; }
-    .drawer-section h3 { font-size: 13px; margin-bottom: 10px; }
-    .body-copy { color: #4c5a67; font-size: 12px; line-height: 1.7; white-space: pre-line; }
-    .file-line { display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 11px; }
-    .file-line small { color: var(--muted); }
-    .comment { padding: 12px 0; border-bottom: 1px solid var(--line); }
-    .comment-head { display: flex; justify-content: space-between; color: var(--muted); font-size: 10px; }
-    .comment-head strong { color: var(--ink); font-size: 11px; }
-    .comment p { margin-top: 5px; color: #4c5a67; font-size: 12px; }
-    .comment-tools { margin-top: 7px; display: flex; gap: 8px; }
-    .comment-remove { border: 0; background: transparent; color: var(--rose-ink); padding: 0; font-size: 10px; }
-    .audit-row { display: grid; grid-template-columns: 8px 1fr auto; gap: 10px; align-items: start; padding: 10px 0; border-bottom: 1px solid var(--line); }
-    .audit-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: var(--gold); }
-    .audit-event { font-size: 11px; }
-    .audit-event strong { font-weight: 600; }
-    .audit-meta { color: var(--muted); font-size: 10px; text-align: right; white-space: nowrap; }
-    .comment-form { display: grid; gap: 8px; margin-top: 12px; }
-    .field, .textarea { width: 100%; border: 1px solid var(--line); background: #fff; border-radius: 5px; color: var(--ink); padding: 10px 11px; outline: none; }
-    .field:focus, .textarea:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(197,154,88,.14); }
-    .textarea { resize: vertical; min-height: 80px; }
-    .modal { position: fixed; z-index: 11; left: 50%; top: 50%; width: min(690px, calc(100% - 32px)); max-height: calc(100vh - 42px); overflow: auto; background: var(--surface); transform: translate(-50%, -47%) scale(.98); opacity: 0; pointer-events: none; transition: .2s ease; box-shadow: var(--shadow); border-radius: var(--radius); }
-    .modal.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
-    .modal-head { padding: 24px 26px 19px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; }
-    .modal-head h2 { font: 600 25px/1.1 'Newsreader', serif; }
-    .modal-close { border: 0; background: transparent; color: var(--muted); font-size: 22px; }
-    .modal-body { padding: 22px 26px; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 17px 16px; }
-    .form-grid .wide { grid-column: 1 / -1; }
-    .form-label { display: grid; gap: 6px; color: var(--muted); font-size: 11px; }
-    .form-label strong { color: var(--ink); font-weight: 600; }
-    .form-help { color: var(--faint); font-size: 10px; }
-    .check-row { display: flex; gap: 9px; align-items: center; color: var(--ink); font-size: 12px; margin-top: 7px; }
-    .check-row input { accent-color: var(--navy); }
-    .upload { border: 1px dashed #c7cfcf; padding: 13px; border-radius: 5px; background: #f8f8f5; }
-    .modal-foot { padding: 17px 26px 22px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; }
-    .foot-right { display: flex; gap: 8px; }
-    .toast { position: fixed; right: 24px; bottom: 24px; background: var(--navy); color: #fff; padding: 12px 15px; border-left: 3px solid var(--gold); box-shadow: var(--shadow); font-size: 12px; transform: translateY(20px); opacity: 0; pointer-events: none; transition: .2s ease; z-index: 20; }
-    .toast.show { transform: translateY(0); opacity: 1; }
-    .auth-gate { min-height: 100vh; background: var(--navy); color: #fff; display: grid; place-items: center; padding: 24px; }
-    .auth-panel { width: min(420px, 100%); background: var(--surface); color: var(--ink); padding: 32px; border-radius: var(--radius); box-shadow: var(--shadow); }
-    .auth-panel h1 { font-size: 34px; margin-top: 8px; }
-    .auth-panel p { color: var(--muted); font-size: 13px; margin: 10px 0 24px; }
-    .auth-form { display: grid; gap: 12px; }
-    .auth-form .button { width: 100%; }
+    h1, h2, h3 { font-family: var(--serif); font-weight: 600; }
+    .mono { font-family: var(--data); font-variant-numeric: tabular-nums lining-nums; }
+    .kicker { color: var(--muted); font: 500 11px/1 var(--data); letter-spacing: .18em; text-transform: uppercase; }
+    .skip-link { position: fixed; left: 18px; top: 14px; z-index: var(--z-toast); transform: translateY(-160%); background: var(--gold); color: var(--navy); padding: 10px 14px; font-weight: 700; transition: transform .2s var(--ease-out); }
+    .skip-link:focus { transform: translateY(0); }
+
+    /* The sign-in surface is a field, not a centered SaaS card. */
+    .auth-gate { min-height: 100dvh; background: var(--navy); color: var(--white); padding: 42px 6vw; display: grid; align-items: center; }
+    .auth-shell { width: min(1180px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 9vw; align-items: center; }
+    .auth-mark { display: inline-grid; place-items: center; width: 42px; height: 42px; background: var(--maroon); color: var(--white); font: 500 13px/1 var(--data); letter-spacing: -.08em; }
+    .auth-brandline { display: flex; align-items: center; gap: 13px; }
+    .auth-brandline strong { font-size: 14px; letter-spacing: -.01em; }
+    .auth-brandline span { display: block; color: rgba(255,255,255,.52); font-size: 11px; margin-top: 2px; }
+    .auth-copy h1 { max-width: 8ch; margin-top: 34px; color: var(--white); font-size: clamp(58px, 8vw, 112px); line-height: .84; letter-spacing: -.06em; }
+    .auth-copy .lede { max-width: 45ch; margin-top: 30px; color: rgba(255,255,255,.7); font-size: 17px; line-height: 1.6; }
+    .auth-form { display: grid; gap: 18px; }
+    .auth-panel { border-top: 1px solid rgba(255,255,255,.38); padding-top: 23px; }
+    .auth-panel .kicker { color: var(--gold); }
+    .auth-panel .form-label, .auth-panel .form-label strong { color: var(--white); }
+    .auth-panel .field { background: transparent; color: var(--white); border-color: rgba(255,255,255,.38); border-width: 0 0 1px; border-radius: 0; padding-left: 0; padding-right: 0; }
+    .auth-panel .field::placeholder { color: rgba(255,255,255,.42); }
+    .auth-panel .field:focus { border-color: var(--gold); box-shadow: 0 1px 0 var(--gold); }
+    .auth-panel .button { width: fit-content; min-width: 170px; }
+    .auth-error { min-height: 18px; color: #f0b9ac; font-size: 12px; }
     .auth-code { display: none; }
-    .auth-code.visible { display: grid; gap: 12px; }
-    .auth-hint { color: var(--blue-ink); background: var(--blue-soft); padding: 9px 10px; font-size: 11px; border-radius: 4px; }
-    .auth-error { color: var(--rose-ink); font-size: 11px; min-height: 16px; }
-    .auth-logout { display: none; }
+    .auth-code.visible { display: grid; gap: 18px; }
+    .auth-hint { padding: 11px 13px; background: rgba(197,154,88,.16); color: #f6d9a3; font: 500 12px/1.45 var(--data); }
+    .auth-back { width: fit-content; border: 0; border-bottom: 1px solid rgba(255,255,255,.35); padding: 0 0 3px; background: transparent; color: rgba(255,255,255,.62); font-size: 12px; }
     body.authenticated .auth-gate { display: none; }
     body:not(.authenticated) .app { display: none; }
-    @media (max-width: 950px) {
-      .app { grid-template-columns: 72px minmax(0, 1fr); }
-      .sidebar { padding: 20px 10px; }
-      .brand { padding-left: 9px; padding-right: 9px; }
+
+    /* The app shell keeps navigation dark and the working record light. */
+    .app { min-height: 100dvh; display: grid; grid-template-columns: 224px minmax(0, 1fr); }
+    .sidebar { display: flex; flex-direction: column; padding: 26px 18px 18px; background: var(--navy); color: var(--white); }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 10px 35px; }
+    .brand-mark { display: grid; place-items: center; width: 38px; height: 38px; background: var(--maroon); color: var(--white); font: 500 13px/1 var(--data); letter-spacing: -.08em; }
+    .brand-title { font: 600 18px/1 var(--serif); }
+    .brand-sub { margin-top: 4px; color: rgba(255,255,255,.48); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; }
+    .side-label { padding: 0 11px; color: rgba(255,255,255,.4); font: 500 10px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
+    .nav { display: grid; gap: 2px; margin-top: 12px; }
+    .nav button { min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 10px 11px; border: 0; border-left: 2px solid transparent; background: transparent; color: rgba(255,255,255,.62); text-align: left; transition: color .18s var(--ease-out), background .18s var(--ease-out), border-color .18s var(--ease-out); }
+    .nav button:hover { background: rgba(255,255,255,.06); color: var(--white); }
+    .nav button.active { border-left-color: var(--gold); background: rgba(255,255,255,.1); color: var(--white); }
+    .nav-icon { position: relative; width: 13px; height: 13px; flex: 0 0 13px; color: var(--gold); }
+    .nav-icon::before { content: ''; position: absolute; inset: 2px; border: 1px solid currentColor; }
+    .nav-icon.circle::before { border-radius: 50%; }
+    .nav-icon.line::before { top: 6px; bottom: auto; height: 1px; border: 0; background: currentColor; }
+    .nav-icon.check::before { border-width: 0 1px 1px 0; transform: rotate(45deg) translate(-1px, -2px); }
+    .nav-icon.corner::before { border-width: 0 0 1px 1px; }
+    .nav-icon.square::before { border-radius: 1px; }
+    .side-bottom { margin-top: auto; padding: 18px 10px 0; border-top: 1px solid rgba(255,255,255,.14); }
+    .identity { display: flex; align-items: center; gap: 10px; }
+    .avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: var(--navy); font-weight: 700; }
+    .identity-name { color: var(--white); font-size: 12px; font-weight: 600; }
+    .identity-role { margin-top: 2px; color: rgba(255,255,255,.48); font-size: 11px; }
+
+    .main { min-width: 0; background: var(--paper); }
+    .topbar { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 42px; border-bottom: 1px solid var(--rule); background: var(--paper); }
+    .crumb { color: var(--muted); font-size: 12px; }
+    .crumb strong { color: var(--ink); font-weight: 600; }
+    .top-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+    .top-link { min-height: 44px; border: 0; border-bottom: 1px solid transparent; padding: 0; background: transparent; color: var(--muted); font-size: 12px; }
+    .top-link:hover { border-color: var(--ink); color: var(--ink); }
+    .field, .program-select, .role-select { min-height: 44px; width: 100%; border: 1px solid var(--rule); border-radius: 0; background: var(--white); color: var(--ink); padding: 9px 11px; outline: none; }
+    .program-select, .role-select { width: auto; min-width: 130px; background: transparent; font-size: 12px; }
+    .role-select { color: var(--muted); font-size: 11px; }
+    .field:focus, .program-select:focus, .role-select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(197,154,88,.14); }
+    .content { width: min(1400px, calc(100% - 84px)); margin: 0 auto; padding: 43px 0 80px; }
+    .page-head { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 33px; }
+    .page-head h1 { margin-top: 12px; font-size: clamp(43px, 5.3vw, 76px); line-height: .9; letter-spacing: -.055em; }
+    .lede { max-width: 57ch; margin-top: 17px; color: var(--muted); font-size: 16px; line-height: 1.6; }
+    .button { min-height: 44px; border: 1px solid var(--navy); border-radius: 4px; padding: 10px 15px; background: var(--navy); color: var(--white); font-size: 12px; font-weight: 700; transition: background .18s var(--ease-out), border-color .18s var(--ease-out), color .18s var(--ease-out), transform .18s var(--ease-out); }
+    .button:hover { background: var(--navy-soft); border-color: var(--navy-soft); transform: translateY(-1px); }
+    .button:disabled { cursor: not-allowed; opacity: .45; transform: none; }
+    .button.secondary { border-color: var(--rule); background: transparent; color: var(--ink); }
+    .button.secondary:hover { border-color: var(--ink); background: transparent; }
+    .button.gold { border-color: var(--gold); background: var(--gold); color: var(--navy); }
+    .button.gold:hover { border-color: #d1a965; background: #d1a965; }
+
+    /* The active cycle is one dark field with a rail. It is not a card. */
+    .cycle-strip { display: grid; grid-template-columns: minmax(240px, .9fr) minmax(340px, 1.5fr) auto; gap: 38px; align-items: center; padding: 27px 28px 31px; background: var(--navy); color: var(--white); }
+    .cycle-kicker { color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
+    .cycle-name { margin-top: 9px; font: 600 28px/1 var(--serif); letter-spacing: -.035em; }
+    .cycle-detail { max-width: 32ch; margin-top: 8px; color: rgba(255,255,255,.68); font-size: 12px; }
+    .cycle-progress { display: grid; gap: 10px; }
+    .progress-labels { display: flex; justify-content: space-between; gap: 16px; color: rgba(255,255,255,.7); font: 500 10px/1 var(--data); letter-spacing: .07em; text-transform: uppercase; }
+    .progress-labels strong { color: var(--gold); font-weight: 500; }
+    .progress-track { position: relative; height: 1px; margin: 3px 0 11px; background: rgba(255,255,255,.42); }
+    .progress-track::after { content: ''; position: absolute; left: 0; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--gold); }
+    .progress-track span { display: none; }
+    .cycle-next { padding-left: 24px; border-left: 1px solid rgba(255,255,255,.25); min-width: 150px; }
+    .cycle-next-label { color: rgba(255,255,255,.52); font: 500 10px/1 var(--data); letter-spacing: .12em; text-transform: uppercase; }
+    .cycle-next-date { margin-top: 8px; font: 500 26px/1 var(--data); letter-spacing: -.08em; }
+    .cycle-next-action { margin-top: 5px; color: var(--gold); font-size: 12px; }
+
+    /* Summary is a sentence-like register, never a KPI card mosaic. */
+    .stats { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 25px; padding: 20px 0 19px; border-bottom: 1px solid var(--rule); }
+    .stat { display: inline-flex; align-items: baseline; gap: 7px; }
+    .stat::after { content: '·'; margin-left: 18px; color: var(--gold); }
+    .stat:last-child::after { display: none; }
+    .stat-label { color: var(--muted); font-size: 12px; }
+    .stat-value { font: 500 24px/1 var(--serif); }
+    .stat-note { color: var(--muted); font-size: 12px; }
+    .stat-note::before { content: '— '; color: var(--gold); }
+
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 70px; margin-top: 46px; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
+    .section-title { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
+    .section-sub { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .tabs { display: flex; gap: 24px; margin-bottom: 0; border-bottom: 1px solid var(--rule); }
+    .tab { min-height: 44px; border: 0; border-bottom: 2px solid transparent; padding: 0 0 10px; background: transparent; color: var(--muted); font-size: 12px; }
+    .tab:hover, .tab.active { border-bottom-color: var(--gold); color: var(--ink); }
+    .tab.active { font-weight: 700; }
+    .proposal-list { border-top: 1px solid var(--ink); }
+    .proposal-row { display: grid; grid-template-columns: minmax(220px, 2.1fr) minmax(120px, .9fr) minmax(85px, .6fr) minmax(140px, 1fr); gap: 20px; align-items: center; min-height: 88px; padding: 17px 0; border-bottom: 1px solid var(--rule); cursor: pointer; transition: background .18s var(--ease-out), padding .18s var(--ease-out); }
+    .proposal-row:hover { padding-left: 11px; padding-right: 11px; background: rgba(238,240,238,.72); }
+    .proposal-title { font-size: 14px; font-weight: 700; letter-spacing: -.015em; }
+    .proposal-meta { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .status, .bucket { display: inline-flex; align-items: center; width: fit-content; gap: 7px; min-height: 0; padding: 0; border-radius: 0; font: 500 11px/1.25 var(--data); white-space: nowrap; }
+    .status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .status.review { color: var(--blue); }
+    .status.comment { color: var(--green); }
+    .status.vote { color: #80602a; }
+    .status.board, .status.decision { color: var(--maroon); }
+    .status.closed { color: var(--rust); }
+    .status.draft { color: var(--muted); }
+    .bucket { color: var(--muted); }
+    .next-action { color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .next-action strong { display: block; margin-bottom: 4px; color: var(--ink); font: 500 10px/1 var(--data); letter-spacing: .12em; text-transform: uppercase; }
+    .empty { padding: 24px 0; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 13px; }
+
+    .activity { margin-top: 52px; }
+    .activity-list { border-top: 1px solid var(--ink); }
+    .activity-item { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 15px 0; border-bottom: 1px solid var(--rule); }
+    .activity-mark { width: 8px; height: 8px; margin-top: 5px; border: 2px solid var(--gold); border-radius: 50%; }
+    .activity-text { font-size: 12px; }
+    .activity-text strong { font-weight: 700; }
+    .activity-time { color: var(--quiet); font: 500 10px/1.3 var(--data); white-space: nowrap; }
+
+    /* The cycle sidebar is a vertical rail, not a stack of milestone cards. */
+    .timeline { padding-left: 23px; border-left: 1px solid var(--rule); }
+    .timeline-head { margin-bottom: 28px; }
+    .timeline-item { position: relative; padding: 0 0 25px 17px; }
+    .timeline-item::before { content: ''; position: absolute; left: -28px; top: 2px; width: 9px; height: 9px; border: 2px solid var(--gold); border-radius: 50%; background: var(--paper); }
+    .timeline-item.done::before { background: var(--gold); }
+    .timeline-item:not(:last-child)::after { content: ''; position: absolute; left: -23px; top: 15px; bottom: -4px; width: 1px; background: var(--rule); }
+    .timeline-date { color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .timeline-title { margin-top: 7px; font-size: 13px; font-weight: 700; }
+    .timeline-copy { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+
+    /* Detail is a sheet with flowing records. No card outline, no boxed metadata. */
+    .drawer-backdrop, .modal-backdrop { position: fixed; inset: 0; z-index: var(--z-scrim); background: rgba(14,27,41,.52); opacity: 0; pointer-events: none; transition: opacity .2s var(--ease-out); }
+    .drawer-backdrop.open, .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+    .drawer { position: fixed; z-index: var(--z-sheet); top: 0; right: 0; bottom: 0; width: min(650px, 100%); display: flex; flex-direction: column; background: var(--paper); border-left: 1px solid var(--ink); transform: translateX(100%); transition: transform .28s var(--ease-out); }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head { padding: 28px 34px 22px; border-bottom: 1px solid var(--ink); }
+    .drawer-close, .modal-close { min-width: 44px; min-height: 44px; float: right; border: 0; padding: 0; background: transparent; color: var(--muted); font-size: 25px; line-height: 1; }
+    .drawer-close:hover, .modal-close:hover { color: var(--ink); }
+    .drawer-title { max-width: 490px; margin-top: 10px; font: 600 36px/.96 var(--serif); letter-spacing: -.045em; }
+    .drawer-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 17px; }
+    .drawer-scroll { overflow-y: auto; padding: 0 34px 50px; }
+    .detail-grid { border-bottom: 1px solid var(--rule); }
+    .detail-grid > div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding: 15px 0; border-bottom: 1px solid var(--rule); }
+    .detail-grid > div:last-child { border-bottom: 0; }
+    .detail-label { color: var(--muted); font: 500 10px/1.2 var(--data); letter-spacing: .1em; text-transform: uppercase; }
+    .detail-value { font-size: 13px; text-align: right; }
+    .review-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 19px 0 21px; border-bottom: 1px solid var(--rule); }
+    .review-note { width: 100%; margin-bottom: 3px; color: var(--muted); font-size: 12px; }
+    .review-actions .form-label { min-width: 150px; flex: 1; }
+    .review-actions .button { padding: 8px 11px; }
+    .governance-panel { padding: 19px 0 21px; border-bottom: 1px solid var(--rule); }
+    .governance-panel h3 { margin-bottom: 10px; font: 700 11px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
+    .governance-note { margin-bottom: 14px; color: var(--muted); font-size: 12px; }
+    .governance-grid { display: grid; gap: 12px; }
+    .governance-grid .button { justify-self: start; }
+    .governance-results { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 13px; color: var(--muted); font: 500 11px/1.3 var(--data); }
+    .governance-results strong { color: var(--ink); }
+    .version-note { color: var(--muted); font-size: 11px; }
+    .stage-line { display: flex; align-items: start; margin: 28px 0 34px; }
+    .stage { position: relative; display: flex; flex: 1; align-items: center; gap: 7px; color: var(--quiet); font: 500 10px/1.2 var(--data); }
+    .stage span { display: grid; place-items: center; width: 22px; height: 22px; flex: 0 0 22px; border: 1px solid var(--rule); border-radius: 50%; color: var(--muted); }
+    .stage:not(:last-child)::after { content: ''; height: 1px; flex: 1; margin: 0 8px; background: var(--rule); }
+    .stage.done, .stage.current { color: var(--ink); }
+    .stage.done span { border-color: var(--gold); background: var(--gold); color: var(--navy); }
+    .stage.current span { border-color: var(--gold); color: var(--gold); }
+    .drawer-section { margin-top: 30px; }
+    .drawer-section h3 { margin-bottom: 12px; font: 700 11px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
+    .body-copy { max-width: 58ch; color: var(--muted); font-size: 14px; line-height: 1.7; white-space: pre-line; }
+    .file-line { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
+    .file-line small { color: var(--muted); font: 500 10px/1 var(--data); }
+    .file-mark { display: inline-block; width: 8px; height: 10px; margin-right: 8px; border: 1px solid var(--gold); vertical-align: -1px; }
+    #comment-list .comment { padding: 16px 0; border-bottom: 1px solid var(--rule); }
+    #comment-list .comment-head { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font: 500 10px/1.4 var(--data); }
+    #comment-list .comment-head strong { color: var(--ink); font-family: var(--sans); font-size: 12px; }
+    #comment-list .comment p { margin-top: 7px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    #comment-list .comment p em { color: var(--rust); font-style: normal; }
+    .comment-tools { margin-top: 9px; }
+    .comment-remove { border: 0; border-bottom: 1px solid rgba(145,87,77,.4); padding: 0 0 2px; background: transparent; color: var(--rust); font-size: 11px; }
+    .audit-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 11px; align-items: start; padding: 13px 0; border-bottom: 1px solid var(--rule); }
+    .audit-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: var(--gold); }
+    .audit-event { font-size: 12px; }
+    .audit-event strong { font-weight: 700; }
+    .audit-meta { color: var(--muted); font: 500 10px/1.4 var(--data); text-align: right; white-space: nowrap; }
+    .comment-form { display: grid; gap: 10px; margin-top: 15px; }
+    .textarea { min-height: 92px; resize: vertical; }
+    .comment-form .button { justify-self: start; }
+
+    /* Proposal form: long-form document, never a field matrix. */
+    .modal { position: fixed; z-index: var(--z-sheet); left: 50%; top: 50%; width: min(720px, calc(100% - 32px)); max-height: min(850px, calc(100dvh - 32px)); overflow-y: auto; background: var(--paper); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); transform: translate(-50%, -47%) scale(.985); opacity: 0; pointer-events: none; transition: transform .22s var(--ease-out), opacity .18s var(--ease-out); }
+    .modal.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+    .modal-head { display: flex; justify-content: space-between; gap: 22px; padding: 26px 30px 21px; border-bottom: 1px solid var(--ink); }
+    .modal-head h2 { margin-top: 10px; font-size: 37px; line-height: .96; letter-spacing: -.045em; }
+    .modal-body { padding: 0 30px; }
+    .form-grid { display: block; }
+    .split-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 9px; }
+    .form-label { display: grid; gap: 8px; padding: 19px 0; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 12px; }
+    .form-label strong { color: var(--ink); font-weight: 700; }
+    .form-help { color: var(--muted); font-size: 11px; }
+    .textarea { width: 100%; }
+    .upload { display: grid; gap: 8px; padding: 16px 0; background: var(--tray); }
+    .upload input { min-height: 44px; padding: 9px 12px; }
+    .check-row { display: flex; align-items: start; gap: 10px; padding: 19px 0; color: var(--ink); font-size: 12px; }
+    .check-row input { width: 18px; height: 18px; flex: 0 0 18px; margin: 0; accent-color: var(--navy); }
+    .modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 30px 24px; border-top: 1px solid var(--ink); }
+    .foot-right { display: flex; gap: 9px; }
+
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: var(--z-toast); max-width: min(390px, calc(100% - 48px)); padding: 13px 15px; border-left: 3px solid var(--gold); background: var(--navy); color: var(--white); box-shadow: 0 12px 24px rgba(14,27,41,.18); font-size: 12px; transform: translateY(16px); opacity: 0; pointer-events: none; transition: transform .2s var(--ease-out), opacity .2s var(--ease-out); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 1080px) {
+      .app { grid-template-columns: 76px minmax(0, 1fr); }
+      .sidebar { padding-left: 10px; padding-right: 10px; }
+      .brand { justify-content: center; padding-left: 0; padding-right: 0; }
       .brand-title, .brand-sub, .side-label, .nav button span:not(.nav-icon), .identity-name, .identity-role { display: none; }
-      .nav button { justify-content: center; padding: 12px 5px; }
-      .nav-icon { font-size: 16px; }
+      .nav button { justify-content: center; padding-left: 0; padding-right: 0; }
+      .side-bottom { padding-left: 0; padding-right: 0; }
       .identity { justify-content: center; }
-      .topbar, .content { padding-left: 24px; padding-right: 24px; }
-      .cycle-strip { grid-template-columns: 1fr; }
-      .cycle-next { border-left: 0; border-top: 1px solid rgba(255,255,255,.16); padding: 14px 0 0; }
+      .workspace { gap: 44px; }
+      .topbar { padding-left: 28px; padding-right: 28px; }
+      .content { width: min(100% - 56px, 1400px); }
     }
-    @media (max-width: 720px) {
-      .topbar { height: auto; padding-top: 16px; padding-bottom: 16px; align-items: flex-start; }
-      .top-actions { flex-wrap: wrap; justify-content: flex-end; }
-      .content { padding-top: 27px; }
-      .page-head { align-items: flex-start; flex-direction: column; }
-      .stats { grid-template-columns: 1fr 1fr; gap: 18px 0; }
-      .stat:nth-child(2) { border-right: 0; }
+    @media (max-width: 860px) {
+      .auth-shell { grid-template-columns: 1fr; gap: 46px; }
+      .auth-copy h1 { max-width: 9ch; }
+      .cycle-strip { grid-template-columns: 1fr; gap: 26px; }
+      .cycle-next { padding: 18px 0 0; border-top: 1px solid rgba(255,255,255,.25); border-left: 0; }
       .workspace { grid-template-columns: 1fr; }
-      .timeline { border-left: 0; border-top: 1px solid var(--line); padding: 25px 0 0; }
-      .proposal-row { grid-template-columns: 1fr 1fr; gap: 9px; }
+      .timeline { padding: 25px 0 0 23px; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+    }
+    @media (max-width: 680px) {
+      .topbar { align-items: flex-start; flex-direction: column; padding-top: 17px; padding-bottom: 17px; }
+      .top-actions { width: 100%; justify-content: flex-start; gap: 8px 14px; }
+      .program-select, .role-select { flex: 1; }
+      .page-head { display: block; }
+      .page-head .button { margin-top: 24px; }
+      .content { width: min(100% - 36px, 600px); padding-top: 32px; }
+      .stats { gap: 12px 0; }
+      .stat { flex-wrap: wrap; }
+      .stat::after { margin-left: 9px; }
+      .stat-note { width: 100%; padding-left: 0; }
+      .proposal-row { grid-template-columns: 1fr auto; gap: 12px; }
       .proposal-row > :first-child { grid-column: 1 / -1; }
-      .proposal-row > :last-child { text-align: right; }
-      .form-grid { grid-template-columns: 1fr; }
-      .form-grid .wide { grid-column: auto; }
+      .next-action { text-align: right; }
+      .stage-line { display: block; }
+      .stage { min-height: 40px; }
+      .stage:not(:last-child)::after { position: absolute; left: 10px; top: 24px; bottom: -11px; width: 1px; height: auto; }
+      .drawer-head, .drawer-scroll { padding-left: 22px; padding-right: 22px; }
+      .modal-head, .modal-body, .modal-foot { padding-left: 22px; padding-right: 22px; }
+      .modal-foot { align-items: stretch; flex-direction: column; }
+      .foot-right { justify-content: flex-end; }
+    }
+    @media (max-width: 480px) {
+      .auth-gate { padding: 28px 20px; }
+      .auth-copy h1 { font-size: 58px; }
+      .brand-mark { width: 34px; height: 34px; font-size: 11px; }
+      .sidebar { padding-top: 18px; }
+      .top-actions .top-link { font-size: 11px; }
+      .cycle-strip { padding: 23px 20px 27px; }
+      .proposal-row { grid-template-columns: 1fr; }
+      .next-action { text-align: left; }
+      .proposal-row .status, .proposal-row .bucket { justify-self: start; }
+      .detail-grid > div { display: block; }
+      .detail-value { margin-top: 5px; text-align: left; }
+      .split-fields { grid-template-columns: 1fr; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
     }
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Skip to portal</a>
+
   <section class="auth-gate" id="auth-gate">
-    <div class="auth-panel">
-      <div class="eyebrow">College Squash Association</div>
-      <h1>Sign in to CSA Portal</h1>
-      <p>Use your approved email address. CSA Portal sends a one-time code—there is no password or SSO dependency.</p>
-      <form class="auth-form" id="auth-request-form">
-        <label class="form-label"><strong>Email address</strong><input class="field" id="auth-email" type="email" required placeholder="you@college.edu" /></label>
-        <button class="button" type="submit">Send sign-in code</button>
-        <div class="auth-error" id="auth-error"></div>
-      </form>
-      <form class="auth-code" id="auth-verify-form">
-        <label class="form-label"><strong>One-time code</strong><input class="field" id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="6 digits" /></label>
-        <div class="auth-hint" id="auth-dev-hint" hidden></div>
-        <button class="button" type="submit">Enter portal</button>
-        <button class="top-link" type="button" id="auth-back">Use a different email</button>
-      </form>
+    <div class="auth-shell">
+      <div class="auth-copy">
+        <div class="auth-brandline"><span class="auth-mark" aria-hidden="true">CSA</span><div><strong>College Squash Association</strong><span>Portal visual constitution</span></div></div>
+        <p class="kicker" style="margin-top: 46px; color: var(--gold);">The record of the cycle</p>
+        <h1>Sign in to the record.</h1>
+        <p class="lede">Use your approved email address. The portal keeps proposals, comments, documents, and decisions together.</p>
+      </div>
+      <div class="auth-panel">
+        <p class="kicker">Member access</p>
+        <form class="auth-form" id="auth-request-form" style="margin-top: 23px;">
+          <label class="form-label"><strong>Email address</strong><input class="field" id="auth-email" type="email" autocomplete="email" required placeholder="you@college.edu" /></label>
+          <button class="button gold" type="submit">Send sign-in code</button>
+          <div class="auth-error" id="auth-error" role="alert" aria-live="polite"></div>
+        </form>
+        <form class="auth-code" id="auth-verify-form">
+          <label class="form-label"><strong>One-time code</strong><input class="field" id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="6 digits" /></label>
+          <div class="auth-hint" id="auth-dev-hint" hidden></div>
+          <button class="button gold" type="submit">Enter portal</button>
+          <button class="auth-back" type="button" id="auth-back">Use a different email</button>
+        </form>
+      </div>
     </div>
   </section>
+
   <div class="app">
     <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-mark">CSA</div>
-        <div><div class="brand-title">CSA Portal</div><div class="brand-sub">Member workspace</div></div>
-      </div>
+      <div class="brand"><div class="brand-mark" aria-hidden="true">CSA</div><div><div class="brand-title">CSA Portal</div><div class="brand-sub">Member workspace</div></div></div>
       <div class="side-label">Workspace</div>
       <nav class="nav" aria-label="Primary navigation">
-        <button class="active" data-view="overview"><span class="nav-icon">◌</span><span>Overview</span></button>
-        <button data-view="proposals"><span class="nav-icon">≡</span><span>Proposals</span></button>
-        <button data-view="review"><span class="nav-icon">✓</span><span>Review queue</span></button>
-        <button data-view="feedback"><span class="nav-icon">↗</span><span>Feedback</span></button>
-        <button data-view="documents"><span class="nav-icon">□</span><span>Documents</span></button>
+        <button class="active" data-view="overview"><span class="nav-icon circle" aria-hidden="true"></span><span>Overview</span></button>
+        <button data-view="proposals"><span class="nav-icon line" aria-hidden="true"></span><span>Proposals</span></button>
+        <button data-view="review"><span class="nav-icon check" aria-hidden="true"></span><span>Review queue</span></button>
+        <button data-view="feedback"><span class="nav-icon corner" aria-hidden="true"></span><span>Feedback</span></button>
+        <button data-view="documents"><span class="nav-icon square" aria-hidden="true"></span><span>Documents</span></button>
       </nav>
-      <div class="side-label" style="margin-top:28px">Coming later</div>
-      <nav class="nav">
-        <button data-view="scheduler"><span class="nav-icon">▦</span><span>Scheduler</span></button>
-        <button data-view="awards"><span class="nav-icon">✦</span><span>Awards</span></button>
+      <div class="side-label" style="margin-top: 28px;">Coming later</div>
+      <nav class="nav" aria-label="Future modules">
+        <button data-view="scheduler"><span class="nav-icon square" aria-hidden="true"></span><span>Scheduler</span></button>
+        <button data-view="awards"><span class="nav-icon circle" aria-hidden="true"></span><span>Awards</span></button>
       </nav>
-      <div class="side-bottom">
-        <div class="identity"><div class="avatar">JS</div><div><div class="identity-name">Jordan Smith</div><div class="identity-role">Head coach · Columbia</div></div></div>
-      </div>
+      <div class="side-bottom"><div class="identity"><div class="avatar">JS</div><div><div class="identity-name">Jordan Smith</div><div class="identity-role">Head coach · Columbia</div></div></div></div>
     </aside>
 
-    <main class="main">
+    <main class="main" id="main-content" tabindex="-1">
       <header class="topbar">
         <div class="crumb"><strong>Legislative Cycle</strong><span> / </span><span id="crumb-view">Overview</span></div>
         <div class="top-actions">
           <button class="top-link" id="help-button">Policy guide</button>
           <select class="role-select" id="role-select" aria-label="Preview role"><option value="coach">Head coach</option><option value="commissioner">Commissioner</option></select>
-          <select class="program-select" id="program-select" aria-label="Program account">
-            <option>Columbia</option><option>Columbia Men</option><option>Columbia Women</option>
-          </select>
+          <select class="program-select" id="program-select" aria-label="Program account"><option>Columbia</option><option>Columbia Men</option><option>Columbia Women</option></select>
           <button class="top-link" id="logout-button">Sign out</button>
         </div>
       </header>
 
       <div class="content">
         <section class="page-head">
-          <div><div class="eyebrow">2026–27 governance workspace</div><h1>Annual Legislative Cycle</h1><p class="lede">The shared record for proposals, review, coach discussion, and the decisions that shape the next season.</p></div>
-          <button class="button gold" id="new-proposal">＋ New proposal</button>
+          <div><p class="kicker">2026–27 · Annual Legislative Cycle</p><h1>Annual Legislative Cycle</h1><p class="lede">Proposals move from submission to discussion to decision. This is the shared record.</p></div>
+          <button class="button gold" id="new-proposal">New proposal</button>
         </section>
 
         <section class="cycle-strip" aria-label="Current cycle status">
           <div><div class="cycle-kicker">Current phase</div><div class="cycle-name">Revision &amp; comment window</div><div class="cycle-detail">Accepted proposals are open for institutional review.</div></div>
-          <div class="cycle-progress"><div class="progress-labels"><span>August</span><strong>56% through cycle</strong><span>May</span></div><div class="progress-track"><span></span></div></div>
-          <div class="cycle-next"><div class="cycle-next-label">Next deadline</div><div class="cycle-next-date">Dec 01</div><div class="cycle-next-action">Revisions due</div></div>
+          <div class="cycle-progress"><div class="progress-labels"><span>August</span><strong>Comments and revisions</strong><span>May</span></div><div class="progress-track" aria-hidden="true"><span></span></div></div>
+          <div class="cycle-next"><div class="cycle-next-label">Next deadline</div><div class="cycle-next-date">Dec 1</div><div class="cycle-next-action">Revisions due</div></div>
         </section>
 
         <section class="stats" aria-label="Cycle summary">
-          <div class="stat"><div class="stat-label">Active proposals</div><div class="stat-value" id="stat-active">7</div><div class="stat-note">2 need your review</div></div>
-          <div class="stat"><div class="stat-label">Open comment threads</div><div class="stat-value">4</div><div class="stat-note">18 comments this week</div></div>
-          <div class="stat"><div class="stat-label">Next formal vote</div><div class="stat-value">May</div><div class="stat-note">Quorum rules visible at vote</div></div>
-          <div class="stat"><div class="stat-label">Your program</div><div class="stat-value" id="stat-program">1</div><div class="stat-note">active program account</div></div>
+          <div class="stat"><span class="stat-value" id="stat-active">4</span><span class="stat-label">active proposals</span><span class="stat-note">2 need your review</span></div>
+          <div class="stat"><span class="stat-value">4</span><span class="stat-label">open comment threads</span><span class="stat-note">18 comments this week</span></div>
+          <div class="stat"><span class="stat-value">May</span><span class="stat-label">next formal vote</span><span class="stat-note">quorum visible at vote</span></div>
+          <div class="stat"><span class="stat-value" id="stat-program">1</span><span class="stat-label">active program account</span></div>
         </section>
 
         <div class="workspace">
           <section>
             <div class="section-head"><div><div class="section-title">Proposal register</div><div class="section-sub">Every accepted proposal in the 2026–27 cycle.</div></div><button class="button secondary" id="view-all">View register</button></div>
-            <div class="tabs" role="tablist"><button class="tab active" data-filter="all">All proposals</button><button class="tab" data-filter="attention">Needs attention</button><button class="tab" data-filter="mine">My proposals</button></div>
+            <div class="tabs" role="tablist"><button class="tab active" data-filter="all" role="tab" aria-selected="true">All proposals</button><button class="tab" data-filter="attention" role="tab" aria-selected="false">Needs attention</button><button class="tab" data-filter="mine" role="tab" aria-selected="false">My proposals</button></div>
             <div class="proposal-list" id="proposal-list"></div>
-            <div class="activity"><div class="section-head"><div><div class="section-title">Recent activity</div><div class="section-sub">The audit trail, in plain view.</div></div></div><div id="activity-list"></div></div>
+            <div class="activity"><div class="section-head"><div><div class="section-title">Recent activity</div><div class="section-sub">The audit trail, in plain view.</div></div></div><div class="activity-list" id="activity-list"></div></div>
           </section>
 
           <aside class="timeline"><div class="timeline-head"><div class="section-title">This cycle</div><div class="section-sub">Approved milestone dates</div></div>
-            <div class="timeline-item done"><div class="timeline-date">Aug 08</div><div class="timeline-title">Annual memo distributed</div><div class="timeline-copy">Submission window opened to all head coaches.</div></div>
-            <div class="timeline-item done"><div class="timeline-date">Sep 04</div><div class="timeline-title">Proposals due</div><div class="timeline-copy">Staff review follows each completed submission.</div></div>
+            <div class="timeline-item done"><div class="timeline-date">Aug 8</div><div class="timeline-title">Annual memo distributed</div><div class="timeline-copy">Submission window opened to all head coaches.</div></div>
+            <div class="timeline-item done"><div class="timeline-date">Sep 4</div><div class="timeline-title">Proposals due</div><div class="timeline-copy">Staff review follows each completed submission.</div></div>
             <div class="timeline-item"><div class="timeline-date">Sep 18</div><div class="timeline-title">Accepted proposals distributed</div><div class="timeline-copy">Coaching body sees the approved register.</div></div>
-            <div class="timeline-item"><div class="timeline-date">Dec 01</div><div class="timeline-title">Revision &amp; comment window closes</div><div class="timeline-copy">Threads become read-only; the record remains.</div></div>
+            <div class="timeline-item"><div class="timeline-date">Dec 1</div><div class="timeline-title">Revision &amp; comment window closes</div><div class="timeline-copy">Threads become read-only; the record remains.</div></div>
             <div class="timeline-item"><div class="timeline-date">May 2027</div><div class="timeline-title">Final coach vote</div><div class="timeline-copy">Quorum and threshold are calculated before submission.</div></div>
           </aside>
         </div>
@@ -325,40 +434,43 @@
   </div>
 
   <div class="drawer-backdrop" id="drawer-backdrop"></div>
-  <aside class="drawer" id="proposal-drawer" aria-label="Proposal detail">
-    <div class="drawer-head"><button class="drawer-close" id="drawer-close" aria-label="Close">×</button><div class="eyebrow" id="drawer-kicker">Proposal record</div><div class="drawer-title" id="drawer-title"></div><div class="drawer-meta" id="drawer-meta"></div></div>
-    <div class="drawer-scroll"><div class="detail-grid" id="drawer-details"></div><div id="drawer-actions"></div><div class="stage-line" id="drawer-stage"></div><div class="drawer-section"><h3>Proposal</h3><p class="body-copy" id="drawer-body"></p></div><div class="drawer-section"><h3>Supporting documents</h3><div id="drawer-files"></div></div><div class="drawer-section"><h3>Record history</h3><div id="drawer-audit"></div></div><div class="drawer-section"><h3>Discussion</h3><div id="comment-list"></div><form class="comment-form" id="comment-form"><textarea class="textarea" id="comment-input" placeholder="Add a comment to this proposal…" required></textarea><button class="button" type="submit">Post comment</button></form></div></div>
+  <aside class="drawer" id="proposal-drawer" aria-label="Proposal detail" aria-hidden="true">
+    <div class="drawer-head"><button class="drawer-close" id="drawer-close" aria-label="Close proposal detail">×</button><div class="kicker" id="drawer-kicker">Proposal record</div><div class="drawer-title" id="drawer-title"></div><div class="drawer-meta" id="drawer-meta"></div></div>
+    <div class="drawer-scroll"><div class="detail-grid" id="drawer-details"></div><div id="drawer-actions"></div><div id="drawer-governance"></div><div class="stage-line" id="drawer-stage"></div><div class="drawer-section"><h3>Proposal</h3><p class="body-copy" id="drawer-body"></p></div><div class="drawer-section"><h3>Supporting documents</h3><div id="drawer-files"></div></div><div class="drawer-section"><h3>Record history</h3><div id="drawer-audit"></div></div><div class="drawer-section"><h3>Discussion</h3><div id="comment-list"></div><form class="comment-form" id="comment-form"><label class="kicker" for="comment-input">Add to the record</label><textarea class="textarea" id="comment-input" placeholder="Add a comment to this proposal…" required></textarea><button class="button" type="submit">Post comment</button></form></div></div>
   </aside>
 
   <div class="modal-backdrop" id="modal-backdrop"></div>
-  <section class="modal" id="proposal-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
-    <div class="modal-head"><div><div class="eyebrow">New legislative proposal</div><h2 id="modal-title">Start a proposal</h2></div><button class="modal-close" id="modal-close" aria-label="Close">×</button></div>
+  <section class="modal" id="proposal-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-head"><div><div class="kicker">New legislative proposal</div><h2 id="modal-title">Start a proposal</h2></div><button class="modal-close" id="modal-close" aria-label="Close proposal form">×</button></div>
     <form id="proposal-form"><div class="modal-body"><div class="form-grid">
-      <label class="form-label wide"><strong>Proposal title</strong><input class="field" id="form-title" required placeholder="A clear working title" /><span class="form-help">Keep it specific enough for the register.</span></label>
+      <label class="form-label"><strong>Proposal title</strong><input class="field" id="form-title" required placeholder="A clear working title" /><span class="form-help">Keep it specific enough for the register.</span></label>
       <label class="form-label"><strong>Primary program</strong><select class="field" id="form-program"><option>Columbia</option><option>Columbia Men</option><option>Columbia Women</option></select></label>
-      <label class="form-label"><strong>Co-sponsor</strong><select class="field" id="form-sponsor"><option value="">Select a co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select><span class="form-help">Electronic signature is requested on submission.</span></label>
-      <label class="form-label wide"><strong>1. Current issue</strong><textarea class="textarea" id="form-issue" required placeholder="What problem, gap, or inequity does this address?"></textarea></label>
-      <label class="form-label wide"><strong>2. Association impact</strong><textarea class="textarea" id="form-impact" required placeholder="How does this affect CSA operations and member institutions?"></textarea></label>
-      <label class="form-label wide"><strong>3. Financial implications</strong><textarea class="textarea" id="form-financial" required placeholder="State the cost implications, or say none are expected."></textarea></label>
-      <label class="form-label wide"><strong>4. Benefit to the student-athlete</strong><textarea class="textarea" id="form-benefit" required placeholder="How does this improve fairness, safety, experience, or recognition?"></textarea></label>
-      <label class="form-label wide"><strong>Supporting documents</strong><span class="upload"><input type="file" id="form-files" multiple /><span class="form-help">PDF, DOCX, XLSX, or image files. Original submissions remain versioned.</span></span></label>
-      <label class="check-row wide"><input type="checkbox" id="form-confirm" required /> I confirm this proposal is ready for CSA staff review.</label>
+      <label class="form-label"><strong>Co-sponsoring programs</strong><div class="split-fields"><select class="field" id="form-sponsor-1"><option value="">Select first co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select><select class="field" id="form-sponsor-2"><option value="">Select second co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select></div><span class="form-help">Two different member programs are required before submission.</span></label>
+      <label class="form-label"><strong>1. Current issue</strong><textarea class="textarea" id="form-issue" required placeholder="What problem, gap, or inequity does this address?"></textarea></label>
+      <label class="form-label"><strong>2. Association impact</strong><textarea class="textarea" id="form-impact" required placeholder="How does this affect CSA operations and member institutions?"></textarea></label>
+      <label class="form-label"><strong>3. Financial implications</strong><textarea class="textarea" id="form-financial" required placeholder="State the cost implications, or say none are expected."></textarea></label>
+      <label class="form-label"><strong>4. Benefit to the student-athlete</strong><textarea class="textarea" id="form-benefit" required placeholder="How does this improve fairness, safety, experience, or recognition?"></textarea></label>
+      <label class="form-label"><strong>Supporting documents</strong><span class="upload"><input type="file" id="form-files" multiple /><span class="form-help">PDF, DOCX, XLSX, or image files. Original submissions remain versioned.</span></span></label>
+      <label class="form-label" id="revision-summary-field" hidden><strong>What changed in this version?</strong><textarea class="textarea" id="form-change-summary" placeholder="Summarize the substantive change for the record."></textarea></label>
+      <label class="check-row"><input type="checkbox" id="form-confirm" required /> <span>I confirm this proposal is ready for CSA staff review.</span></label>
     </div></div><div class="modal-foot"><button class="button secondary" type="button" id="save-draft">Save draft</button><div class="foot-right"><button class="button secondary" type="button" id="cancel-proposal">Cancel</button><button class="button" type="submit">Submit for review</button></div></div></form>
   </section>
-  <div class="toast" id="toast" role="status"></div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
     const seedProposals = [
-      { id: 'p1', title: 'Standardize championship host selection criteria', program: 'Princeton', proposer: 'Will Carlin', bucket: 'Bucket 3', status: 'comment', statusLabel: 'Comment window', next: 'Revisions due Dec 01', body: 'Create a transparent host-selection process that accounts for facility readiness, travel burden, broadcast capacity, and student-athlete experience.', comments: [{ author: 'Jordan Smith', date: 'Nov 14', text: 'The travel burden language should include a consistent distance threshold.' }, { author: 'Maya Chen', date: 'Nov 13', text: 'Support the direction. Would like to see the facility checklist before December.' }], files: ['Host selection draft v2.pdf'], activity: 'Comment added by Jordan Smith', time: '18 min ago' },
-      { id: 'p2', title: 'Clarify ranking data submission windows', program: 'Columbia', proposer: 'Jordan Smith', bucket: 'Bucket 2', status: 'review', statusLabel: 'Staff review', next: 'Awaiting Commissioner review', body: 'Establish a shared submission window and correction protocol for ranking match data across the regular season.', comments: [], files: ['Ranking data proposal.docx'], activity: 'Submitted for staff review', time: 'Yesterday' },
-      { id: 'p3', title: 'Member program travel support pilot', program: 'Yale', proposer: 'Anna Morales', bucket: 'Bucket 3', status: 'vote', statusLabel: 'Coach vote next', next: 'Coach vote · May 2027', body: 'Pilot a needs-based travel support fund for qualifying member programs attending CSA championship events.', comments: [{ author: 'Alex Reed', date: 'Oct 28', text: 'Would like to understand the proposed funding source.' }], files: ['Travel support pilot.pdf', 'Budget assumptions.xlsx'], activity: 'Moved to coach vote', time: 'Oct 29' },
-      { id: 'p4', title: 'Update emergency session notice language', program: 'Trinity', proposer: 'Maya Chen', bucket: 'Bucket 1', status: 'closed', statusLabel: 'Commissioner review', next: 'Decision recorded Nov 02', body: 'Clarify emergency session notices and the circumstances in which the Commissioner may authorize an exception.', comments: [], files: [], activity: 'Decision recorded by Commissioner', time: 'Nov 02' },
-      { id: 'p5', title: 'Create a shared rules change archive', program: 'Penn', proposer: 'Chris Bell', bucket: 'Bucket 2', status: 'comment', statusLabel: 'Comment window', next: 'Comments close Dec 01', body: 'Create a durable, searchable archive of approved and rejected proposals, effective dates, and policy versions.', comments: [], files: ['Archive outline.pdf'], activity: 'Document updated', time: 'Nov 08' }
+      { id: 'p1', title: 'Standardize championship host selection criteria', program: 'Princeton', proposer: 'Will Carlin', proposerId: 'u-will', coSponsors: ['Penn', 'Yale'], bucket: 'Bucket 3', status: 'comment', statusLabel: 'Comment window', next: 'Revisions due Dec 1', body: 'Create a transparent host-selection process that accounts for facility readiness, travel burden, broadcast capacity, and student-athlete experience.', comments: [{ author: 'Jordan Smith', date: 'Nov 14', text: 'The travel burden language should include a consistent distance threshold.' }, { author: 'Maya Chen', date: 'Nov 13', text: 'Support the direction. Would like to see the facility checklist before December.' }], files: ['Host selection draft v2.pdf'], activity: 'Comment added by Jordan Smith', time: '18 min ago' },
+      { id: 'p2', title: 'Clarify ranking data submission windows', program: 'Columbia', proposer: 'Jordan Smith', proposerId: 'u-jordan', coSponsors: ['Princeton', 'Penn'], bucket: 'Bucket 2', status: 'review', statusLabel: 'Staff review', next: 'Awaiting Commissioner review', body: 'Establish a shared submission window and correction protocol for ranking match data across the regular season.', comments: [], files: ['Ranking data proposal.docx'], activity: 'Submitted for staff review', time: 'Yesterday' },
+      { id: 'p3', title: 'Member program travel support pilot', program: 'Yale', proposer: 'Anna Morales', coSponsors: ['Columbia', 'Princeton'], bucket: 'Bucket 3', status: 'vote', statusLabel: 'Coach vote open', next: 'Quorum and threshold calculated at close', body: 'Pilot a needs-based travel support fund for qualifying member programs attending CSA championship events.', comments: [{ author: 'Alex Reed', date: 'Oct 28', text: 'Would like to understand the proposed funding source.' }], files: ['Travel support pilot.pdf', 'Budget assumptions.xlsx'], activity: 'Moved to coach vote', time: 'Oct 29', vote: { eligibleUnits: ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'], quorumRequired: 3, thresholdPercent: 50, ballots: [], status: 'open', result: null, counts: null, quorumMet: null, thresholdMet: null } },
+      { id: 'p4', title: 'Update emergency session notice language', program: 'Trinity', proposer: 'Maya Chen', proposerId: 'u-maya', coSponsors: ['Columbia', 'Penn'], bucket: 'Bucket 1', status: 'closed', statusLabel: 'Decision recorded', next: 'Decision recorded Nov 2', body: 'Clarify emergency session notices and the circumstances in which the Commissioner may authorize an exception.', comments: [], files: [], activity: 'Decision recorded by Commissioner', time: 'Nov 2', decision: { outcome: 'Adopted', reason: 'Administrative clarification', effectiveDate: '2026-11-02', decidedBy: 'Harry Smith', decidedAt: 'Nov 2' } },
+      { id: 'p5', title: 'Create a shared rules change archive', program: 'Penn', proposer: 'Chris Bell', proposerId: 'u-chris', coSponsors: ['Princeton', 'Trinity'], bucket: 'Bucket 2', status: 'comment', statusLabel: 'Comment window', next: 'Comments close Dec 1', body: 'Create a durable, searchable archive of approved and rejected proposals, effective dates, and policy versions.', comments: [], files: ['Archive outline.pdf'], activity: 'Document updated', time: 'Nov 8' }
     ];
     const storeKey = 'csa-portal-proposals-v1';
     let proposals = [];
     let serverBacked = false;
     let activeProposal = null;
+    let editingProposal = null;
+    let editingMode = 'draft';
     let currentFilter = 'all';
     let currentRole = 'coach';
     let authUser = null;
@@ -373,20 +485,47 @@
       return payload;
     }
     async function syncProposal(proposal) {
-      if (!serverBacked || !proposal) return;
+      if (!serverBacked || !proposal) return proposal;
       try {
         const updated = await api(`/api/proposals/${proposal.id}`, { method: 'PATCH', body: JSON.stringify(proposal) });
         const index = proposals.findIndex(item => item.id === updated.id);
         if (index >= 0) proposals[index] = updated;
+        return updated;
       } catch (error) { toast(`Could not sync change: ${error.message}`); }
+      return null;
     }
-    const toast = (message) => { const node = $('#toast'); node.textContent = message; node.classList.add('show'); clearTimeout(window.__toast); window.__toast = setTimeout(() => node.classList.remove('show'), 2600); };
+    const toast = (message) => { const node = $('#toast'); node.textContent = message; node.classList.add('show'); clearTimeout(window.__toast); window.__toast = setTimeout(() => node.classList.remove('show'), 3200); };
+    const memberPrograms = ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'];
+    const roleLabels = { commissioner: 'CSA Commissioner', coach: 'Head coach', board_member: 'Board member', staff: 'CSA staff', administrator: 'Portal administrator', conference_observer: 'Conference observer' };
+    const roleLabel = (user) => roleLabels[user.role] || user.role;
+    const canReview = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:admin')));
+    const canModerate = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:moderation')));
+    const canBoard = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:board')));
+    const canSubmit = () => Boolean(authUser && (['coach', 'institutional_representative'].includes(authUser.role) || canReview()));
+    function fillSelect(select, values, placeholder = '') {
+      select.innerHTML = `${placeholder ? `<option value="">${esc(placeholder)}</option>` : ''}${values.map(value => `<option value="${esc(value)}">${esc(value)}</option>`).join('')}`;
+    }
+    function populateProgramFields() {
+      const primaryPrograms = authUser && authUser.programs && authUser.programs.length ? authUser.programs : memberPrograms;
+      const selectedPrimary = $('#form-program').value;
+      fillSelect($('#form-program'), primaryPrograms);
+      if (primaryPrograms.includes(selectedPrimary)) $('#form-program').value = selectedPrimary;
+      const primary = $('#form-program').value;
+      const sponsors = memberPrograms.filter(program => program !== primary);
+      fillSelect($('#form-sponsor-1'), sponsors, 'Select first co-sponsor');
+      fillSelect($('#form-sponsor-2'), sponsors, 'Select second co-sponsor');
+    }
     function applyAuthUser(user) {
       authUser = user; currentRole = user.role; document.body.classList.add('authenticated');
-      const roleSelect = $('#role-select'); roleSelect.innerHTML = `<option value="${esc(user.role)}">${user.role === 'commissioner' ? 'Commissioner' : 'Head coach'}</option>`; roleSelect.disabled = true;
-      document.querySelector('.identity-role').textContent = user.role === 'commissioner' ? 'CSA Commissioner' : `Head coach · ${user.programs[0] || 'CSA'}`;
+      const roleSelect = $('#role-select'); roleSelect.innerHTML = `<option value="${esc(user.role)}">${esc(roleLabel(user))}</option>`; roleSelect.disabled = true; roleSelect.setAttribute('aria-label', 'Authorized role');
+      document.querySelector('.identity-role').textContent = `${roleLabel(user)}${user.programs?.length ? ` · ${user.programs[0]}` : ''}`;
       document.querySelector('.identity-name').textContent = user.name; document.querySelector('.avatar').textContent = user.name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
-      if (user.role === 'commissioner') document.querySelector('[data-view="review"]').style.display = 'flex';
+      const programSelect = $('#program-select');
+      fillSelect(programSelect, user.programs?.length ? user.programs : memberPrograms, user.programs?.length ? '' : 'All program accounts');
+      programSelect.value = user.programs?.[0] || '';
+      populateProgramFields();
+      document.querySelector('[data-view="review"]').style.display = canReview() ? 'flex' : 'none';
+      $('#new-proposal').style.display = canSubmit() ? '' : 'none';
     }
     async function loadProposals() {
       try { proposals = await api('/api/proposals'); serverBacked = true; }
@@ -398,44 +537,92 @@
       catch (error) { document.body.classList.remove('authenticated'); }
     }
 
-    function statusClass(status) { return ['review','comment','vote','closed'].includes(status) ? status : 'review'; }
+    function statusClass(status) { return ['draft','review','comment','vote','board','decision','closed'].includes(status) ? status : 'review'; }
     function visibleProposals() {
-      return proposals.filter(p => currentFilter === 'all' || (currentFilter === 'attention' && ['review','vote'].includes(p.status)) || (currentFilter === 'mine' && p.program === $('#program-select').value));
+      return proposals.filter(p => currentFilter === 'all' || (currentFilter === 'attention' && ['review','vote','board','decision'].includes(p.status)) || (currentFilter === 'mine' && p.program === $('#program-select').value));
+    }
+    function updateTabState() {
+      document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.filter === currentFilter; tab.classList.toggle('active', active); tab.setAttribute('aria-selected', active ? 'true' : 'false'); });
     }
     function renderProposals() {
       const list = $('#proposal-list');
       const rows = visibleProposals();
       if (!rows.length) { list.innerHTML = '<div class="empty">No proposals match this view.</div>'; return; }
-      list.innerHTML = rows.map(p => `<article class="proposal-row" data-id="${esc(p.id)}"><div><div class="proposal-title">${esc(p.title)}</div><div class="proposal-meta">${esc(p.proposer)} · ${esc(p.program)} · ${p.comments.length} comments</div></div><div><span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span></div><div><span class="bucket">${esc(p.bucket)}</span></div><div class="next-action"><strong>Next</strong>${esc(p.next)}</div></article>`).join('');
+      list.innerHTML = rows.map(p => `<article class="proposal-row" data-id="${esc(p.id)}"><div><div class="proposal-title">${esc(p.title)}</div><div class="proposal-meta">${esc(p.proposer)} · ${esc(p.program)} · ${(p.comments || []).length} comments</div></div><div><span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span></div><div><span class="bucket">${esc(p.bucket)}</span></div><div class="next-action"><strong>Next action</strong>${esc(p.next)}</div></article>`).join('');
       list.querySelectorAll('[data-id]').forEach(row => row.addEventListener('click', () => openDrawer(row.dataset.id)));
       $('#stat-active').textContent = proposals.filter(p => p.status !== 'closed').length;
+      updateTabState();
     }
     function renderActivity() {
       const recent = proposals.slice(0, 4);
-      $('#activity-list').innerHTML = recent.map(p => `<div class="activity-item"><div class="activity-icon">↗</div><div class="activity-text"><strong>${esc(p.activity)}</strong><br><span>${esc(p.title)}</span></div><div class="activity-time">${esc(p.time)}</div></div>`).join('');
+      $('#activity-list').innerHTML = recent.map(p => `<div class="activity-item"><span class="activity-mark" aria-hidden="true"></span><div class="activity-text"><strong>${esc(p.activity)}</strong><br><span>${esc(p.title)}</span></div><div class="activity-time">${esc(p.time)}</div></div>`).join('');
     }
+    async function replaceProposal(updated, message) { proposals = proposals.map(item => item.id === updated.id ? updated : item); renderProposals(); renderActivity(); openDrawer(updated.id); if (message) toast(message); }
     function renderReviewActions(p) {
-      if (currentRole !== 'commissioner') { $('#drawer-actions').innerHTML = ''; return; }
-      const needsReview = p.status === 'review' || p.bucket === 'Unassigned';
-      $('#drawer-actions').innerHTML = `<div class="review-actions"><div class="review-note">Commissioner review · ${needsReview ? 'assign the route and record a decision.' : 'this record has already moved beyond intake.'}</div><label class="form-label"><strong>Decision bucket</strong><select class="field" id="drawer-bucket"><option ${p.bucket === 'Unassigned' ? 'selected' : ''}>Unassigned</option><option ${p.bucket === 'Bucket 1' ? 'selected' : ''}>Bucket 1</option><option ${p.bucket === 'Bucket 2' ? 'selected' : ''}>Bucket 2</option><option ${p.bucket === 'Bucket 3' ? 'selected' : ''}>Bucket 3</option></select></label><button class="button secondary" id="assign-bucket">Assign bucket</button><button class="button" id="accept-review">Accept &amp; distribute</button><button class="button secondary" id="return-review">Return to proposer</button></div>`;
-      $('#assign-bucket').addEventListener('click', () => { const value = $('#drawer-bucket').value; if (value === 'Unassigned') return toast('Choose a bucket before assigning.'); p.bucket = value; p.activity = `Bucket assigned by Commissioner`; p.time = 'Just now'; p.next = 'Commissioner final review'; p.audit = [...(p.audit || []), { event: `Bucket assigned: ${value}`, by: 'Commissioner', at: 'Just now' }]; save(); syncProposal(p); renderProposals(); renderActivity(); openDrawer(p.id); toast(`${value} assigned and recorded.`); });
-      $('#accept-review').addEventListener('click', () => { if (p.bucket === 'Unassigned') return toast('Assign a decision bucket first.'); p.status = 'comment'; p.statusLabel = 'Comment window'; p.next = 'Comments close Dec 01'; p.activity = 'Accepted and distributed by Commissioner'; p.time = 'Just now'; p.audit = [...(p.audit || []), { event: 'Accepted and distributed', by: 'Commissioner', at: 'Just now' }]; save(); syncProposal(p); renderProposals(); renderActivity(); openDrawer(p.id); toast('Proposal accepted and distributed to eligible participants.'); });
-      $('#return-review').addEventListener('click', () => { const reason = window.prompt('Reason to return this proposal to the proposer:'); if (!reason || !reason.trim()) return; p.statusLabel = 'Returned to proposer'; p.next = 'Correction required'; p.reviewReason = reason.trim(); p.activity = 'Returned by Commissioner'; p.time = 'Just now'; p.audit = [...(p.audit || []), { event: 'Returned to proposer', by: 'Commissioner', at: 'Just now', reason: p.reviewReason }]; save(); syncProposal(p); renderProposals(); renderActivity(); openDrawer(p.id); toast('Proposal returned with a recorded reason.'); });
+      const owner = Boolean(authUser && (p.proposerId ? p.proposerId === authUser.id : p.proposer === authUser.name));
+      if (!canReview()) {
+        const controls = [];
+        if (p.status === 'draft' && owner) controls.push('<button class="button" id="edit-draft">Continue draft</button>');
+        if (owner && ['comment', 'vote', 'board', 'decision'].includes(p.status)) controls.push('<button class="button secondary" id="create-revision">Create revision</button>');
+        $('#drawer-actions').innerHTML = controls.length ? `<div class="review-actions"><div class="review-note">${p.status === 'draft' ? 'Draft · private to your program account until you submit it.' : 'Proposer controls · a new version returns to staff review.'}</div>${controls.join('')}</div>` : '';
+        if ($('#edit-draft')) $('#edit-draft').addEventListener('click', () => openModal(p));
+        if ($('#create-revision')) $('#create-revision').addEventListener('click', () => openModal(p, 'revision'));
+        return;
+      }
+      const reviewable = !['closed', 'vote', 'board', 'decision'].includes(p.status);
+      $('#drawer-actions').innerHTML = `<div class="review-actions"><div class="review-note">CSA governance authority · ${reviewable ? 'assign the route and move the record forward.' : 'the record is in a governed decision state.'}</div>${reviewable ? `<label class="form-label"><strong>Decision bucket</strong><select class="field" id="drawer-bucket"><option ${p.bucket === 'Unassigned' ? 'selected' : ''}>Unassigned</option><option ${p.bucket === 'Bucket 1' ? 'selected' : ''}>Bucket 1</option><option ${p.bucket === 'Bucket 2' ? 'selected' : ''}>Bucket 2</option><option ${p.bucket === 'Bucket 3' ? 'selected' : ''}>Bucket 3</option></select></label><button class="button secondary" id="assign-bucket">Assign bucket</button><button class="button" id="accept-review">Accept &amp; distribute</button><button class="button secondary" id="return-review">Return to proposer</button>` : ''}${p.status === 'comment' && ['Bucket 2', 'Bucket 3'].includes(p.bucket) ? '<button class="button" id="open-vote">Close comments &amp; open vote</button>' : ''}${p.status === 'vote' ? '<button class="button" id="finalize-vote">Finalize coach vote</button>' : ''}</div>`;
+      if ($('#assign-bucket')) $('#assign-bucket').addEventListener('click', async () => { const value = $('#drawer-bucket').value; if (value === 'Unassigned') return toast('Choose a bucket before assigning.'); try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify({ bucket: value, next: 'Commissioner final review', activity: `Bucket assigned by ${authUser.name}`, statusLabel: p.statusLabel }) }); await replaceProposal(updated, `${value} assigned and recorded.`); } catch (error) { toast(`Could not assign bucket: ${error.message}`); } });
+      if ($('#accept-review')) $('#accept-review').addEventListener('click', async () => { if (p.bucket === 'Unassigned') return toast('Assign a decision bucket first.'); const patch = p.bucket === 'Bucket 1' ? { status: 'decision', statusLabel: 'Commissioner decision', next: 'Commissioner to record final outcome', activity: 'Accepted for Commissioner decision' } : { status: 'comment', statusLabel: 'Comment window', next: 'Comments close Dec 1', activity: 'Accepted and distributed' }; try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify(patch) }); await replaceProposal(updated, 'Proposal route recorded.'); } catch (error) { toast(`Could not accept proposal: ${error.message}`); } });
+      if ($('#return-review')) $('#return-review').addEventListener('click', async () => { const reason = window.prompt('Reason to return this proposal to the proposer:'); if (!reason || !reason.trim()) return; try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify({ statusLabel: 'Returned to proposer', next: 'Correction required', reviewReason: reason.trim(), activity: 'Returned by CSA governance' }) }); await replaceProposal(updated, 'Proposal returned with a recorded reason.'); } catch (error) { toast(`Could not return proposal: ${error.message}`); } });
+      if ($('#open-vote')) $('#open-vote').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/open-vote`, { method: 'POST' }); await replaceProposal(updated, 'Comments closed; coach vote is open.'); } catch (error) { toast(`Could not open vote: ${error.message}`); } });
+      if ($('#finalize-vote')) $('#finalize-vote').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/finalize-vote`, { method: 'POST' }); await replaceProposal(updated, updated.vote?.result === 'passed' ? 'Vote finalized and routed.' : 'Vote finalized; proposal was not adopted.'); } catch (error) { toast(`Could not finalize vote: ${error.message}`); } });
+    }
+    function renderDecisionForm(p, board = false) {
+      const authority = board ? canBoard() : canReview();
+      if (!authority) return '';
+      return `<div class="governance-panel"><h3>${board ? 'Board decision' : 'Commissioner decision'}</h3><div class="governance-note">Record one final outcome. Adopted decisions require an effective date; Rejected and Tabled decisions require a reason.</div><div class="governance-grid"><label class="form-label"><strong>Outcome</strong><select class="field" id="decision-outcome"><option>Adopted</option><option>Rejected</option><option>Tabled</option></select></label><label class="form-label"><strong>Reason</strong><textarea class="textarea" id="decision-reason" placeholder="Explain the decision for the permanent record."></textarea></label><label class="form-label"><strong>Effective date</strong><input class="field" id="decision-effective-date" type="date" /></label><button class="button" id="record-decision">Record ${board ? 'Board' : 'Commissioner'} decision</button></div></div>`;
+    }
+    function renderGovernance(p) {
+      const node = $('#drawer-governance');
+      node.innerHTML = '';
+      if (p.status === 'vote' && p.vote) {
+        const eligible = (authUser?.programs || []).filter(unit => (p.vote.eligibleUnits || []).includes(unit));
+        const voted = p.vote.myVotingUnits || [];
+        const options = eligible.map(unit => `<option value="${esc(unit)}" ${voted.includes(unit) ? 'disabled' : ''}>${esc(unit)}${voted.includes(unit) ? ' · ballot recorded' : ''}</option>`).join('');
+        node.innerHTML = `<div class="governance-panel"><h3>Coach vote</h3><div class="governance-note">Ballots are immutable and confidential until CSA staff finalizes the vote. Quorum: ${esc(p.vote.quorumRequired)} of ${esc(p.vote.eligibleUnits.length)} voting units.</div>${eligible.length ? `<div class="governance-grid"><label class="form-label"><strong>Voting unit</strong><select class="field" id="vote-unit">${options}</select></label><label class="form-label"><strong>Ballot</strong><select class="field" id="vote-choice"><option value="yes">Yes</option><option value="no">No</option><option value="abstain">Abstain</option></select></label><button class="button" id="submit-vote" ${eligible.every(unit => voted.includes(unit)) ? 'disabled' : ''}>Submit immutable ballot</button></div>` : '<div class="version-note">No voting unit is authorized for this account.</div>'}${canReview() ? '<button class="button secondary" id="finalize-vote-inline" style="margin-top:12px;">Finalize vote</button>' : ''}</div>`;
+        if ($('#submit-vote')) $('#submit-vote').addEventListener('click', async () => { const unit = $('#vote-unit').value; if (!unit || voted.includes(unit)) return toast('Choose an authorized voting unit without a recorded ballot.'); try { const updated = await api(`/api/proposals/${p.id}/votes`, { method: 'POST', body: JSON.stringify({ votingUnit: unit, choice: $('#vote-choice').value }) }); await replaceProposal(updated, 'Immutable ballot recorded.'); } catch (error) { toast(`Could not submit ballot: ${error.message}`); } });
+        if ($('#finalize-vote-inline')) $('#finalize-vote-inline').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/finalize-vote`, { method: 'POST' }); await replaceProposal(updated, 'Vote finalized and routed.'); } catch (error) { toast(`Could not finalize vote: ${error.message}`); } });
+      } else if (p.status === 'decision') {
+        node.innerHTML = renderDecisionForm(p, false);
+      } else if (p.status === 'board') {
+        node.innerHTML = renderDecisionForm(p, true);
+      } else if (p.status === 'closed' && p.decision) {
+        node.innerHTML = `<div class="governance-panel"><h3>Decision record</h3><div class="governance-results"><span><strong>${esc(p.decision.outcome)}</strong></span>${p.decision.effectiveDate ? `<span>Effective ${esc(p.decision.effectiveDate)}</span>` : ''}${p.decision.reason ? `<span>${esc(p.decision.reason)}</span>` : ''}</div></div>`;
+      }
+      if ($('#record-decision')) $('#record-decision').addEventListener('click', async () => { const outcome = $('#decision-outcome').value; const reason = $('#decision-reason').value.trim(); const effectiveDate = $('#decision-effective-date').value; if (outcome === 'Adopted' && !effectiveDate) return toast('Choose an effective date for an Adopted decision.'); if (outcome !== 'Adopted' && !reason) return toast(`Add a reason for a ${outcome} decision.`); const endpoint = p.status === 'board' ? 'board-decision' : 'decision'; try { const updated = await api(`/api/proposals/${p.id}/${endpoint}`, { method: 'POST', body: JSON.stringify({ outcome, reason, effectiveDate }) }); await replaceProposal(updated, `${outcome} decision recorded.`); } catch (error) { toast(`Could not record decision: ${error.message}`); } });
     }
     function auditFor(p) {
-      return p.audit && p.audit.length ? p.audit : [
-        { event: 'Proposal submitted', by: p.proposer, at: 'Nov 04' },
-        ...(p.status !== 'review' ? [{ event: 'Accepted for current cycle', by: 'CSA staff', at: 'Nov 06' }] : [])
-      ];
+      return p.audit && p.audit.length ? p.audit : [{ event: 'Proposal submitted', by: p.proposer, at: 'Nov 4' }, ...(p.status !== 'review' ? [{ event: 'Accepted for current cycle', by: 'CSA staff', at: 'Nov 6' }] : [])];
     }
     function renderComments(p) {
-      $('#comment-list').innerHTML = p.comments.length ? p.comments.map((c, index) => `<div class="comment"><div class="comment-head"><strong>${esc(c.author)}</strong><span>${esc(c.date)}</span></div><p>${c.removed ? '<em>Comment removed from the visible thread.</em>' : esc(c.text)}</p>${(!c.removed && (currentRole === 'commissioner' || c.author === 'Jordan Smith')) ? `<div class="comment-tools"><button class="comment-remove" data-comment-index="${index}">Remove comment</button></div>` : ''}</div>`).join('') : '<div class="empty">No comments yet.</div>';
-      $('#comment-list').querySelectorAll('[data-comment-index]').forEach(button => button.addEventListener('click', () => {
-        const comment = p.comments[Number(button.dataset.commentIndex)];
-        const reason = currentRole === 'commissioner' ? window.prompt('Reason for removing this comment:') : 'Removed by commenter';
-        if (currentRole === 'commissioner' && (!reason || !reason.trim())) return;
-        comment.removed = true; comment.originalText = comment.text; comment.removedBy = currentRole === 'commissioner' ? 'Commissioner' : 'Jordan Smith'; comment.removedReason = (reason || 'Removed by commenter').trim();
-        p.audit = [...(p.audit || []), { event: 'Comment removed', by: comment.removedBy, at: 'Just now', reason: comment.removedReason }]; p.activity = 'Comment removed from visible thread'; p.time = 'Just now'; save(); syncProposal(p); renderProposals(); renderActivity(); openDrawer(p.id); toast('Comment removed; audit record preserved.');
+      const ownsComment = (comment) => Boolean(authUser && (comment.authorId ? comment.authorId === authUser.id : comment.author === authUser.name));
+      const comments = Array.isArray(p.comments) ? p.comments : [];
+      $('#comment-list').innerHTML = comments.length ? comments.map((c, index) => `<div class="comment"><div class="comment-head"><strong>${esc(c.author)}</strong><span>${esc(c.date)}</span></div><p>${c.removed ? '<em>Comment removed from the visible thread.</em>' : esc(c.text)}</p>${(!c.removed && (canModerate() || ownsComment(c))) ? `<div class="comment-tools"><button class="comment-remove" data-comment-index="${index}">Remove comment</button></div>` : ''}</div>`).join('') : '<div class="empty">No comments yet.</div>';
+      $('#comment-list').querySelectorAll('[data-comment-index]').forEach(button => button.addEventListener('click', async () => {
+        const comment = comments[Number(button.dataset.commentIndex)];
+        const moderating = canModerate() && !ownsComment(comment);
+        const reason = moderating ? window.prompt('Reason for removing this comment:') : 'Removed by commenter';
+        if (moderating && (!reason || !reason.trim())) return;
+        try {
+          if (serverBacked) {
+            const updated = await api(`/api/proposals/${p.id}/comments/${button.dataset.commentIndex}`, { method: 'DELETE', body: JSON.stringify({ reason }) });
+            proposals = proposals.map(item => item.id === updated.id ? updated : item); activeProposal = updated;
+          } else {
+            comment.removed = true; comment.originalText = comment.text; comment.removedBy = authUser?.name || 'Head coach'; comment.removedReason = (reason || 'Removed by commenter').trim();
+            p.audit = [...(p.audit || []), { event: 'Comment removed', by: comment.removedBy, at: 'Just now', reason: comment.removedReason }]; p.activity = 'Comment removed from visible thread'; p.time = 'Just now'; save();
+          }
+          renderProposals(); renderActivity(); openDrawer(p.id); toast('Comment removed; audit record preserved.');
+        } catch (error) { toast(`Could not remove comment: ${error.message}`); }
       }));
     }
     function syncCommentState(p) {
@@ -445,46 +632,71 @@
       $('#comment-form button').disabled = !open;
       $('#comment-form button').title = open ? '' : 'Comments are closed for this proposal';
     }
+    function setOverlayState(node, open) { node.setAttribute('aria-hidden', open ? 'false' : 'true'); }
     function openDrawer(id) {
       const p = proposals.find(item => item.id === id); if (!p) return; activeProposal = p;
       $('#drawer-title').textContent = p.title; $('#drawer-kicker').textContent = `${p.program} · ${p.bucket}`;
       $('#drawer-meta').innerHTML = `<span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span><span class="proposal-meta">Proposed by ${esc(p.proposer)}</span>`;
-      $('#drawer-details').innerHTML = `<div><div class="detail-label">Program account</div><div class="detail-value">${esc(p.program)}</div></div><div><div class="detail-label">Next action</div><div class="detail-value">${esc(p.next)}</div></div><div><div class="detail-label">Decision route</div><div class="detail-value">${esc(p.bucket)}</div></div><div><div class="detail-label">Record status</div><div class="detail-value">Version 1 · audited</div></div>`;
+      const version = p.version || (Array.isArray(p.versions) && p.versions.length) || 1;
+      $('#drawer-details').innerHTML = `<div><div class="detail-label">Program account</div><div class="detail-value">${esc(p.program)}</div></div><div><div class="detail-label">Co-sponsors</div><div class="detail-value">${esc(Array.isArray(p.coSponsors) && p.coSponsors.length ? p.coSponsors.join(' · ') : 'Not recorded')}</div></div><div><div class="detail-label">Next action</div><div class="detail-value">${esc(p.next)}</div></div><div><div class="detail-label">Decision route</div><div class="detail-value">${esc(p.bucket)}</div></div><div><div class="detail-label">Record status</div><div class="detail-value">Version ${esc(version)} · audited</div></div>`;
       renderReviewActions(p);
-      const steps = ['Submitted','Staff review','Comment window','Coach vote','Decision']; const current = p.status === 'review' ? 1 : p.status === 'comment' ? 2 : p.status === 'vote' ? 3 : 4;
+      renderGovernance(p);
+      const steps = ['Submitted','Staff review','Comment window','Coach vote','Board decision','Final decision']; const current = p.status === 'draft' ? -1 : p.status === 'review' ? 1 : p.status === 'comment' ? 2 : p.status === 'vote' ? 3 : p.status === 'board' ? 4 : 5;
       $('#drawer-stage').innerHTML = steps.map((step, i) => `<div class="stage ${i < current ? 'done' : i === current ? 'current' : ''}"><span>${i < current ? '✓' : i + 1}</span>${step}</div>`).join('');
-      $('#drawer-body').textContent = p.body; $('#drawer-files').innerHTML = p.files.length ? p.files.map(f => `<div class="file-line"><span>□ ${esc(f)}</span><small>Version 1</small></div>`).join('') : '<div class="empty">No supporting documents attached.</div>';
-      renderComments(p);
-      syncCommentState(p);
+      $('#drawer-body').textContent = p.body; $('#drawer-files').innerHTML = (p.files || []).length ? p.files.map(f => `<div class="file-line"><span><span class="file-mark" aria-hidden="true"></span>${esc(f)}</span><small>Version ${esc(version)}</small></div>`).join('') : '<div class="empty">No supporting documents attached.</div>';
+      renderComments(p); syncCommentState(p);
       $('#drawer-audit').innerHTML = auditFor(p).map(item => `<div class="audit-row"><span class="audit-dot"></span><div class="audit-event"><strong>${esc(item.event)}</strong><br><span>${esc(item.by)}${item.reason ? ` · ${esc(item.reason)}` : ''}</span></div><div class="audit-meta">${esc(item.at)}</div></div>`).join('');
-      $('#drawer-backdrop').classList.add('open'); $('#proposal-drawer').classList.add('open');
+      $('#drawer-backdrop').classList.add('open'); $('#proposal-drawer').classList.add('open'); setOverlayState($('#proposal-drawer'), true); $('#drawer-close').focus();
     }
-    function closeDrawer() { $('#drawer-backdrop').classList.remove('open'); $('#proposal-drawer').classList.remove('open'); activeProposal = null; }
-    function openModal() { $('#proposal-modal').classList.add('open'); $('#modal-backdrop').classList.add('open'); setTimeout(() => $('#form-title').focus(), 120); }
-    function closeModal() { $('#proposal-modal').classList.remove('open'); $('#modal-backdrop').classList.remove('open'); $('#proposal-form').reset(); }
-    function readForm() { return { title: $('#form-title').value.trim(), program: $('#form-program').value, proposer: 'Jordan Smith', bucket: 'Unassigned', status: 'review', statusLabel: 'Draft for review', next: 'CSA staff review', body: `Current issue:\n${$('#form-issue').value.trim()}\n\nAssociation impact:\n${$('#form-impact').value.trim()}\n\nFinancial implications:\n${$('#form-financial').value.trim()}\n\nBenefit to the student-athlete:\n${$('#form-benefit').value.trim()}`, comments: [], files: Array.from($('#form-files').files).map(f => f.name), activity: 'Draft created', time: 'Just now' }; }
+    function closeDrawer() { $('#drawer-backdrop').classList.remove('open'); $('#proposal-drawer').classList.remove('open'); setOverlayState($('#proposal-drawer'), false); activeProposal = null; }
+    function openModal(proposal = null, mode = 'draft') {
+      editingProposal = proposal; editingMode = mode;
+      $('#proposal-form').reset();
+      $('#modal-title').textContent = mode === 'revision' ? 'Create a new version' : proposal ? 'Continue a draft' : 'Start a proposal';
+      $('#revision-summary-field').hidden = mode !== 'revision';
+      if (proposal) {
+        $('#form-title').value = proposal.title || '';
+        $('#form-program').value = proposal.program || 'Columbia';
+        const sponsors = Array.isArray(proposal.coSponsors) ? proposal.coSponsors : [];
+        $('#form-sponsor-1').value = sponsors[0] || '';
+        $('#form-sponsor-2').value = sponsors[1] || '';
+        const match = String(proposal.body || '').match(/^Current issue:\n([\s\S]*?)\n\nAssociation impact:\n([\s\S]*?)\n\nFinancial implications:\n([\s\S]*?)\n\nBenefit to the student-athlete:\n([\s\S]*)$/);
+        $('#form-issue').value = match ? match[1] : proposal.body || '';
+        $('#form-impact').value = match ? match[2] : '';
+        $('#form-financial').value = match ? match[3] : '';
+        $('#form-benefit').value = match ? match[4] : '';
+      }
+      $('#proposal-modal').classList.add('open'); $('#modal-backdrop').classList.add('open'); setOverlayState($('#proposal-modal'), true); setTimeout(() => $('#form-title').focus(), 120);
+    }
+    function closeModal() { $('#proposal-modal').classList.remove('open'); $('#modal-backdrop').classList.remove('open'); setOverlayState($('#proposal-modal'), false); $('#proposal-form').reset(); $('#revision-summary-field').hidden = true; $('#modal-title').textContent = 'Start a proposal'; editingProposal = null; editingMode = 'draft'; }
+    function readForm() { const selectedFiles = Array.from($('#form-files').files).map(f => f.name); return { title: $('#form-title').value.trim(), program: $('#form-program').value, coSponsors: [$('#form-sponsor-1').value, $('#form-sponsor-2').value].filter(Boolean), submissionState: 'submit', body: `Current issue:\n${$('#form-issue').value.trim()}\n\nAssociation impact:\n${$('#form-impact').value.trim()}\n\nFinancial implications:\n${$('#form-financial').value.trim()}\n\nBenefit to the student-athlete:\n${$('#form-benefit').value.trim()}`, files: selectedFiles.length ? selectedFiles : (editingProposal?.files || []) }; }
     async function createProposal(submit) {
-      const p = readForm(); if (!p.title) return;
-      if ($('#form-sponsor').value) p.activity = submit ? `Submitted with ${$('#form-sponsor').value} co-sponsor` : 'Draft saved';
+      const p = readForm(); p.submissionState = submit ? 'submit' : 'draft'; if (!p.title) return;
+      const mode = editingMode;
+      if (submit && new Set(p.coSponsors).size < 2) return toast('Choose two different co-sponsoring programs before submitting.');
+      if (editingMode === 'revision' && !$('#form-change-summary').value.trim()) return toast('Summarize what changed in this version.');
+      if (p.coSponsors.length) p.activity = submit ? `Submitted with ${p.coSponsors.join(' and ')} co-sponsors` : 'Draft saved';
       if (!submit) { p.statusLabel = 'Draft'; p.next = 'Complete and submit'; }
+      const editingId = editingProposal?.id;
       try {
-        if (serverBacked) {
-          const created = await api('/api/proposals', { method: 'POST', body: JSON.stringify(p) });
-          proposals = [created, ...proposals];
-        } else { p.id = `p${Date.now()}`; proposals = [p, ...proposals]; save(); }
-        renderProposals(); renderActivity(); closeModal(); toast(submit ? 'Proposal submitted for CSA staff review.' : 'Draft saved to your register.');
+        if (editingProposal) {
+          if (serverBacked) { const updated = editingMode === 'revision' ? await api(`/api/proposals/${editingProposal.id}/revisions`, { method: 'POST', body: JSON.stringify({ ...p, changeSummary: $('#form-change-summary').value.trim() }) }) : await api(`/api/proposals/${editingProposal.id}`, { method: 'PATCH', body: JSON.stringify(p) }); proposals = proposals.map(item => item.id === updated.id ? updated : item); }
+          else { const updated = { ...editingProposal, ...p, audit: [...(editingProposal.audit || []), { event: submit ? 'Proposal submitted' : 'Draft updated', by: authUser?.name || 'Head coach', at: 'Just now' }] }; proposals = proposals.map(item => item.id === updated.id ? updated : item); save(); }
+        } else if (serverBacked) { const created = await api('/api/proposals', { method: 'POST', body: JSON.stringify(p) }); proposals = [created, ...proposals]; }
+        else { p.id = `p${Date.now()}`; proposals = [p, ...proposals]; save(); }
+        renderProposals(); renderActivity(); closeModal(); if (editingId) openDrawer(editingId); toast(mode === 'revision' ? 'New version submitted for CSA staff review.' : submit ? 'Proposal submitted for CSA staff review.' : 'Draft saved to your register.');
       } catch (error) { toast(`Could not save proposal: ${error.message}`); }
     }
 
-    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const view = btn.dataset.view; $('#crumb-view').textContent = btn.textContent.trim(); if (view === 'review') { currentFilter = 'attention'; document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.filter === 'attention')); renderProposals(); } if (['scheduler','awards'].includes(view)) toast(`${view === 'scheduler' ? 'Scheduler' : 'Awards'} is mapped for a later release.`); }));
-    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => { document.querySelectorAll('.tab').forEach(t => t.classList.remove('active')); tab.classList.add('active'); currentFilter = tab.dataset.filter; renderProposals(); }));
-    $('#program-select').addEventListener('change', () => { $('#stat-program').textContent = $('#program-select').value === 'Columbia' ? '1' : '1'; if (currentFilter === 'mine') renderProposals(); });
+    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const view = btn.dataset.view; $('#crumb-view').textContent = btn.textContent.trim(); if (view === 'review') { currentFilter = 'attention'; renderProposals(); } if (['scheduler','awards','feedback','documents'].includes(view)) toast(`${view === 'scheduler' ? 'Scheduler' : view === 'awards' ? 'Awards' : view === 'feedback' ? 'Feedback' : 'Documents'} is mapped for a later release.`); }));
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => { currentFilter = tab.dataset.filter; renderProposals(); }));
+    $('#program-select').addEventListener('change', () => { $('#stat-program').textContent = '1'; if (currentFilter === 'mine') renderProposals(); });
     $('#role-select').addEventListener('change', () => { currentRole = $('#role-select').value; document.querySelector('.identity-role').textContent = currentRole === 'commissioner' ? 'CSA Commissioner' : 'Head coach · Columbia'; document.querySelector('.identity-name').textContent = currentRole === 'commissioner' ? 'Harry Smith' : 'Jordan Smith'; document.querySelector('.avatar').textContent = currentRole === 'commissioner' ? 'HS' : 'JS'; if (activeProposal) openDrawer(activeProposal.id); toast(currentRole === 'commissioner' ? 'Commissioner review tools enabled.' : 'Head coach view restored.'); });
-    $('#new-proposal').addEventListener('click', openModal); $('#modal-close').addEventListener('click', closeModal); $('#cancel-proposal').addEventListener('click', closeModal); $('#modal-backdrop').addEventListener('click', closeModal); $('#drawer-close').addEventListener('click', closeDrawer); $('#drawer-backdrop').addEventListener('click', closeDrawer);
+    $('#new-proposal').addEventListener('click', () => openModal()); $('#modal-close').addEventListener('click', closeModal); $('#cancel-proposal').addEventListener('click', closeModal); $('#modal-backdrop').addEventListener('click', closeModal); $('#drawer-close').addEventListener('click', closeDrawer); $('#drawer-backdrop').addEventListener('click', closeDrawer);
     $('#save-draft').addEventListener('click', () => { if ($('#form-title').value.trim()) createProposal(false); else toast('Add a working title before saving.'); });
     $('#proposal-form').addEventListener('submit', (event) => { event.preventDefault(); createProposal(true); });
     $('#comment-form').addEventListener('submit', async (event) => { event.preventDefault(); if (!activeProposal || activeProposal.status !== 'comment') return; const text = $('#comment-input').value.trim(); if (!text) return; try { if (serverBacked) { const updated = await api(`/api/proposals/${activeProposal.id}/comments`, { method: 'POST', body: JSON.stringify({ text }) }); proposals = proposals.map(item => item.id === updated.id ? updated : item); activeProposal = updated; } else { activeProposal.comments.push({ author: 'Jordan Smith', date: 'Just now', text }); activeProposal.activity = 'Comment added by Jordan Smith'; activeProposal.time = 'Just now'; save(); } renderProposals(); renderActivity(); openDrawer(activeProposal.id); $('#comment-input').value = ''; toast('Comment added to the proposal record.'); } catch (error) { toast(`Could not add comment: ${error.message}`); } });
-    $('#view-all').addEventListener('click', () => { document.querySelector('[data-filter="all"]').click(); window.scrollTo({ top: 425, behavior: 'smooth' }); });
+    $('#view-all').addEventListener('click', () => { currentFilter = 'all'; renderProposals(); window.scrollTo({ top: 370, behavior: 'smooth' }); });
     $('#help-button').addEventListener('click', () => toast('Policy guide: approved rules are versioned by the Commissioner.'));
     $('#logout-button').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }).catch(() => {}); document.body.classList.remove('authenticated'); window.location.reload(); });
     $('#auth-request-form').addEventListener('submit', async (event) => { event.preventDefault(); authEmail = $('#auth-email').value.trim().toLowerCase(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/request-code', { method: 'POST', body: JSON.stringify({ email: authEmail }) }); $('#auth-request-form').style.display = 'none'; $('#auth-verify-form').classList.add('visible'); if (result.devCode) { $('#auth-dev-hint').hidden = false; $('#auth-dev-hint').textContent = `Local development code: ${result.devCode}`; } $('#auth-code').focus(); } catch (error) { $('#auth-error').textContent = error.message; } });

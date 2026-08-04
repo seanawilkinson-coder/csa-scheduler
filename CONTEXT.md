@@ -199,3 +199,107 @@ _Avoid_: Coach-question proposal, informal criteria
 **Passwordless portal identity**:
 A single person identity authenticated through a one-time, expiring email link or code sent only to a Commissioner-approved email address. The identity may be linked to multiple program accounts; the portal has no open self-registration or SSO dependency.
 _Avoid_: Shared login, password account, SSO identity
+
+## Portal proposal lifecycle
+
+**Annual Legislative Cycle**:
+The named governance cycle for a season, beginning with the Commissioner's memo and submission window and ending with the Board outcome. A proposal always belongs to one cycle; the cycle is not just a date range or a dashboard filter.
+_Avoid_: Current proposals, active year, rolling queue
+
+**Legislative proposal**:
+An authored policy submission tied to a program account and cycle. Its identity is stable across review, discussion, voting, and decision; its visible stage describes where it is in the cycle, not a replacement record.
+_Avoid_: Row, card, ticket, request
+
+**Proposal draft**:
+A saved but not-yet-submitted proposal. It remains private to its authorized proposer and is incomplete as a governance submission until the proposer explicitly submits it for staff review.
+_Avoid_: Submitted proposal, pending review
+
+**Proposal submission**:
+The explicit act that moves a completed proposal draft into the CSA staff review gate. Submission is an auditable event; saving a draft is not submission, and a proposal cannot be treated as distributed before staff acceptance.
+_Avoid_: Save, publish, send
+
+**CSA staff review gate**:
+The intake stage in which authorized CSA staff verifies the proposal's required content, co-sponsorship, cycle timing, and eligibility before distribution. A proposal at this gate is not yet open for the coaching body to discuss.
+_Avoid_: Automatic publication, informal screening
+
+**Accepted and distributed proposal**:
+A proposal that has passed the staff review gate and has been shared with its eligible participants for the current cycle. Acceptance and distribution are one recorded governance transition for this portal surface; they are not implied by a proposal's existence.
+_Avoid_: Approved forever, publicly published
+
+**Legislative comment window**:
+The phase in which eligible coaches, administrators, and other explicitly scoped participants may add attributable written comments to an accepted proposal. When it closes, the thread is read-only but remains part of the proposal record.
+_Avoid_: Open comments, chat, deleted discussion
+
+**Proposal comment**:
+An attributable contribution to a proposal's visible discussion thread. A comment is distinct from an audit event: the comment carries the participant's words, while the audit records the fact that it was added, edited, or removed.
+_Avoid_: Note, private message, anonymous feedback
+
+**Comment moderation record**:
+The visible representation of a removed or moderated comment, paired with preserved original text, actor, timestamp, and reason in the proposal history. Removal changes what participants see; it does not erase the record.
+_Avoid_: Hard delete, silent edit
+
+**Decision bucket**:
+The Commissioner-and-Board-Chair governance classification assigned during staff review. Bucket 1 uses an administrative path; Bucket 2 follows the standard cycle and coach vote; Bucket 3 adds Board ratification. The proposer does not choose the bucket.
+_Avoid_: Priority, user-selected route, label-only tag
+
+**Proposal history**:
+The chronological, append-only record of lifecycle transitions, decisions, comments, moderation, actors, dates, reasons, and linked material. The current stage is a summary of this history, not a substitute for it.
+_Avoid_: Status-only record, activity feed without provenance
+
+**Record owner**:
+The program account and authorized proposer responsible for the proposal's submission. Ownership governs who may create or continue the proposal; it does not grant authority to assign a decision bucket, accept distribution, or make a governance decision.
+_Avoid_: Whoever last edited it, institution-wide owner
+
+### Lifecycle invariants
+
+- A draft is not in staff review; only an explicit submission creates that transition.
+- Only an authorized representative may submit for a program account; a Commissioner may act across program accounts when governance authority requires it.
+- Only authorized CSA staff may assign a decision bucket, accept and distribute, return a proposal, or record a route-specific decision.
+- A proposal must not be open for comments before acceptance and distribution, and a closed comment window must reject new comments while preserving its thread and history.
+- Removing a comment may alter its visible text but must preserve attribution, original text, removal reason, and the moderation event.
+- Lifecycle history is append-only. A current summary may be updated, but prior events cannot be rewritten or dropped.
+- A proposal's title, program, and stage are human-readable fields; the stable proposal identity is the record itself, not its position in a list.
+
+### Current portal slice
+
+The portal currently demonstrates the submission, staff review, bucket assignment, acceptance and distribution, comment-window, comment moderation, coach voting, Board decisions, proposal revisions, scoped roles, and append-only history behaviors. Urgent measures and policy configuration remain governed domain concepts that must be added as explicit transitions rather than represented by generic status labels.
+
+## Expanded governance lifecycle
+
+**Coach vote**:
+A time-bounded decision in which each eligible program voting unit may submit one ballot for an advanced proposal. The vote is governed by the active cycle policy, including quorum, advancement threshold, representation, and proxy rules.
+_Avoid_: Poll, survey, institution-wide vote
+
+**Ballot**:
+The immutable choice submitted for one program voting unit, including the choice, voting unit, direct or proxy representation, voter identity, and submission time. A later correction does not edit the ballot; it creates a Commissioner-authorized correction record.
+_Avoid_: Editable vote, anonymous count, shared institution ballot
+
+**Vote result**:
+The computed outcome of a finalized coach vote, including represented units, quorum, yes/no/abstain counts, threshold, and whether the proposal advanced. A result is not public as final until the Commissioner closes the vote.
+_Avoid_: Live tally, manual status label
+
+**Board decision**:
+The Board's route-specific final outcome for a Bucket 3 proposal after a passing coach vote. The decision must be Adopted, Rejected, or Tabled, and Adopted requires an effective date while Rejected and Tabled require written reasoning.
+_Avoid_: Commissioner-only approval, generic close
+
+**Proposal version**:
+An immutable submitted form of a proposal. A new version preserves the prior version's content, documents, authorizations, comments, votes, and history while becoming the current version for any future action.
+_Avoid_: Overwrite, autosave revision, silent edit
+
+**Revision request**:
+An explicit request to revise an advanced proposal. The proposer may create a new proposal version only through the permitted revision path; substantive changes require proposer acknowledgment and another required vote.
+_Avoid_: Inline edit, post-vote rewrite
+
+**Scoped role**:
+An identity's authorized role and module permissions for one or more program accounts. Role names do not grant blanket access: a conference observer may comment, a Board member may decide only within the Board route, and CSA staff act only within assigned modules.
+_Avoid_: Preview role, global administrator
+
+### Expanded lifecycle invariants
+
+- A ballot is one-per-voting-unit per open vote; changing a choice requires a new authorized correction event, not mutation of the prior ballot.
+- A vote cannot finalize without the configured quorum. A passing vote also requires the active route threshold; an abstention is represented and does not silently become a no vote.
+- Individual ballots remain confidential until vote finalization; the finalized result and ballots are then published to the eligible audience.
+- A passing Bucket 2 vote moves to Commissioner final review; a passing Bucket 3 vote moves to Board decision. A failed vote closes the proposal for the cycle.
+- A Board decision must match the route. Bucket 1 does not enter a coach vote, and Bucket 2 does not require Board ratification.
+- Revisions never destroy the prior proposal version. The current version and all prior versions remain attributable and auditable.
+- Role scope is enforced at the action boundary. UI affordances may explain access, but they cannot create authority.
