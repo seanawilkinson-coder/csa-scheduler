@@ -13,7 +13,12 @@ app.get('/portal', (req, res) => res.sendFile(path.join(__dirname, 'public', 'po
 // ── Legislative portal persistence + passwordless development auth ──────────
 // The JSON store keeps this slice runnable without provisioning Supabase first.
 // The API boundary is intentionally shaped so the store can be replaced later.
-const DATA_FILE = process.env.CSA_PORTAL_DATA_FILE || path.join(__dirname, 'data', 'portal-data.json');
+const SEED_DATA_FILE = path.join(__dirname, 'data', 'portal-data.json');
+const DATA_FILE = process.env.CSA_PORTAL_DATA_FILE || SEED_DATA_FILE;
+if (DATA_FILE !== SEED_DATA_FILE && !fs.existsSync(DATA_FILE)) {
+  fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
+  fs.copyFileSync(SEED_DATA_FILE, DATA_FILE);
+}
 const sessions = new Map();
 const loginCodes = new Map();
 const ROLE_VALUES = ['coach', 'institutional_representative', 'commissioner', 'board_member', 'staff', 'administrator', 'conference_observer'];
