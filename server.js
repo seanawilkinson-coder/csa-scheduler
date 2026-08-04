@@ -1,10 +1,167 @@
 const express = require('express');
 const path    = require('path');
+const fs      = require('fs');
+const crypto  = require('crypto');
 const PDFDocument = require('pdfkit');
 const app     = express();
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/portal', (req, res) => res.sendFile(path.join(__dirname, 'public', 'portal.html')));
+
+// ── Legislative portal persistence + passwordless development auth ──────────
+// The JSON store keeps this slice runnable without provisioning Supabase first.
+// The API boundary is intentionally shaped so the store can be replaced later.
+const DATA_FILE = path.join(__dirname, 'data', 'portal-data.json');
+const sessions = new Map();
+const loginCodes = new Map();
+
+function readPortalData() {
+  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+}
+
+function writePortalData(data) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2) + '\n');
+}
+
+function getSession(req) {
+  const cookie = req.headers.cookie || '';
+  const match = cookie.match(/(?:^|; )csa_session=([^;]+)/);
+  return match ? sessions.get(match[1]) : null;
+}
+
+function requireSession(req, res, next) {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Sign-in required' });
+  req.user = session;
+  next();
+}
+
+function requireCommissioner(req, res, next) {
+  if (req.user.role !== 'commissioner') return res.status(403).json({ error: 'Commissioner permission required' });
+  next();
+}
+
+function publicUser(user) {
+  return { id: user.id, name: user.name, email: user.email, role: user.role, programs: user.programs };
+}
+
+app.get('/api/health', (req, res) => res.json({ ok: true, service: 'csa-legislative-portal', persistence: 'json' }));
+
+app.get('/api/auth/me', (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not signed in' });
+  res.json({ user: session });
+});
+
+app.post('/api/auth/request-code', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const data = readPortalData();
+  const user = data.users.find(item => item.email.toLowerCase() === email);
+  // Keep the response generic for unknown emails; only approved users receive a code.
+  if (!user) return res.json({ sent: true });
+  const code = String(crypto.randomInt(100000, 1000000));
+  loginCodes.set(email, { code, expires: Date.now() + 10 * 60 * 1000 });
+  const response = { sent: true };
+  if (process.env.NODE_ENV !== 'production') response.devCode = code;
+  res.json(response);
+});
+
+app.post('/api/auth/verify-code', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const code = String(req.body.code || '').trim();
+  const pending = loginCodes.get(email);
+  if (!pending || pending.expires < Date.now() || pending.code !== code) return res.status(401).json({ error: 'Invalid or expired code' });
+  const data = readPortalData();
+  const user = data.users.find(item => item.email.toLowerCase() === email);
+  if (!user) return res.status(401).json({ error: 'This email is not approved for CSA Portal access' });
+  loginCodes.delete(email);
+  const token = crypto.randomBytes(32).toString('hex');
+  const session = publicUser(user);
+  sessions.set(token, session);
+  res.setHeader('Set-Cookie', `csa_session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=28800`);
+  res.json({ user: session });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const cookie = req.headers.cookie || '';
+  const match = cookie.match(/(?:^|; )csa_session=([^;]+)/);
+  if (match) sessions.delete(match[1]);
+  res.setHeader('Set-Cookie', 'csa_session=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0');
+  res.json({ ok: true });
+});
+
+app.get('/api/proposals', requireSession, (req, res) => {
+  const data = readPortalData();
+  res.json(data.proposals);
+});
+
+app.post('/api/proposals', requireSession, (req, res) => {
+  const data = readPortalData();
+  const body = req.body || {};
+  const proposal = {
+    ...body,
+    id: `p${Date.now()}`,
+    proposer: req.user.name,
+    status: 'review',
+    statusLabel: 'Staff review',
+    next: 'CSA staff review',
+    comments: [],
+    audit: [{ event: 'Proposal submitted', by: req.user.name, at: 'Just now' }],
+    activity: 'Submitted for staff review',
+    time: 'Just now'
+  };
+  data.proposals.unshift(proposal);
+  writePortalData(data);
+  res.status(201).json(proposal);
+});
+
+app.patch('/api/proposals/:id', requireSession, requireCommissioner, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  const allowed = ['bucket', 'status', 'statusLabel', 'next', 'activity', 'time', 'reviewReason', 'audit'];
+  allowed.forEach(key => { if (Object.prototype.hasOwnProperty.call(req.body, key)) proposal[key] = req.body[key]; });
+  writePortalData(data);
+  res.json(proposal);
+});
+
+app.post('/api/proposals/:id/comments', requireSession, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  if (proposal.status !== 'comment') return res.status(409).json({ error: 'Comment window is closed' });
+  const text = String(req.body.text || '').trim();
+  if (!text) return res.status(400).json({ error: 'Comment text is required' });
+  proposal.comments.push({ author: req.user.name, date: 'Just now', text });
+  proposal.activity = `Comment added by ${req.user.name}`;
+  proposal.time = 'Just now';
+  proposal.audit = [...(proposal.audit || []), { event: 'Comment added', by: req.user.name, at: 'Just now' }];
+  writePortalData(data);
+  res.status(201).json(proposal);
+});
+
+app.delete('/api/proposals/:id/comments/:index', requireSession, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  const index = Number(req.params.index);
+  if (!proposal || !proposal.comments[index]) return res.status(404).json({ error: 'Comment not found' });
+  const comment = proposal.comments[index];
+  const isOwner = comment.author === req.user.name;
+  if (!isOwner && req.user.role !== 'commissioner') return res.status(403).json({ error: 'You may only remove your own comments' });
+  const reason = String(req.body.reason || (isOwner ? 'Removed by commenter' : '')).trim();
+  if (req.user.role === 'commissioner' && !reason) return res.status(400).json({ error: 'A moderation reason is required' });
+  comment.removed = true;
+  comment.originalText = comment.text;
+  comment.removedBy = req.user.name;
+  comment.removedReason = reason;
+  proposal.audit = [...(proposal.audit || []), { event: 'Comment removed', by: req.user.name, at: 'Just now', reason }];
+  proposal.activity = 'Comment removed from visible thread';
+  proposal.time = 'Just now';
+  writePortalData(data);
+  res.json(proposal);
+});
 
 // ── Colors (exact match to app CSS) ──────────────────────────────────────────
 const C = {

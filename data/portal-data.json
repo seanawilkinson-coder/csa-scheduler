@@ -1,0 +1,111 @@
+{
+  "users": [
+    { "id": "u-jordan", "name": "Jordan Smith", "email": "jordan@columbia.edu", "role": "coach", "programs": ["Columbia"] },
+    { "id": "u-commissioner", "name": "Harry Smith", "email": "commissioner@csasquash.org", "role": "commissioner", "programs": ["CSA"] }
+  ],
+  "proposals": [
+    {
+      "id": "p1",
+      "title": "Standardize championship host selection criteria",
+      "program": "Princeton",
+      "proposer": "Will Carlin",
+      "bucket": "Bucket 3",
+      "status": "comment",
+      "statusLabel": "Comment window",
+      "next": "Revisions due Dec 01",
+      "body": "Create a transparent host-selection process that accounts for facility readiness, travel burden, broadcast capacity, and student-athlete experience.",
+      "comments": [
+        { "author": "Jordan Smith", "date": "Nov 14", "text": "The travel burden language should include a consistent distance threshold." },
+        { "author": "Maya Chen", "date": "Nov 13", "text": "Support the direction. Would like to see the facility checklist before December." }
+      ],
+      "files": ["Host selection draft v2.pdf"],
+      "activity": "Comment added by Jordan Smith",
+      "time": "18 min ago",
+      "audit": [
+        { "event": "Proposal submitted", "by": "Will Carlin", "at": "Sep 04" },
+        { "event": "Bucket assigned: Bucket 3", "by": "Commissioner", "at": "Sep 06" },
+        { "event": "Accepted and distributed", "by": "Commissioner", "at": "Sep 18" }
+      ]
+    },
+    {
+      "id": "p2",
+      "title": "Clarify ranking data submission windows",
+      "program": "Columbia",
+      "proposer": "Jordan Smith",
+      "bucket": "Bucket 2",
+      "status": "review",
+      "statusLabel": "Staff review",
+      "next": "Awaiting Commissioner review",
+      "body": "Establish a shared submission window and correction protocol for ranking match data across the regular season.",
+      "comments": [],
+      "files": ["Ranking data proposal.docx"],
+      "activity": "Submitted for staff review",
+      "time": "Yesterday",
+      "audit": [
+        { "event": "Proposal submitted", "by": "Jordan Smith", "at": "Nov 14" }
+      ]
+    },
+    {
+      "id": "p3",
+      "title": "Member program travel support pilot",
+      "program": "Yale",
+      "proposer": "Anna Morales",
+      "bucket": "Bucket 3",
+      "status": "vote",
+      "statusLabel": "Coach vote next",
+      "next": "Coach vote · May 2027",
+      "body": "Pilot a needs-based travel support fund for qualifying member programs attending CSA championship events.",
+      "comments": [
+        { "author": "Alex Reed", "date": "Oct 28", "text": "Would like to understand the proposed funding source." }
+      ],
+      "files": ["Travel support pilot.pdf", "Budget assumptions.xlsx"],
+      "activity": "Moved to coach vote",
+      "time": "Oct 29",
+      "audit": [
+        { "event": "Proposal submitted", "by": "Anna Morales", "at": "Sep 02" },
+        { "event": "Accepted and distributed", "by": "Commissioner", "at": "Sep 18" },
+        { "event": "Comment window closed", "by": "CSA staff", "at": "Dec 01" }
+      ]
+    },
+    {
+      "id": "p4",
+      "title": "Update emergency session notice language",
+      "program": "Trinity",
+      "proposer": "Maya Chen",
+      "bucket": "Bucket 1",
+      "status": "closed",
+      "statusLabel": "Commissioner review",
+      "next": "Decision recorded Nov 02",
+      "body": "Clarify emergency session notices and the circumstances in which the Commissioner may authorize an exception.",
+      "comments": [],
+      "files": [],
+      "activity": "Decision recorded by Commissioner",
+      "time": "Nov 02",
+      "audit": [
+        { "event": "Proposal submitted", "by": "Maya Chen", "at": "Oct 20" },
+        { "event": "Bucket assigned: Bucket 1", "by": "Commissioner", "at": "Oct 22" },
+        { "event": "Decision recorded", "by": "Commissioner", "at": "Nov 02", "reason": "Administrative clarification" }
+      ]
+    },
+    {
+      "id": "p5",
+      "title": "Create a shared rules change archive",
+      "program": "Penn",
+      "proposer": "Chris Bell",
+      "bucket": "Bucket 2",
+      "status": "comment",
+      "statusLabel": "Comment window",
+      "next": "Comments close Dec 01",
+      "body": "Create a durable, searchable archive of approved and rejected proposals, effective dates, and policy versions.",
+      "comments": [],
+      "files": ["Archive outline.pdf"],
+      "activity": "Document updated",
+      "time": "Nov 08",
+      "audit": [
+        { "event": "Proposal submitted", "by": "Chris Bell", "at": "Sep 03" },
+        { "event": "Accepted and distributed", "by": "Commissioner", "at": "Sep 18" },
+        { "event": "Document updated", "by": "Chris Bell", "at": "Nov 08" }
+      ]
+    }
+  ]
+}
