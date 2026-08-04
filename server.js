@@ -21,6 +21,11 @@ if (DATA_FILE !== SEED_DATA_FILE && !fs.existsSync(DATA_FILE)) {
 }
 const sessions = new Map();
 const loginCodes = new Map();
+const hostedDeployment = Boolean(process.env.RAILWAY_PROJECT_ID || process.env.RAILWAY_ENVIRONMENT_ID || process.env.RAILWAY_SERVICE_ID);
+const developmentAuthEnabled = process.env.NODE_ENV !== 'production' && !hostedDeployment && process.env.CSA_DEV_AUTH_ENABLED !== 'false';
+const developmentAuthUsername = String(process.env.CSA_DEV_USERNAME || 'commissioner@csasquash.org').trim().toLowerCase();
+const developmentAuthPassword = String(process.env.CSA_DEV_PASSWORD || 'CSA-commissioner-dev-2026');
+const developmentAuthUserEmail = String(process.env.CSA_DEV_USER_EMAIL || 'commissioner@csasquash.org').trim().toLowerCase();
 const ROLE_VALUES = ['coach', 'institutional_representative', 'commissioner', 'board_member', 'staff', 'administrator', 'conference_observer'];
 const PERMISSION_VALUES = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:access', 'legislative:configuration', 'legislative:records', 'legislative:moderation', 'legislative:board'];
 const DEFAULT_POLICY = {
@@ -597,6 +602,10 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ user: session });
 });
 
+app.get('/api/auth/config', (req, res) => {
+  res.json({ development: developmentAuthEnabled, username: developmentAuthEnabled ? developmentAuthUsername : null });
+});
+
 app.get('/api/cycle', requireSession, (req, res) => {
   const data = readPortalData();
   res.json(publicCycle(data));
@@ -679,6 +688,21 @@ app.post('/api/auth/request-code', (req, res) => {
   const response = { sent: true };
   if (process.env.NODE_ENV !== 'production') response.devCode = code;
   res.json(response);
+});
+
+app.post('/api/auth/dev-login', (req, res) => {
+  if (!developmentAuthEnabled) return res.status(404).json({ error: 'Not found' });
+  const username = String(req.body.username || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+  if (username !== developmentAuthUsername || password !== developmentAuthPassword) return res.status(401).json({ error: 'Invalid development credentials' });
+  const data = readPortalData();
+  const user = data.users.find(item => item.email.toLowerCase() === developmentAuthUserEmail);
+  if (!user || user.active === false) return res.status(401).json({ error: 'The development identity is not approved or active' });
+  const token = crypto.randomBytes(32).toString('hex');
+  const session = publicUser(user);
+  sessions.set(token, session);
+  res.setHeader('Set-Cookie', `csa_session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=28800`);
+  res.json({ user: session, development: true });
 });
 
 app.post('/api/auth/verify-code', (req, res) => {

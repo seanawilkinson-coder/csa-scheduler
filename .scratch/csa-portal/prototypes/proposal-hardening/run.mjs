@@ -121,6 +121,14 @@ async function run() {
   const server = startServer();
   try {
     await waitForHealth();
+    const authConfig = await request('/api/auth/config');
+    report('development commissioner access is configured', { type: 'dev-auth-config', status: authConfig.status, development: authConfig.payload.development, username: authConfig.payload.username }, authConfig.status !== 200 || authConfig.payload.development !== true || authConfig.payload.username !== 'commissioner@csasquash.org');
+    const badDevLogin = await request('/api/auth/dev-login', { method: 'POST', body: { username: 'commissioner@csasquash.org', password: 'wrong-password' } });
+    report('invalid development credentials are rejected', { type: 'dev-auth-rejection', status: badDevLogin.status }, badDevLogin.status !== 401);
+    const devLogin = await request('/api/auth/dev-login', { method: 'POST', body: { username: 'commissioner@csasquash.org', password: 'CSA-commissioner-dev-2026' } });
+    sessions.devCommissioner = devLogin.setCookie.split(';')[0];
+    const devOverview = await request('/api/admin/overview', { cookie: sessions.devCommissioner });
+    report('development commissioner opens workflows', { type: 'dev-auth-login', status: devLogin.status, role: devLogin.payload.user?.role, overview: devOverview.status, queue: devOverview.payload.queue?.length }, devLogin.status !== 200 || devLogin.payload.user?.role !== 'commissioner' || devOverview.status !== 200 || devOverview.payload.queue?.length < 1);
     sessions.coach = await login('jordan@columbia.edu');
     sessions.princeton = await login('will@princeton.edu');
     sessions.penn = await login('chris@penn.edu');

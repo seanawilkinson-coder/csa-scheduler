@@ -13,6 +13,10 @@ Administration is the operating surface for the people who keep the legislative 
 
 The surface is a register and command rail. It does not become a spreadsheet, a role preview, or a second proposal workspace.
 
+## Development access
+
+Local development exposes a commissioner-only username/password path so the full governance workspace can be exercised without an email provider. The default identity is `commissioner@csasquash.org` and the default password is `CSA-commissioner-dev-2026`; `CSA_DEV_USERNAME`, `CSA_DEV_PASSWORD`, and `CSA_DEV_USER_EMAIL` override them. The path is disabled for hosted production deployments and does not replace approved-email sign-in.
+
 ## Authority model
 
 | Capability | Commissioner | Legislative administrator | Other roles |
