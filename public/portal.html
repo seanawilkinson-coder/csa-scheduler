@@ -466,8 +466,8 @@
     <div class="auth-shell">
       <div class="auth-copy">
         <div class="auth-brandline"><img class="auth-logo" src="/assets/csa-logo.png" alt="CSA" /><div><strong>College Squash Association</strong><span>Legislative portal</span></div></div>
-        <p class="kicker" style="margin-top: 46px; color: var(--gold);">The record of the cycle</p>
-        <h1>Sign in to the record.</h1>
+        <p class="kicker" style="margin-top: 46px; color: var(--gold);">CSA legislative portal</p>
+        <h1>Member sign-in.</h1>
         <p class="lede">Approved members only.</p>
       </div>
       <div class="auth-panel">
@@ -485,7 +485,7 @@
         </form>
         <section class="auth-dev-panel" id="auth-dev-panel" hidden>
           <div class="auth-dev-title">Development access</div>
-          <p class="auth-dev-copy">Commissioner access for controlled rehearsal.</p>
+          <p class="auth-dev-copy">Commissioner development access.</p>
           <form class="auth-form auth-dev-form" id="auth-dev-form">
             <label class="form-label"><strong>Username</strong><input class="field" id="auth-dev-username" autocomplete="username" required /></label>
             <label class="form-label"><strong>Password</strong><input class="field" id="auth-dev-password" type="password" autocomplete="current-password" required /></label>
@@ -548,7 +548,7 @@
         </section>
 
         <section class="module-panel" id="overview-panel" hidden>
-          <div class="section-head"><div><div class="section-title">At a glance</div><div class="section-sub">The few things worth acting on first.</div></div></div>
+          <div class="section-head"><div><div class="section-title">At a glance</div><div class="section-sub">Priority items.</div></div></div>
           <div class="module-register" id="overview-register"></div>
         </section>
 
@@ -557,7 +557,7 @@
             <div class="section-head"><div><div class="section-title" id="workspace-title">Proposal register</div><div class="section-sub" id="workspace-sub">Current proposals and their next actions.</div></div><button class="button secondary" id="view-all">View register</button></div>
             <div class="tabs" role="tablist"><button class="tab active" data-filter="all" role="tab" aria-selected="true">All proposals</button><button class="tab" data-filter="attention" role="tab" aria-selected="false">Needs attention</button><button class="tab" data-filter="mine" role="tab" aria-selected="false">My proposals</button></div>
             <div class="proposal-list" id="proposal-list"></div>
-            <div class="activity"><div class="section-head"><div><div class="section-title">Recent activity</div><div class="section-sub">The audit trail, in plain view.</div></div></div><div class="activity-list" id="activity-list"></div></div>
+            <div class="activity"><div class="section-head"><div><div class="section-title">Recent activity</div><div class="section-sub">Latest events.</div></div></div><div class="activity-list" id="activity-list"></div></div>
           </section>
 
           <aside class="timeline"><div class="timeline-head"><div class="section-title">Deadlines</div><div class="section-sub">Cycle dates</div></div><div id="cycle-timeline"></div>
@@ -580,7 +580,7 @@
           </div>
           <div class="admin-pane admin-pane-split" data-admin-pane="queue">
             <section class="admin-section"><div class="section-head"><div><div class="section-title">Governance queue</div><div class="section-sub">Records waiting for a governance action.</div></div></div><div class="admin-queue" id="admin-queue"></div></section>
-            <aside class="admin-section admin-rail"><div class="section-head"><div><div class="section-title">Next deadline</div><div class="section-sub">Cycle context.</div></div></div><div class="module-register" id="admin-next-deadline"></div></aside>
+            <aside class="admin-section admin-rail"><div class="section-head"><div><div class="section-title">Next deadline</div><div class="section-sub">Next milestone.</div></div></div><div class="module-register" id="admin-next-deadline"></div></aside>
           </div>
           <div class="admin-pane" data-admin-pane="cycle" hidden>
             <section class="admin-section"><div class="section-head"><div><div class="section-title">Cycle and policy</div><div class="section-sub">Active rules and milestone dates.</div></div></div><div id="cycle-controls"></div></section>
@@ -602,14 +602,14 @@
   <section class="modal" id="proposal-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
     <div class="modal-head"><div><div class="kicker">New legislative proposal</div><h2 id="modal-title">Start a proposal</h2></div><button class="modal-close" id="modal-close" aria-label="Close proposal form">×</button></div>
     <form id="proposal-form"><div class="modal-body"><div class="form-grid">
-      <label class="form-label"><strong>Proposal title</strong><input class="field" id="form-title" required placeholder="A clear working title" /><span class="form-help">Keep it specific enough for the register.</span></label>
+      <label class="form-label"><strong>Proposal title</strong><input class="field" id="form-title" required placeholder="A clear working title" /><span class="form-help">Use a specific title.</span></label>
       <label class="form-label"><strong>Primary program</strong><select class="field" id="form-program"><option>Columbia</option><option>Columbia Men</option><option>Columbia Women</option></select></label>
-      <label class="form-label"><strong>Co-sponsoring programs</strong><div class="split-fields"><select class="field" id="form-sponsor-1"><option value="">Select first co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select><select class="field" id="form-sponsor-2"><option value="">Select second co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select></div><span class="form-help">Two different member programs are required before submission.</span></label>
+      <label class="form-label"><strong>Co-sponsoring programs</strong><div class="split-fields"><select class="field" id="form-sponsor-1"><option value="">Select first co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select><select class="field" id="form-sponsor-2"><option value="">Select second co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select></div><span class="form-help">Select two different co-sponsors.</span></label>
       <label class="form-label"><strong>1. Current issue</strong><textarea class="textarea" id="form-issue" required placeholder="What problem, gap, or inequity does this address?"></textarea></label>
       <label class="form-label"><strong>2. Association impact</strong><textarea class="textarea" id="form-impact" required placeholder="How does this affect CSA operations and member institutions?"></textarea></label>
       <label class="form-label"><strong>3. Financial implications</strong><textarea class="textarea" id="form-financial" required placeholder="State the cost implications, or say none are expected."></textarea></label>
       <label class="form-label"><strong>4. Benefit to the student-athlete</strong><textarea class="textarea" id="form-benefit" required placeholder="How does this improve fairness, safety, experience, or recognition?"></textarea></label>
-      <label class="form-label"><strong>Supporting documents</strong><span class="upload"><input type="file" id="form-files" multiple /><span class="form-help">PDF, DOCX, XLSX, or image files. Original submissions remain versioned.</span></span></label>
+      <label class="form-label"><strong>Supporting documents</strong><span class="upload"><input type="file" id="form-files" multiple /><span class="form-help">PDF, DOCX, XLSX, or image. Versions are retained.</span></span></label>
       <label class="form-label" id="revision-summary-field" hidden><strong>What changed in this version?</strong><textarea class="textarea" id="form-change-summary" placeholder="Summarize the substantive change for the record."></textarea></label>
       <label class="check-row"><input type="checkbox" id="form-confirm" required /> <span>I confirm this proposal is ready for CSA staff review.</span></label>
     </div></div><div class="modal-foot"><button class="button secondary" type="button" id="save-draft">Save draft</button><div class="foot-right"><button class="button secondary" type="button" id="cancel-proposal">Cancel</button><button class="button" type="submit">Submit for review</button></div></div></form>
@@ -828,16 +828,16 @@
       if (view === 'feedback') {
         const threads = proposals.reduce((total, item) => total + (item.comments || []).length, 0);
         $('#module-title').textContent = 'Feedback';
-        $('#module-sub').textContent = 'Comments stay with the proposal record.';
-        node.innerHTML = `<div class="module-register"><div class="module-row"><div class="module-row-label">Open threads</div><div><div class="module-row-value">${threads}</div><div class="module-row-copy">Across the current proposal set.</div></div></div><div class="module-row"><div class="module-row-label">Where to respond</div><div><div class="module-row-value">Proposal records</div><div class="module-row-copy">Open a proposal to read or add a comment.</div></div></div></div>${openProposals}`;
+        $('#module-sub').textContent = 'Comments live on each proposal.';
+        node.innerHTML = `<div class="module-register"><div class="module-row"><div class="module-row-label">Open threads</div><div><div class="module-row-value">${threads}</div><div class="module-row-copy">Current proposals.</div></div></div><div class="module-row"><div class="module-row-label">Where to respond</div><div><div class="module-row-value">Proposal records</div><div class="module-row-copy">Open a proposal to respond.</div></div></div></div>${openProposals}`;
       } else if (view === 'documents') {
         const documents = proposals.flatMap(item => (item.files || []).map(file => ({ file, title: item.title, id: item.id })));
         $('#module-title').textContent = 'Documents';
-        $('#module-sub').textContent = 'Files attached to proposal records.';
+        $('#module-sub').textContent = 'Files on proposal records.';
         node.innerHTML = documents.length ? `<div class="module-register">${documents.map(doc => `<div class="module-row"><div class="module-row-label">File</div><div><div class="module-row-value">${esc(doc.file)}</div><div class="module-row-copy">${esc(doc.title)}</div></div><button class="button secondary" data-open-proposal="${esc(doc.id)}">Open record</button></div>`).join('')}</div>` : '<div class="empty">No documents attached.</div>';
       } else {
         const title = view === 'scheduler' ? 'Scheduler' : 'Awards';
-        const copy = view === 'scheduler' ? 'Scheduling is mapped for a later release.' : 'Awards is mapped for a later release.';
+        const copy = view === 'scheduler' ? 'Not available yet.' : 'Not available yet.';
         $('#module-title').textContent = title;
         $('#module-sub').textContent = 'Coming later.';
         node.innerHTML = `<p class="module-note">${esc(copy)}</p><div class="module-actions"><button class="button secondary" data-jump="overview">Back to overview</button></div>`;
