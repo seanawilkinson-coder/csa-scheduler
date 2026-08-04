@@ -15,7 +15,7 @@ The surface is a register and command rail. It does not become a spreadsheet, a 
 
 ## Development access
 
-Local development exposes a commissioner-only username/password path so the full governance workspace can be exercised without an email provider. The default identity is `commissioner@csasquash.org` and the default password is `CSA-commissioner-dev-2026`; `CSA_DEV_USERNAME`, `CSA_DEV_PASSWORD`, and `CSA_DEV_USER_EMAIL` override them. The path is disabled for hosted production deployments and does not replace approved-email sign-in.
+Local development exposes a commissioner-only username/password path so the full governance workspace can be exercised without an email provider. The default identity is `commissioner@csasquash.org` and the default password is `CSA-commissioner-dev-2026`; `CSA_DEV_USERNAME`, `CSA_DEV_PASSWORD`, and `CSA_DEV_USER_EMAIL` override them. Hosted environments require the explicit `CSA_DEV_AUTH_ENABLED=true` flag, and this path should be removed or disabled before production hardening; it does not replace approved-email sign-in.
 
 ## Authority model
 

@@ -22,7 +22,8 @@ if (DATA_FILE !== SEED_DATA_FILE && !fs.existsSync(DATA_FILE)) {
 const sessions = new Map();
 const loginCodes = new Map();
 const hostedDeployment = Boolean(process.env.RAILWAY_PROJECT_ID || process.env.RAILWAY_ENVIRONMENT_ID || process.env.RAILWAY_SERVICE_ID);
-const developmentAuthEnabled = process.env.NODE_ENV !== 'production' && !hostedDeployment && process.env.CSA_DEV_AUTH_ENABLED !== 'false';
+// Local development is enabled by default; hosted access requires an explicit flag.
+const developmentAuthEnabled = process.env.CSA_DEV_AUTH_ENABLED === 'true' || (process.env.NODE_ENV !== 'production' && !hostedDeployment && process.env.CSA_DEV_AUTH_ENABLED !== 'false');
 const developmentAuthUsername = String(process.env.CSA_DEV_USERNAME || 'commissioner@csasquash.org').trim().toLowerCase();
 const developmentAuthPassword = String(process.env.CSA_DEV_PASSWORD || 'CSA-commissioner-dev-2026');
 const developmentAuthUserEmail = String(process.env.CSA_DEV_USER_EMAIL || 'commissioner@csasquash.org').trim().toLowerCase();
