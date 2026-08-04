@@ -221,6 +221,62 @@
     .version-row-copy em { color: var(--ink); font-style: normal; }
     .deadline-note { color: var(--muted); font-size: 11px; }
 
+    /* Administration is a set of operating rails, never a grid of cells. */
+    .admin-panel { margin-top: 46px; padding-top: 26px; border-top: 1px solid var(--ink); }
+    .admin-overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 28px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    .admin-signal { min-height: 92px; display: flex; flex-direction: column; justify-content: center; padding: 16px 18px 16px 0; border-right: 1px solid var(--rule); }
+    .admin-signal:not(:first-child) { padding-left: 18px; }
+    .admin-signal:last-child { border-right: 0; }
+    .admin-signal-value { font: 600 24px/.95 var(--serif); letter-spacing: -.03em; }
+    .admin-signal-label { margin-top: 7px; color: var(--muted); font: 500 10px/1.3 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .admin-signal-note { margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .admin-workspace { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(320px, .78fr); gap: 46px; margin-top: 40px; }
+    .admin-section { min-width: 0; }
+    .admin-rail { padding-left: 28px; border-left: 1px solid var(--rule); }
+    .admin-queue { margin-top: 19px; border-top: 1px solid var(--ink); }
+    .admin-queue-row { display: grid; grid-template-columns: minmax(0, 1fr) 116px 142px; gap: 18px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--rule); }
+    .admin-queue-row:hover .admin-queue-title { color: var(--maroon); }
+    .admin-queue-open { width: 100%; border: 0; padding: 0; background: transparent; color: inherit; text-align: left; }
+    .admin-queue-title { font-weight: 700; transition: color .18s var(--ease-out); }
+    .admin-queue-meta { margin-top: 5px; color: var(--muted); font: 500 10px/1.35 var(--data); }
+    .admin-queue-status { color: var(--muted); font: 500 10px/1.35 var(--data); letter-spacing: .05em; text-transform: uppercase; }
+    .admin-queue-next { color: var(--muted); font-size: 11px; text-align: right; }
+    .admin-queue-next strong { display: block; color: var(--ink); font-size: 10px; }
+    .admin-config { margin-top: 18px; }
+    .admin-config-intro { margin-bottom: 5px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .admin-config-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .admin-config-fields .form-label.full { grid-column: 1 / -1; }
+    .admin-config-fields .form-label { padding: 13px 0; }
+    .admin-config input, .admin-config select, .admin-config textarea, .invite-form input, .invite-form select { width: 100%; min-height: 36px; border: 1px solid var(--rule); border-radius: 0; background: var(--white); color: var(--ink); padding: 7px 8px; }
+    .admin-config textarea { min-height: 62px; resize: vertical; }
+    .admin-config select[multiple], .invite-form select[multiple] { min-height: 74px; }
+    .admin-config .form-label, .invite-form .form-label { gap: 7px; }
+    .policy-rule { margin-top: 19px; padding-top: 18px; border-top: 1px solid var(--ink); }
+    .policy-rule-title { color: var(--muted); font: 500 10px/1 var(--data); letter-spacing: .12em; text-transform: uppercase; }
+    .policy-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 13px; }
+    .policy-units { margin: 13px 0 0; padding: 0; border: 0; }
+    .policy-units legend { margin-bottom: 9px; color: var(--muted); font: 500 10px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .policy-unit-list { display: flex; flex-wrap: wrap; gap: 8px 15px; }
+    .policy-unit { display: flex; align-items: center; gap: 7px; color: var(--ink); font-size: 11px; }
+    .policy-unit input { width: 16px; height: 16px; min-height: 16px; accent-color: var(--navy); }
+    .policy-history { margin-top: 22px; border-top: 1px solid var(--rule); }
+    .policy-history .version-row:first-child { border-top: 0; }
+    .admin-config-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--ink); }
+    .admin-section + .admin-section { margin-top: 42px; }
+    .access-invite { margin-top: 18px; padding: 15px 0 18px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+    .invite-form { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) minmax(150px, .8fr) auto; gap: 0 15px; align-items: end; }
+    .invite-form .form-label { padding: 0; border: 0; }
+    .invite-form .form-label.wide { grid-column: span 2; }
+    .invite-form .invite-permissions { grid-column: span 2; }
+    .invite-form .access-active { align-self: center; padding: 8px 0; }
+    .invite-form .button { align-self: end; min-height: 36px; }
+    .admin-audit { margin-top: 18px; border-top: 1px solid var(--ink); }
+    .admin-audit-row { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: 15px; align-items: start; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    .admin-audit-scope { color: var(--gold); font: 500 10px/1.35 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .admin-audit-event { font-size: 12px; }
+    .admin-audit-detail { margin-top: 4px; color: var(--muted); font: 500 10px/1.45 var(--data); }
+    .admin-audit-time { color: var(--muted); font: 500 10px/1.35 var(--data); text-align: right; white-space: nowrap; }
+
     /* Detail is a sheet with flowing records. No card outline, no boxed metadata. */
     .drawer-backdrop, .modal-backdrop { position: fixed; inset: 0; z-index: var(--z-scrim); background: rgba(14,27,41,.52); opacity: 0; pointer-events: none; transition: opacity .2s var(--ease-out); }
     .drawer-backdrop.open, .modal-backdrop.open { opacity: 1; pointer-events: auto; }
@@ -321,6 +377,10 @@
       .timeline { padding: 25px 0 0 23px; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
       .access-row, .cycle-control-row { grid-template-columns: 1fr 1fr; }
       .access-row > :first-child, .access-row > :last-child { grid-column: 1 / -1; }
+      .admin-workspace { grid-template-columns: 1fr; gap: 40px; }
+      .admin-rail { padding-left: 0; padding-top: 28px; border-top: 1px solid var(--rule); border-left: 0; }
+      .invite-form { grid-template-columns: 1fr 1fr; }
+      .invite-form .button { grid-column: 1 / -1; justify-self: start; }
     }
     @media (max-width: 680px) {
       .topbar { align-items: flex-start; flex-direction: column; padding-top: 17px; padding-bottom: 17px; }
@@ -360,6 +420,18 @@
       .access-row, .cycle-control-row { grid-template-columns: 1fr; }
       .access-row > :first-child, .access-row > :last-child { grid-column: auto; }
       .cycle-control-footer { align-items: stretch; flex-direction: column; }
+      .admin-overview { grid-template-columns: 1fr 1fr; }
+      .admin-signal:nth-child(2) { border-right: 0; }
+      .admin-signal:nth-child(3), .admin-signal:nth-child(4) { border-top: 1px solid var(--rule); }
+      .admin-signal:nth-child(3) { padding-left: 0; }
+      .admin-queue-row { grid-template-columns: 1fr auto; gap: 8px 14px; }
+      .admin-queue-status { grid-column: 2; grid-row: 1; }
+      .admin-queue-next { grid-column: 1 / -1; text-align: left; }
+      .admin-config-fields, .policy-fields, .invite-form { grid-template-columns: 1fr; }
+      .admin-config-fields .form-label.full, .invite-form .form-label.wide, .invite-form .invite-permissions { grid-column: auto; }
+      .invite-form .button { grid-column: auto; }
+      .admin-audit-row { grid-template-columns: 1fr auto; gap: 8px 14px; }
+      .admin-audit-scope { grid-column: 1 / -1; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
@@ -402,7 +474,7 @@
         <button class="active" data-view="overview"><span class="nav-icon circle" aria-hidden="true"></span><span>Overview</span></button>
         <button data-view="proposals"><span class="nav-icon line" aria-hidden="true"></span><span>Proposals</span></button>
         <button data-view="review"><span class="nav-icon check" aria-hidden="true"></span><span>Review queue</span></button>
-        <button data-view="access" id="access-nav" style="display:none"><span class="nav-icon square" aria-hidden="true"></span><span>Access</span></button>
+        <button data-view="admin" id="access-nav" style="display:none"><span class="nav-icon square" aria-hidden="true"></span><span>Administration</span></button>
         <button data-view="feedback"><span class="nav-icon corner" aria-hidden="true"></span><span>Feedback</span></button>
         <button data-view="documents"><span class="nav-icon square" aria-hidden="true"></span><span>Documents</span></button>
       </nav>
@@ -455,7 +527,16 @@
           <aside class="timeline"><div class="timeline-head"><div class="section-title">This cycle</div><div class="section-sub">Configured milestone dates</div></div><div id="cycle-timeline"></div>
           </aside>
         </div>
-        <section class="access-panel" id="access-panel" hidden><div class="section-head"><div><div class="section-title">Access register</div><div class="section-sub">Commissioner-approved identities, program scope, and legislative permissions.</div></div></div><div class="access-list" id="access-list"></div><div id="cycle-controls"></div></section>
+        <section class="admin-panel access-panel" id="access-panel" hidden>
+          <div class="section-head"><div><div class="section-title">Administration</div><div class="section-sub">Govern the active cycle, route records, and keep access attributable.</div></div></div>
+          <div class="admin-overview" id="admin-overview"></div>
+          <div class="admin-workspace">
+            <section class="admin-section"><div class="section-head"><div><div class="section-title">Governance queue</div><div class="section-sub">The next records that require a governance action.</div></div></div><div class="admin-queue" id="admin-queue"></div></section>
+            <aside class="admin-section admin-rail"><div class="section-head"><div><div class="section-title">Cycle and policy</div><div class="section-sub">The active rules behind every route.</div></div></div><div id="cycle-controls"></div></aside>
+          </div>
+          <section class="admin-section"><div class="section-head"><div><div class="section-title">Access register</div><div class="section-sub">Approved identities, program scope, and explicit legislative permissions.</div></div></div><div class="access-invite" id="access-invite"></div><div class="access-list" id="access-list"></div></section>
+          <section class="admin-section"><div class="section-head"><div><div class="section-title">Audit register</div><div class="section-sub">Configuration, access, and proposal events in one attributable sequence.</div></div></div><div class="admin-audit" id="admin-audit"></div></section>
+        </section>
       </div>
     </main>
   </div>
@@ -503,6 +584,7 @@
     let authUser = null;
     let authEmail = '';
     let cycle = null;
+    let adminOverview = null;
     const $ = (s) => document.querySelector(s);
     const esc = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
     const save = () => localStorage.setItem(storeKey, JSON.stringify(proposals));
@@ -524,7 +606,7 @@
     }
     const toast = (message) => { const node = $('#toast'); node.textContent = message; node.classList.add('show'); clearTimeout(window.__toast); window.__toast = setTimeout(() => node.classList.remove('show'), 3200); };
     const memberPrograms = ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'];
-    const roleLabels = { commissioner: 'CSA Commissioner', coach: 'Head coach', board_member: 'Board member', staff: 'CSA staff', administrator: 'Portal administrator', conference_observer: 'Conference observer' };
+    const roleLabels = { commissioner: 'CSA Commissioner', coach: 'Head coach', institutional_representative: 'Institution representative', board_member: 'Board member', staff: 'CSA staff', administrator: 'Portal administrator', conference_observer: 'Conference observer' };
     const roleLabel = (user) => roleLabels[user.role] || user.role;
     const phaseLabels = { submission: 'Submission window', review: 'Staff review', comment: 'Comment and revision window', vote: 'Coach vote', board: 'Board review', decision: 'Final decision', complete: 'Complete' };
     const formatDate = (value, options = {}) => { if (!value) return '—'; const date = new Date(`${String(value).slice(0, 10)}T12:00:00`); return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', ...(options.year ? { year: 'numeric' } : {}) }).format(date); };
@@ -532,6 +614,8 @@
     const cycleDeadline = (id) => cycle?.deadlines?.find(item => item.id === id) || null;
     const deadlineText = (id, fallback) => { const item = cycleDeadline(id); return item ? `${item.label} · ${formatDate(item.date, { year: true })}` : fallback; };
     const canReview = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:admin')));
+    const canManageAccess = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:admin') || (authUser.permissions || []).includes('legislative:access')));
+    const canManageConfiguration = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:admin') || (authUser.permissions || []).includes('legislative:configuration')));
     const canModerate = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:moderation')));
     const canBoard = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:board')));
     const canSubmit = () => Boolean(authUser && (['coach', 'institutional_representative'].includes(authUser.role) || canReview()));
@@ -585,6 +669,61 @@
       catch (error) { proposals = JSON.parse(localStorage.getItem(storeKey) || 'null') || seedProposals; serverBacked = false; }
       renderProposals(); renderActivity();
     }
+    function renderAdminOverview() {
+      const node = $('#admin-overview');
+      if (!node || !adminOverview) return;
+      const counts = adminOverview.counts || {};
+      const active = (counts.review || 0) + (counts.comment || 0) + (counts.vote || 0) + (counts.board || 0) + (counts.decision || 0);
+      const next = adminOverview.cycle?.nextDeadline;
+      const signals = [
+        { value: active, label: 'records in motion', note: `${counts.total || 0} total proposal records` },
+        { value: adminOverview.queue?.length || 0, label: 'governance queue', note: `${counts.review || 0} awaiting staff review` },
+        { value: adminOverview.access?.active || 0, label: 'active identities', note: `${adminOverview.access?.inactive || 0} inactive record${adminOverview.access?.inactive === 1 ? '' : 's'}` },
+        { value: next ? formatDate(next.date, { year: true }) : '—', label: 'next deadline', note: next?.label || 'No deadline configured' }
+      ];
+      node.innerHTML = signals.map(signal => `<div class="admin-signal"><div class="admin-signal-value">${esc(signal.value)}</div><div class="admin-signal-label">${esc(signal.label)}</div><div class="admin-signal-note">${esc(signal.note)}</div></div>`).join('');
+    }
+    function renderAdminQueue() {
+      const node = $('#admin-queue');
+      if (!node || !adminOverview) return;
+      const queue = adminOverview.queue || [];
+      node.innerHTML = queue.length ? queue.map(p => `<article class="admin-queue-row"><button class="admin-queue-open" data-admin-proposal="${esc(p.id)}"><div class="admin-queue-title">${esc(p.title)}</div><div class="admin-queue-meta">${esc(p.program)} · ${esc(p.proposer)} · ${esc(p.bucket)}</div></button><div class="admin-queue-status">${esc(p.statusLabel)}</div><div class="admin-queue-next"><strong>Next action</strong>${esc(p.next)}</div></article>`).join('') : '<div class="empty">The governance queue is clear.</div>';
+      node.querySelectorAll('[data-admin-proposal]').forEach(button => button.addEventListener('click', () => openDrawer(button.dataset.adminProposal)));
+    }
+    function renderAdminCycle() {
+      const node = $('#cycle-controls');
+      if (!node || !cycle) return;
+      const policy = cycle.policy || {};
+      const deadlines = cycle.deadlines || [];
+      const phases = ['submission', 'review', 'comment', 'vote', 'board', 'decision', 'complete'];
+      const policyHistory = adminOverview?.policyHistory || [];
+      node.innerHTML = `<div class="admin-config"><div class="admin-config-intro">Changes apply to the active cycle and create a configuration event. Historical votes keep the policy captured when they opened.</div><div class="admin-config-fields"><label class="form-label"><strong>Cycle status</strong><select data-cycle-status>${['pilot', 'active', 'paused', 'closed'].map(value => `<option value="${value}" ${cycle.status === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label><label class="form-label"><strong>Current phase</strong><select data-cycle-phase>${phases.map(value => `<option value="${value}" ${cycle.phase === value ? 'selected' : ''}>${esc(phaseLabels[value] || value)}</option>`).join('')}</select></label><label class="form-label"><strong>Timezone</strong><input data-cycle-timezone value="${esc(cycle.timeZone || 'America/New_York')}" /></label><label class="form-label full"><strong>Commissioner note</strong><textarea data-cycle-note>${esc(cycle.note || '')}</textarea></label></div><div class="policy-rule"><div class="policy-rule-title">Policy ${esc(policy.version || cycle.policyVersion || '—')}</div><div class="policy-fields"><label class="form-label"><strong>Version</strong><input data-policy-version value="${esc(policy.version || '')}" /></label><label class="form-label"><strong>Effective date</strong><input type="date" data-policy-effective value="${esc(policy.effectiveDate || '')}" /></label><label class="form-label"><strong>Proxy registration hours</strong><input type="number" min="1" data-policy-proxy value="${esc(policy.proxyRegistrationHours ?? '')}" /></label><label class="form-label"><strong>Quorum</strong><input type="number" min="1" max="${memberPrograms.length}" data-policy-quorum value="${esc(policy.quorumRequired ?? '')}" /></label><label class="form-label"><strong>Threshold percent</strong><input type="number" min="0" max="100" data-policy-threshold value="${esc(policy.thresholdPercent ?? '')}" /></label></div><fieldset class="policy-units"><legend>Eligible voting units</legend><div class="policy-unit-list">${memberPrograms.map(unit => `<label class="policy-unit"><input type="checkbox" data-policy-unit value="${esc(unit)}" ${(policy.eligibleVotingUnits || []).includes(unit) ? 'checked' : ''} />${esc(unit)}</label>`).join('')}</div></fieldset></div>${policyHistory.length ? `<div class="policy-history"><div class="policy-rule-title" style="margin-top:18px;">Retired policy history</div>${policyHistory.slice().reverse().map(item => `<div class="version-row"><div class="version-row-head"><strong>${esc(item.version || 'Policy')}</strong><span>Retired ${esc(formatWhen(item.retiredAt))}</span></div><div class="version-row-copy">Effective ${esc(formatDate(item.effectiveDate, { year: true }))} · ${esc(item.retiredBy || 'CSA governance')} · quorum ${esc(item.quorumRequired)} · ${esc(item.thresholdPercent)}% threshold</div></div>`).join('')}</div>` : '<div class="version-note" style="margin-top:18px;">No retired policy versions.</div>'}<div class="admin-config-footer"><span class="deadline-note">${esc(cycle.timeZone || 'America/New_York')} · ${deadlines.length} configured deadlines</span><button class="button secondary" data-save-cycle ${canManageConfiguration() ? '' : 'disabled'}>Save governance configuration</button></div><div class="cycle-control-list">${deadlines.map(item => `<label class="cycle-control-row"><span class="cycle-control-label">${esc(item.label)}</span><span class="cycle-control-stage">${esc(phaseLabels[item.stage] || item.stage)}</span><input type="date" data-cycle-deadline="${esc(item.id)}" value="${esc(item.date)}" aria-label="${esc(item.label)} date" /></label>`).join('')}</div></div>`;
+      node.querySelector('[data-save-cycle]')?.addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        const updatedDeadlines = Array.from(node.querySelectorAll('[data-cycle-deadline]')).map(input => { const source = deadlines.find(item => item.id === input.dataset.cycleDeadline); return { ...source, date: input.value }; });
+        const eligibleVotingUnits = Array.from(node.querySelectorAll('[data-policy-unit]:checked')).map(input => input.value);
+        button.disabled = true;
+        try {
+          const result = await api('/api/cycle', { method: 'PATCH', body: JSON.stringify({ status: node.querySelector('[data-cycle-status]').value, phase: node.querySelector('[data-cycle-phase]').value, timeZone: node.querySelector('[data-cycle-timezone]').value.trim(), note: node.querySelector('[data-cycle-note]').value.trim(), deadlines: updatedDeadlines, policy: { version: node.querySelector('[data-policy-version]').value.trim(), effectiveDate: node.querySelector('[data-policy-effective]').value, quorumRequired: Number(node.querySelector('[data-policy-quorum]').value), thresholdPercent: Number(node.querySelector('[data-policy-threshold]').value), proxyRegistrationHours: Number(node.querySelector('[data-policy-proxy]').value), eligibleVotingUnits } }) });
+          cycle = result.cycle; renderCycle(); await loadAdmin(); toast('Governance configuration saved to the record.');
+        } catch (error) { toast(`Could not save governance configuration: ${error.message}`); button.disabled = false; }
+      });
+    }
+    function renderAdminAudit() {
+      const node = $('#admin-audit');
+      if (!node || !adminOverview) return;
+      const audit = adminOverview.recentAudit || [];
+      node.innerHTML = audit.length ? audit.map(item => { const detail = [item.proposalTitle, item.user, item.policyVersion ? `policy ${item.policyVersion}` : '', item.fields?.length ? `fields: ${item.fields.join(', ')}` : '', item.reason].filter(Boolean).join(' · '); return `<div class="admin-audit-row"><div class="admin-audit-scope">${esc(item.scope || 'Record')}</div><div><div class="admin-audit-event"><strong>${esc(item.event)}</strong></div><div class="admin-audit-detail">${esc(item.by || 'CSA governance')}${detail ? ` · ${esc(detail)}` : ''}</div></div><div class="admin-audit-time">${esc(formatWhen(item.at))}</div></div>`; }).join('') : '<div class="empty">No audit events have been recorded yet.</div>';
+    }
+    async function loadAdmin() {
+      if (!canReview()) return;
+      try {
+        adminOverview = await api('/api/admin/overview');
+        cycle = adminOverview.cycle;
+        renderCycle(); renderAdminOverview(); renderAdminQueue(); renderAdminCycle(); renderAdminAudit();
+        await renderAccess();
+      } catch (error) { toast(`Could not load administration: ${error.message}`); }
+    }
     async function bootAuth() {
       try { const session = await api('/api/auth/me'); applyAuthUser(session.user); await loadCycle(); await loadProposals(); }
       catch (error) { document.body.classList.remove('authenticated'); }
@@ -611,14 +750,24 @@
       $('#activity-list').innerHTML = recent.map(p => `<div class="activity-item"><span class="activity-mark" aria-hidden="true"></span><div class="activity-text"><strong>${esc(p.activity)}</strong><br><span>${esc(p.title)}</span></div><div class="activity-time">${esc(p.time)}</div></div>`).join('');
     }
     async function renderAccess() {
-      if (!canReview()) return;
+      if (!canManageAccess()) return;
       const list = $('#access-list');
       list.innerHTML = '<div class="empty">Loading approved identities…</div>';
       try {
         const payload = await api('/api/access/users');
         const roles = Object.entries(roleLabels).map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join('');
-        const permissions = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:moderation', 'legislative:board'];
+        const inviteRoles = `<option value="" selected disabled>Select role</option>${roles}`;
+        const permissions = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:access', 'legislative:configuration', 'legislative:records', 'legislative:moderation', 'legislative:board'];
         const programs = ['CSA', ...memberPrograms];
+        $('#access-invite').innerHTML = `<form class="invite-form" id="access-invite-form"><label class="form-label"><strong>Name</strong><input name="name" required placeholder="Full name" /></label><label class="form-label"><strong>Email</strong><input name="email" type="email" required placeholder="name@institution.edu" /></label><label class="form-label"><strong>Role</strong><select name="role" required>${inviteRoles}</select></label><label class="access-active"><input type="checkbox" name="active" checked /> Active</label><label class="form-label wide"><strong>Program scope</strong><select name="programs" multiple>${programs.map(program => `<option value="${esc(program)}">${esc(program)}</option>`).join('')}</select><span class="form-help">Select only the accounts this identity may act for.</span></label><label class="form-label invite-permissions"><strong>Permissions</strong><select name="permissions" multiple>${permissions.map(permission => `<option value="${esc(permission)}">${esc(permission)}</option>`).join('')}</select><span class="form-help">No permission is implied by adding an identity.</span></label><button class="button" type="submit">Add approved identity</button></form>`;
+        $('#access-invite-form').addEventListener('submit', async event => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          const selected = name => Array.from(form.querySelectorAll(`[name="${name}"] option:checked`)).map(option => option.value);
+          const button = form.querySelector('button'); button.disabled = true;
+          try { await api('/api/access/users', { method: 'POST', body: JSON.stringify({ name: form.elements.name.value.trim(), email: form.elements.email.value.trim(), role: form.elements.role.value, active: form.elements.active.checked, programs: selected('programs'), permissions: selected('permissions') }) }); await loadAdmin(); toast('Approved identity added to the access register.'); }
+          catch (error) { toast(`Could not add identity: ${error.message}`); button.disabled = false; }
+        });
         list.innerHTML = payload.users.map(user => `<article class="access-row" data-user-id="${esc(user.id)}"><div><div class="access-name">${esc(user.name)}</div><div class="access-email">${esc(user.email)}</div></div><div class="access-controls"><label>Role</label><select data-access-role>${roles.replace(`value="${esc(user.role)}"`, `value="${esc(user.role)}" selected`)}</select><label class="access-active"><input type="checkbox" data-access-active ${user.active ? 'checked' : ''} /> Active</label></div><div class="access-controls"><label>Program scope</label><select multiple data-access-programs>${programs.map(program => `<option value="${esc(program)}" ${(user.programs || []).includes(program) ? 'selected' : ''}>${esc(program)}</option>`).join('')}</select><label>Permissions</label><select multiple data-access-permissions>${permissions.map(permission => `<option value="${esc(permission)}" ${(user.permissions || []).includes(permission) ? 'selected' : ''}>${esc(permission)}</option>`).join('')}</select></div><button class="button secondary" data-save-access>Save access</button></article>`).join('');
         list.querySelectorAll('[data-save-access]').forEach(button => button.addEventListener('click', async () => {
           const row = button.closest('[data-user-id]');
@@ -626,28 +775,10 @@
           button.disabled = true;
           try {
             await api(`/api/access/users/${row.dataset.userId}`, { method: 'PATCH', body: JSON.stringify({ role: row.querySelector('[data-access-role]').value, active: row.querySelector('[data-access-active]').checked, programs: selected('[data-access-programs]'), permissions: selected('[data-access-permissions]') }) });
-            toast('Access assignment saved to the register.');
+            await loadAdmin(); toast('Access assignment saved to the register.');
           } catch (error) { toast(`Could not save access: ${error.message}`); }
           button.disabled = false;
         }));
-        const controls = $('#cycle-controls');
-        const deadlines = cycle?.deadlines || [];
-        controls.innerHTML = `<section class="cycle-controls"><div class="section-head"><div><div class="section-title">Cycle controls</div><div class="section-sub">Operational dates for the ${esc(cycle?.id || 'current')} legislative cycle. Changes are recorded with the acting administrator.</div></div></div><div class="cycle-control-list">${deadlines.map(item => `<label class="cycle-control-row"><span class="cycle-control-label">${esc(item.label)}</span><span class="cycle-control-stage">${esc(phaseLabels[item.stage] || item.stage)}</span><input type="date" data-cycle-deadline="${esc(item.id)}" value="${esc(item.date)}" aria-label="${esc(item.label)} date" /></label>`).join('')}</div><div class="cycle-control-footer"><span class="deadline-note">Cycle timezone: ${esc(cycle?.timeZone || 'America/New_York')}. Policy changes remain a separate recorded action.</span><button class="button secondary" data-save-cycle ${deadlines.length ? '' : 'disabled'}>Save cycle schedule</button></div></section>`;
-        controls.querySelector('[data-save-cycle]')?.addEventListener('click', async (event) => {
-          const button = event.currentTarget;
-          const updatedDeadlines = Array.from(controls.querySelectorAll('[data-cycle-deadline]')).map(input => {
-            const source = deadlines.find(item => item.id === input.dataset.cycleDeadline);
-            return { ...source, date: input.value };
-          });
-          button.disabled = true;
-          try {
-            const result = await api('/api/cycle', { method: 'PATCH', body: JSON.stringify({ deadlines: updatedDeadlines }) });
-            cycle = result.cycle;
-            renderCycle();
-            toast('Cycle schedule saved to the governance record.');
-          } catch (error) { toast(`Could not save cycle schedule: ${error.message}`); }
-          button.disabled = false;
-        });
       } catch (error) { list.innerHTML = `<div class="empty">${esc(error.message)}</div>`; }
     }
     async function replaceProposal(updated, message) { proposals = proposals.map(item => item.id === updated.id ? updated : item); renderProposals(); renderActivity(); openDrawer(updated.id); if (message) toast(message); }
@@ -789,7 +920,7 @@
       } catch (error) { toast(`Could not save proposal: ${error.message}`); }
     }
 
-    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const view = btn.dataset.view; $('#crumb-view').textContent = btn.textContent.trim(); if (view === 'access') { $('#proposal-workspace').hidden = true; $('#access-panel').hidden = false; renderAccess(); return; } $('#proposal-workspace').hidden = false; $('#access-panel').hidden = true; if (view === 'review') { currentFilter = 'attention'; renderProposals(); } if (['scheduler','awards','feedback','documents'].includes(view)) toast(`${view === 'scheduler' ? 'Scheduler' : view === 'awards' ? 'Awards' : view === 'feedback' ? 'Feedback' : 'Documents'} is mapped for a later release.`); }));
+    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const view = btn.dataset.view; $('#crumb-view').textContent = btn.textContent.trim(); if (view === 'admin') { $('#proposal-workspace').hidden = true; $('#access-panel').hidden = false; loadAdmin(); return; } $('#proposal-workspace').hidden = false; $('#access-panel').hidden = true; if (view === 'review') { currentFilter = 'attention'; renderProposals(); } if (['scheduler','awards','feedback','documents'].includes(view)) toast(`${view === 'scheduler' ? 'Scheduler' : view === 'awards' ? 'Awards' : view === 'feedback' ? 'Feedback' : 'Documents'} is mapped for a later release.`); }));
     document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => { currentFilter = tab.dataset.filter; renderProposals(); }));
     $('#program-select').addEventListener('change', () => { $('#stat-program').textContent = '1'; if (currentFilter === 'mine') renderProposals(); });
     $('#role-select').addEventListener('change', () => { if (authUser) toast(`Authorized role: ${roleLabel(authUser)}. Role changes are managed in the access register.`); });

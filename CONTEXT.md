@@ -204,6 +204,18 @@ _Avoid_: Shared login, password account, SSO identity
 The Commissioner-controlled record of approved portal identities, active state, program scope, role, and legislative permissions. Deactivation removes current access while preserving historical records.
 _Avoid_: Role picker, preview role, shared login
 
+**Governance administration**:
+The Commissioner-and-permissioned-administrator operating surface for cycle configuration, policy activation, proposal routing, access approval, and consolidated audit review. It is an authority boundary, not a second proposal workspace.
+_Avoid_: Admin dashboard, role preview, spreadsheet console
+
+**Administration queue**:
+The ordered set of proposal and configuration records that require a governance action, such as staff review, distribution, vote close, decision, or an access correction.
+_Avoid_: Task list without authority, notification feed
+
+**Policy history**:
+The retained sequence of prior governance policy versions, each paired with the actor and time that retired it. A new active policy does not rewrite the policy captured by an existing vote.
+_Avoid_: Current settings, overwritten config, versionless rule
+
 **Cycle deadline**:
 A named date in an Annual Legislative Cycle that governs a stage transition or notice, including its audience-facing label and route. A deadline is configurable policy data and is not inferred from a proposal's display text.
 _Avoid_: Reminder text, hard-coded date, dashboard date
@@ -326,3 +338,6 @@ _Avoid_: Preview role, global administrator
 - Drafts and undistributed staff-review records are visible only to their proposer and authorized governance staff.
 - Cycle deadlines and policy values are read from the active cycle record; changing one creates an attributable configuration event.
 - A decision packet is generated from the proposal record and does not replace the append-only history.
+- Governance administration is visible only to a Commissioner or explicitly permissioned administrator; every mutation is checked at the action boundary.
+- Deactivating an identity removes current access without deleting authored records, and an identity email cannot be silently reused.
+- Policy changes retire the prior policy into policy history; finalized votes retain the policy values captured when the vote opened.

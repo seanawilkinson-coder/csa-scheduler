@@ -35,6 +35,8 @@
     "proxyRegistrationHours": 72
   },
   "accessAudit": [],
+  "governanceAudit": [],
+  "policyHistory": [],
   "proposals": [
     {
       "id": "p1",

@@ -22,7 +22,7 @@ if (DATA_FILE !== SEED_DATA_FILE && !fs.existsSync(DATA_FILE)) {
 const sessions = new Map();
 const loginCodes = new Map();
 const ROLE_VALUES = ['coach', 'institutional_representative', 'commissioner', 'board_member', 'staff', 'administrator', 'conference_observer'];
-const PERMISSION_VALUES = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:moderation', 'legislative:board'];
+const PERMISSION_VALUES = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:access', 'legislative:configuration', 'legislative:records', 'legislative:moderation', 'legislative:board'];
 const DEFAULT_POLICY = {
   version: 'v4',
   effectiveDate: '2026-08-01',
@@ -119,11 +119,24 @@ function isDraftOwner(user, proposal) {
 }
 
 function hasPermission(user, permission) {
-  return user.role === 'commissioner' || (user.permissions || []).includes('*') || (user.permissions || []).includes(permission);
+  const permissions = user.permissions || [];
+  return user.role === 'commissioner' || permissions.includes('*') || permissions.includes(permission) || (permissions.includes('legislative:admin') && ['legislative:access', 'legislative:configuration', 'legislative:records'].includes(permission));
 }
 
 function isGovernanceAdmin(user) {
   return hasPermission(user, 'legislative:admin');
+}
+
+function canManageAccess(user) {
+  return hasPermission(user, 'legislative:access');
+}
+
+function canManageConfiguration(user) {
+  return hasPermission(user, 'legislative:configuration');
+}
+
+function canReadGovernanceRecords(user) {
+  return hasPermission(user, 'legislative:records');
 }
 
 function isModerator(user) {
@@ -136,6 +149,21 @@ function isBoardMember(user) {
 
 function requireGovernanceAdmin(req, res, next) {
   if (!isGovernanceAdmin(req.user)) return res.status(403).json({ error: 'CSA staff or Commissioner permission required' });
+  next();
+}
+
+function requireAccessAdmin(req, res, next) {
+  if (!canManageAccess(req.user)) return res.status(403).json({ error: 'Access administration permission required' });
+  next();
+}
+
+function requireConfigurationAdmin(req, res, next) {
+  if (!canManageConfiguration(req.user)) return res.status(403).json({ error: 'Cycle and policy configuration permission required' });
+  next();
+}
+
+function requireRecordsAdmin(req, res, next) {
+  if (!canReadGovernanceRecords(req.user)) return res.status(403).json({ error: 'Governance records permission required' });
   next();
 }
 
@@ -191,6 +219,48 @@ function publicCycle(data) {
       eligibleVotingUnits: policy.eligibleVotingUnits,
       proxyRegistrationHours: policy.proxyRegistrationHours
     }
+  };
+}
+
+function governanceAudit(data, limit = 40) {
+  const accessEvents = (Array.isArray(data.governanceAudit) ? data.governanceAudit : (data.accessAudit || [])).map(item => ({ ...item, scope: item.scope || 'Administration' }));
+  const proposalEvents = (data.proposals || []).flatMap(proposal => (proposal.audit || []).map(item => ({
+    ...item,
+    scope: 'Proposal',
+    proposalId: proposal.id,
+    proposalTitle: proposal.title
+  })));
+  return [...accessEvents, ...proposalEvents]
+    .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))
+    .slice(0, limit);
+}
+
+function publicAdminOverview(data, user) {
+  const proposals = serializeProposals(data.proposals || [], user);
+  const counts = proposals.reduce((result, proposal) => {
+    result.total += 1;
+    result[proposal.status] = (result[proposal.status] || 0) + 1;
+    return result;
+  }, { total: 0, draft: 0, review: 0, comment: 0, vote: 0, board: 0, decision: 0, closed: 0 });
+  const byBucket = proposals.reduce((result, proposal) => {
+    result[proposal.bucket] = (result[proposal.bucket] || 0) + 1;
+    return result;
+  }, {});
+  const queue = proposals.filter(proposal => ['review', 'comment', 'vote', 'board', 'decision'].includes(proposal.status)).slice(0, 40);
+  const users = data.users || [];
+  return {
+    cycle: publicCycle(data),
+    policyHistory: Array.isArray(data.policyHistory) ? data.policyHistory : [],
+    counts,
+    byBucket,
+    queue,
+    access: {
+      total: users.length,
+      active: users.filter(item => item.active !== false).length,
+      inactive: users.filter(item => item.active === false).length,
+      byRole: users.reduce((result, item) => { result[item.role] = (result[item.role] || 0) + 1; return result; }, {})
+    },
+    recentAudit: governanceAudit(data)
   };
 }
 
@@ -371,13 +441,23 @@ function auditIsAppendOnly(previous, next) {
   return previous.every((entry, index) => JSON.stringify(entry) === JSON.stringify(next[index]));
 }
 
-function validateCyclePatch(body) {
+function validateCyclePatch(body, currentPolicy = DEFAULT_POLICY) {
   if (!isRecord(body)) return { error: 'Cycle payload must be an object' };
   const patch = {};
   if (Object.hasOwn(body, 'phase')) {
     const phase = requiredText(body.phase, 'Cycle phase', 40);
     if (phase.error || !['submission', 'review', 'comment', 'vote', 'board', 'decision', 'complete'].includes(phase.value)) return { error: 'Invalid cycle phase' };
     patch.phase = phase.value;
+  }
+  if (Object.hasOwn(body, 'status')) {
+    const status = requiredText(body.status, 'Cycle status', 40);
+    if (status.error || !['pilot', 'active', 'paused', 'closed'].includes(status.value)) return { error: 'Invalid cycle status' };
+    patch.status = status.value;
+  }
+  if (Object.hasOwn(body, 'timeZone')) {
+    const timeZone = requiredText(body.timeZone, 'Cycle timezone', 80);
+    if (timeZone.error) return timeZone;
+    patch.timeZone = timeZone.value;
   }
   if (Object.hasOwn(body, 'note')) {
     const note = optionalText(body.note, 'Cycle note', 400);
@@ -403,7 +483,7 @@ function validateCyclePatch(body) {
   }
   if (Object.hasOwn(body, 'policy')) {
     if (!isRecord(body.policy)) return { error: 'Policy must be an object' };
-    const policy = { ...DEFAULT_POLICY };
+    const policy = { ...DEFAULT_POLICY, ...currentPolicy };
     if (body.policy.version !== undefined) {
       const version = requiredText(body.policy.version, 'Policy version', 40);
       if (version.error) return version;
@@ -453,8 +533,27 @@ function validateAccessPatch(body) {
   return { value: patch };
 }
 
+function validateAccessRecord(body) {
+  if (!isRecord(body)) return { error: 'Access record must be an object' };
+  const name = requiredText(body.name, 'Name', 120);
+  const email = requiredText(body.email, 'Email', 180);
+  if (name.error) return name;
+  if (email.error) return email;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) return { error: 'Email must be valid' };
+  const access = validateAccessPatch({
+    active: body.active === undefined ? true : body.active,
+    role: body.role,
+    programs: body.programs || [],
+    permissions: body.permissions || []
+  });
+  if (access.error) return access;
+  return { value: { name: name.value, email: email.value.toLowerCase(), ...access.value } };
+}
+
 function appendAccessAudit(data, event, by, extra = {}) {
-  data.accessAudit = [...(Array.isArray(data.accessAudit) ? data.accessAudit : []), { event, by, at: nowStamp(), ...extra }];
+  const record = { event, by, at: nowStamp(), ...extra };
+  data.accessAudit = [...(Array.isArray(data.accessAudit) ? data.accessAudit : []), record];
+  data.governanceAudit = [...(Array.isArray(data.governanceAudit) ? data.governanceAudit : []), record];
 }
 
 function validateDecisionInput(body) {
@@ -503,28 +602,59 @@ app.get('/api/cycle', requireSession, (req, res) => {
   res.json(publicCycle(data));
 });
 
-app.patch('/api/cycle', requireSession, requireGovernanceAdmin, (req, res) => {
+app.get('/api/admin/overview', requireSession, requireGovernanceAdmin, (req, res) => {
   const data = readPortalData();
-  const input = validateCyclePatch(req.body);
+  res.json(publicAdminOverview(data, req.user));
+});
+
+app.get('/api/admin/audit', requireSession, requireRecordsAdmin, (req, res) => {
+  const data = readPortalData();
+  const limit = Math.min(Math.max(Number(req.query.limit) || 40, 1), 100);
+  res.json({ audit: governanceAudit(data, limit) });
+});
+
+app.patch('/api/cycle', requireSession, requireConfigurationAdmin, (req, res) => {
+  const data = readPortalData();
+  const input = validateCyclePatch(req.body, policyFor(data));
   if (input.error) return res.status(400).json({ error: input.error });
   const before = publicCycle(data);
   const cycle = cycleFor(data);
-  if (input.value.policy) data.policy = input.value.policy;
+  const previousPolicy = policyFor(data);
+  if (input.value.policy) {
+    const nextPolicy = input.value.policy;
+    if (JSON.stringify(previousPolicy) !== JSON.stringify(nextPolicy)) {
+      data.policyHistory = [...(Array.isArray(data.policyHistory) ? data.policyHistory : []), { ...previousPolicy, retiredAt: nowStamp(), retiredBy: req.user.name }];
+    }
+    data.policy = nextPolicy;
+    cycle.policyVersion = nextPolicy.version;
+  }
   const cyclePatch = { ...input.value };
   delete cyclePatch.policy;
   Object.assign(cycle, cyclePatch);
   data.cycle = cycle;
-  appendAccessAudit(data, 'Cycle configuration updated', req.user.name, { fields: Object.keys(input.value) });
+  appendAccessAudit(data, 'Cycle configuration updated', req.user.name, { scope: 'Configuration', fields: Object.keys(input.value), policyVersion: input.value.policy?.version });
   writePortalData(data);
   res.json({ cycle: publicCycle(data), previous: before });
 });
 
-app.get('/api/access/users', requireSession, requireGovernanceAdmin, (req, res) => {
+app.get('/api/access/users', requireSession, requireAccessAdmin, (req, res) => {
   const data = readPortalData();
   res.json({ users: data.users.map(publicUser), audit: data.accessAudit || [] });
 });
 
-app.patch('/api/access/users/:id', requireSession, requireGovernanceAdmin, (req, res) => {
+app.post('/api/access/users', requireSession, requireAccessAdmin, (req, res) => {
+  const data = readPortalData();
+  const input = validateAccessRecord(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  if (data.users.some(user => user.email.toLowerCase() === input.value.email)) return res.status(409).json({ error: 'An approved identity already uses that email' });
+  const user = { id: `u-${crypto.randomUUID()}`, ...input.value };
+  data.users.push(user);
+  appendAccessAudit(data, 'Approved identity added', req.user.name, { scope: 'Access', user: user.email, fields: ['name', 'email', 'role', 'programs', 'permissions', 'active'] });
+  writePortalData(data);
+  res.status(201).json({ user: publicUser(user) });
+});
+
+app.patch('/api/access/users/:id', requireSession, requireAccessAdmin, (req, res) => {
   const data = readPortalData();
   const user = data.users.find(item => item.id === req.params.id);
   if (!user) return res.status(404).json({ error: 'User not found' });

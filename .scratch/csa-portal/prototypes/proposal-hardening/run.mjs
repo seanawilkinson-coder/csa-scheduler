@@ -127,6 +127,7 @@ async function run() {
     sessions.commissioner = await login('commissioner@csasquash.org');
     sessions.board = await login('board@csasquash.org');
     sessions.observer = await login('observer@conference.org');
+    sessions.admin = await login('admin@columbia.edu');
     report('auth', { type: 'auth', coach: Boolean(sessions.coach), commissioner: Boolean(sessions.commissioner), board: Boolean(sessions.board), observer: Boolean(sessions.observer) }, !sessions.coach || !sessions.commissioner || !sessions.board || !sessions.observer);
 
     const cycle = await request('/api/cycle', { cookie: sessions.coach });
@@ -135,8 +136,29 @@ async function run() {
     report('coach cannot manage access', { type: 'access-scope', status: coachAccess.status }, coachAccess.status !== 403);
     const adminAccess = await request('/api/access/users', { cookie: sessions.commissioner });
     report('commissioner can manage access', { type: 'access-register', status: adminAccess.status, users: adminAccess.payload.users?.length }, adminAccess.status !== 200 || adminAccess.payload.users?.length !== 8);
+    const coachAdminOverview = await request('/api/admin/overview', { cookie: sessions.coach });
+    report('coach cannot open administration', { type: 'admin-scope', status: coachAdminOverview.status }, coachAdminOverview.status !== 403);
+    const commissionerAdminOverview = await request('/api/admin/overview', { cookie: sessions.commissioner });
+    report('commissioner sees governance overview', { type: 'admin-overview', status: commissionerAdminOverview.status, queue: commissionerAdminOverview.payload.queue?.length, active: commissionerAdminOverview.payload.access?.active }, commissionerAdminOverview.status !== 200 || commissionerAdminOverview.payload.counts?.total < 5 || commissionerAdminOverview.payload.queue?.length < 1 || commissionerAdminOverview.payload.access?.active !== 8);
+    const permissionedAdminOverview = await request('/api/admin/overview', { cookie: sessions.admin });
+    report('permissioned administrator sees governance overview', { type: 'admin-permission', status: permissionedAdminOverview.status }, permissionedAdminOverview.status !== 200);
+    const coachAudit = await request('/api/admin/audit', { cookie: sessions.coach });
+    report('coach cannot read governance audit', { type: 'audit-scope', status: coachAudit.status }, coachAudit.status !== 403);
+    const commissionerAudit = await request('/api/admin/audit', { cookie: sessions.commissioner });
+    report('commissioner can read consolidated audit', { type: 'audit-register', status: commissionerAudit.status, entries: commissionerAudit.payload.audit?.length }, commissionerAudit.status !== 200 || !commissionerAudit.payload.audit?.some(item => item.scope === 'Proposal'));
     const cycleUpdate = await request('/api/cycle', { method: 'PATCH', cookie: sessions.commissioner, body: { note: 'Pilot timing updated for rehearsal.' } });
     report('cycle updates are audited', { type: 'cycle-update', status: cycleUpdate.status, note: cycleUpdate.payload.cycle?.note }, cycleUpdate.status !== 200 || cycleUpdate.payload.cycle?.note !== 'Pilot timing updated for rehearsal.');
+    const policyUpdate = await request('/api/cycle', { method: 'PATCH', cookie: sessions.commissioner, body: { policy: { version: 'v4.1' } } });
+    const policyOverview = await request('/api/admin/overview', { cookie: sessions.commissioner });
+    report('policy changes retain history', { type: 'policy-history', status: policyUpdate.status, version: policyOverview.payload.cycle?.policyVersion, history: policyOverview.payload.policyHistory?.length }, policyUpdate.status !== 200 || policyOverview.payload.cycle?.policyVersion !== 'v4.1' || policyOverview.payload.policyHistory?.[0]?.version !== 'v4');
+    const invalidAccess = await request('/api/access/users', { method: 'POST', cookie: sessions.commissioner, body: { name: 'No Email' } });
+    report('invalid identity is rejected', { type: 'access-validation', status: invalidAccess.status }, invalidAccess.status !== 400);
+    const missingAccessRole = await request('/api/access/users', { method: 'POST', cookie: sessions.commissioner, body: { name: 'No Role', email: 'no-role@example.org' } });
+    report('identity role is explicit', { type: 'access-role', status: missingAccessRole.status }, missingAccessRole.status !== 400);
+    const addedAccess = await request('/api/access/users', { method: 'POST', cookie: sessions.admin, body: { name: 'Pilot Administrator', email: 'pilot-admin@example.org', role: 'staff', active: true, programs: ['CSA'], permissions: ['legislative:records'] } });
+    report('approved identity can be added', { type: 'access-add', status: addedAccess.status, id: addedAccess.payload.user?.id }, addedAccess.status !== 201 || addedAccess.payload.user?.email !== 'pilot-admin@example.org');
+    const duplicateAccess = await request('/api/access/users', { method: 'POST', cookie: sessions.commissioner, body: { name: 'Duplicate Administrator', email: 'PILOT-ADMIN@example.org', role: 'staff', active: true, programs: [], permissions: [] } });
+    report('identity email is unique', { type: 'access-unique', status: duplicateAccess.status }, duplicateAccess.status !== 409);
     const observerView = await request('/api/proposals', { cookie: sessions.observer });
     report('observer cannot see undistributed review records', { type: 'visibility', status: observerView.status, seesReview: observerView.payload.some(item => item.id === 'p2') }, observerView.status !== 200 || observerView.payload.some(item => item.id === 'p2'));
     const recordPdf = await request('/api/proposals/p1/record.pdf', { cookie: sessions.observer });
