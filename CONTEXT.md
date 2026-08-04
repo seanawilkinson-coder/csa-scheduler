@@ -200,6 +200,26 @@ _Avoid_: Coach-question proposal, informal criteria
 A single person identity authenticated through a one-time, expiring email link or code sent only to a Commissioner-approved email address. The identity may be linked to multiple program accounts; the portal has no open self-registration or SSO dependency.
 _Avoid_: Shared login, password account, SSO identity
 
+**Access register**:
+The Commissioner-controlled record of approved portal identities, active state, program scope, role, and legislative permissions. Deactivation removes current access while preserving historical records.
+_Avoid_: Role picker, preview role, shared login
+
+**Cycle deadline**:
+A named date in an Annual Legislative Cycle that governs a stage transition or notice, including its audience-facing label and route. A deadline is configurable policy data and is not inferred from a proposal's display text.
+_Avoid_: Reminder text, hard-coded date, dashboard date
+
+**Decision packet**:
+A downloadable representation of one proposal's current version, prior versions, discussion, decision, supporting documents, and append-only audit trail.
+_Avoid_: Screenshot, status export, email thread
+
+**Version diff**:
+The recorded list of proposal fields that changed between two immutable versions, paired with the proposer's change summary.
+_Avoid_: Silent edit, overwrite, redline without provenance
+
+**Legislative pilot fixture**:
+A seeded proposal or identity used to exercise a specific governance route before the cycle rules are frozen. A fixture is a testable scenario, not production policy.
+_Avoid_: Demo row, fake data, permanent sample
+
 ## Portal proposal lifecycle
 
 **Annual Legislative Cycle**:
@@ -262,7 +282,7 @@ _Avoid_: Whoever last edited it, institution-wide owner
 
 ### Current portal slice
 
-The portal currently demonstrates the submission, staff review, bucket assignment, acceptance and distribution, comment-window, comment moderation, coach voting, Board decisions, proposal revisions, scoped roles, and append-only history behaviors. Urgent measures and policy configuration remain governed domain concepts that must be added as explicit transitions rather than represented by generic status labels.
+The portal currently demonstrates the submission, staff review, bucket assignment, acceptance and distribution, comment-window, comment moderation, coach voting, Board decisions, proposal revisions, scoped roles, cycle deadlines, access administration, decision packets, and append-only history behaviors. The runnable pilot fixtures and exit criteria live in `docs/CSA-LEGISLATIVE-PILOT.md`. Urgent measures and policy configuration beyond the current cycle controls remain governed domain concepts that must be added as explicit transitions rather than represented by generic status labels.
 
 ## Expanded governance lifecycle
 
@@ -303,3 +323,6 @@ _Avoid_: Preview role, global administrator
 - A Board decision must match the route. Bucket 1 does not enter a coach vote, and Bucket 2 does not require Board ratification.
 - Revisions never destroy the prior proposal version. The current version and all prior versions remain attributable and auditable.
 - Role scope is enforced at the action boundary. UI affordances may explain access, but they cannot create authority.
+- Drafts and undistributed staff-review records are visible only to their proposer and authorized governance staff.
+- Cycle deadlines and policy values are read from the active cycle record; changing one creates an attributable configuration event.
+- A decision packet is generated from the proposal record and does not replace the append-only history.

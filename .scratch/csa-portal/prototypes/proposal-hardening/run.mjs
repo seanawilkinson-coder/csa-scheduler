@@ -50,8 +50,8 @@ async function request(pathname, options = {}) {
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   if (options.cookie) headers.Cookie = options.cookie;
   const response = await fetch(`${baseUrl}${pathname}`, { ...options, headers, body: options.body === undefined ? undefined : JSON.stringify(options.body) });
-  const payload = await response.json().catch(() => ({}));
-  return { status: response.status, payload, setCookie: response.headers.get('set-cookie') || '' };
+  const payload = pathname.endsWith('.pdf') ? await response.arrayBuffer() : await response.json().catch(() => ({}));
+  return { status: response.status, payload, headers: response.headers, setCookie: response.headers.get('set-cookie') || '' };
 }
 
 async function login(email) {
@@ -128,6 +128,19 @@ async function run() {
     sessions.board = await login('board@csasquash.org');
     sessions.observer = await login('observer@conference.org');
     report('auth', { type: 'auth', coach: Boolean(sessions.coach), commissioner: Boolean(sessions.commissioner), board: Boolean(sessions.board), observer: Boolean(sessions.observer) }, !sessions.coach || !sessions.commissioner || !sessions.board || !sessions.observer);
+
+    const cycle = await request('/api/cycle', { cookie: sessions.coach });
+    report('cycle record is operational', { type: 'cycle', status: cycle.status, id: cycle.payload.id, next: cycle.payload.nextDeadline?.id, policy: cycle.payload.policy?.version }, cycle.status !== 200 || cycle.payload.status !== 'pilot' || !cycle.payload.nextDeadline || cycle.payload.policy?.version !== 'v4');
+    const coachAccess = await request('/api/access/users', { cookie: sessions.coach });
+    report('coach cannot manage access', { type: 'access-scope', status: coachAccess.status }, coachAccess.status !== 403);
+    const adminAccess = await request('/api/access/users', { cookie: sessions.commissioner });
+    report('commissioner can manage access', { type: 'access-register', status: adminAccess.status, users: adminAccess.payload.users?.length }, adminAccess.status !== 200 || adminAccess.payload.users?.length !== 8);
+    const cycleUpdate = await request('/api/cycle', { method: 'PATCH', cookie: sessions.commissioner, body: { note: 'Pilot timing updated for rehearsal.' } });
+    report('cycle updates are audited', { type: 'cycle-update', status: cycleUpdate.status, note: cycleUpdate.payload.cycle?.note }, cycleUpdate.status !== 200 || cycleUpdate.payload.cycle?.note !== 'Pilot timing updated for rehearsal.');
+    const observerView = await request('/api/proposals', { cookie: sessions.observer });
+    report('observer cannot see undistributed review records', { type: 'visibility', status: observerView.status, seesReview: observerView.payload.some(item => item.id === 'p2') }, observerView.status !== 200 || observerView.payload.some(item => item.id === 'p2'));
+    const recordPdf = await request('/api/proposals/p1/record.pdf', { cookie: sessions.observer });
+    report('record packet is downloadable', { type: 'record-packet', status: recordPdf.status, contentType: recordPdf.headers.get('content-type'), bytes: recordPdf.payload.byteLength }, recordPdf.status !== 200 || !recordPdf.headers.get('content-type')?.includes('application/pdf') || recordPdf.payload.byteLength < 1000);
 
     const cases = buildProposalCases();
     const knownIds = new Set();

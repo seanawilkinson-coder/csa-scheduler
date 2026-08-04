@@ -195,6 +195,31 @@
     .timeline-date { color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; }
     .timeline-title { margin-top: 7px; font-size: 13px; font-weight: 700; }
     .timeline-copy { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .access-panel { margin-top: 46px; padding-top: 26px; border-top: 1px solid var(--ink); }
+    .access-list { margin-top: 18px; border-top: 1px solid var(--ink); }
+    .access-row { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(130px, .7fr) minmax(190px, 1fr) auto; gap: 18px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--rule); }
+    .access-name { font-weight: 700; }
+    .access-email { margin-top: 4px; color: var(--muted); font: 500 10px/1.3 var(--data); }
+    .access-controls { display: grid; gap: 5px; }
+    .access-controls label { color: var(--muted); font: 500 10px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .access-controls select { min-height: 36px; width: 100%; border: 1px solid var(--rule); border-radius: 0; background: var(--white); color: var(--ink); padding: 7px 8px; font-size: 12px; }
+    .access-controls select[multiple] { min-height: 72px; }
+    .access-active { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .access-active input { width: 17px; height: 17px; accent-color: var(--navy); }
+    .cycle-controls { margin-top: 42px; padding-top: 26px; border-top: 1px solid var(--ink); }
+    .cycle-control-list { margin-top: 18px; border-top: 1px solid var(--ink); }
+    .cycle-control-row { display: grid; grid-template-columns: minmax(190px, 1fr) 180px minmax(180px, 1.4fr); gap: 18px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    .cycle-control-label { font-size: 12px; font-weight: 700; }
+    .cycle-control-stage { color: var(--muted); font: 500 10px/1.3 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .cycle-control-row input { width: 100%; min-height: 36px; border: 1px solid var(--rule); border-radius: 0; background: var(--white); color: var(--ink); padding: 7px 8px; font: 500 12px/1.2 var(--data); }
+    .cycle-control-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 17px; }
+    .cycle-control-footer .button { flex: 0 0 auto; }
+    .version-row { padding: 13px 0; border-bottom: 1px solid var(--rule); }
+    .version-row-head { display: flex; justify-content: space-between; gap: 15px; color: var(--muted); font: 500 10px/1.35 var(--data); }
+    .version-row-head strong { color: var(--ink); font-family: var(--sans); font-size: 12px; }
+    .version-row-copy { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .version-row-copy em { color: var(--ink); font-style: normal; }
+    .deadline-note { color: var(--muted); font-size: 11px; }
 
     /* Detail is a sheet with flowing records. No card outline, no boxed metadata. */
     .drawer-backdrop, .modal-backdrop { position: fixed; inset: 0; z-index: var(--z-scrim); background: rgba(14,27,41,.52); opacity: 0; pointer-events: none; transition: opacity .2s var(--ease-out); }
@@ -294,6 +319,8 @@
       .cycle-next { padding: 18px 0 0; border-top: 1px solid rgba(255,255,255,.25); border-left: 0; }
       .workspace { grid-template-columns: 1fr; }
       .timeline { padding: 25px 0 0 23px; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+      .access-row, .cycle-control-row { grid-template-columns: 1fr 1fr; }
+      .access-row > :first-child, .access-row > :last-child { grid-column: 1 / -1; }
     }
     @media (max-width: 680px) {
       .topbar { align-items: flex-start; flex-direction: column; padding-top: 17px; padding-bottom: 17px; }
@@ -330,6 +357,9 @@
       .detail-grid > div { display: block; }
       .detail-value { margin-top: 5px; text-align: left; }
       .split-fields { grid-template-columns: 1fr; }
+      .access-row, .cycle-control-row { grid-template-columns: 1fr; }
+      .access-row > :first-child, .access-row > :last-child { grid-column: auto; }
+      .cycle-control-footer { align-items: stretch; flex-direction: column; }
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
@@ -372,6 +402,7 @@
         <button class="active" data-view="overview"><span class="nav-icon circle" aria-hidden="true"></span><span>Overview</span></button>
         <button data-view="proposals"><span class="nav-icon line" aria-hidden="true"></span><span>Proposals</span></button>
         <button data-view="review"><span class="nav-icon check" aria-hidden="true"></span><span>Review queue</span></button>
+        <button data-view="access" id="access-nav" style="display:none"><span class="nav-icon square" aria-hidden="true"></span><span>Access</span></button>
         <button data-view="feedback"><span class="nav-icon corner" aria-hidden="true"></span><span>Feedback</span></button>
         <button data-view="documents"><span class="nav-icon square" aria-hidden="true"></span><span>Documents</span></button>
       </nav>
@@ -401,9 +432,9 @@
         </section>
 
         <section class="cycle-strip" aria-label="Current cycle status">
-          <div><div class="cycle-kicker">Current phase</div><div class="cycle-name">Revision &amp; comment window</div><div class="cycle-detail">Accepted proposals are open for institutional review.</div></div>
-          <div class="cycle-progress"><div class="progress-labels"><span>August</span><strong>Comments and revisions</strong><span>May</span></div><div class="progress-track" aria-hidden="true"><span></span></div></div>
-          <div class="cycle-next"><div class="cycle-next-label">Next deadline</div><div class="cycle-next-date">Dec 1</div><div class="cycle-next-action">Revisions due</div></div>
+          <div><div class="cycle-kicker" id="cycle-status">Current phase</div><div class="cycle-name" id="cycle-name">Annual Legislative Cycle</div><div class="cycle-detail" id="cycle-detail">Loading the current cycle record.</div></div>
+          <div class="cycle-progress"><div class="progress-labels"><span id="cycle-start">—</span><strong id="cycle-phase">—</strong><span id="cycle-end">—</span></div><div class="progress-track" aria-hidden="true"><span></span></div></div>
+          <div class="cycle-next"><div class="cycle-next-label">Next deadline</div><div class="cycle-next-date" id="cycle-next-date">—</div><div class="cycle-next-action" id="cycle-next-action">Loading</div></div>
         </section>
 
         <section class="stats" aria-label="Cycle summary">
@@ -413,7 +444,7 @@
           <div class="stat"><span class="stat-value" id="stat-program">1</span><span class="stat-label">active program account</span></div>
         </section>
 
-        <div class="workspace">
+        <div class="workspace" id="proposal-workspace">
           <section>
             <div class="section-head"><div><div class="section-title">Proposal register</div><div class="section-sub">Every accepted proposal in the 2026–27 cycle.</div></div><button class="button secondary" id="view-all">View register</button></div>
             <div class="tabs" role="tablist"><button class="tab active" data-filter="all" role="tab" aria-selected="true">All proposals</button><button class="tab" data-filter="attention" role="tab" aria-selected="false">Needs attention</button><button class="tab" data-filter="mine" role="tab" aria-selected="false">My proposals</button></div>
@@ -421,14 +452,10 @@
             <div class="activity"><div class="section-head"><div><div class="section-title">Recent activity</div><div class="section-sub">The audit trail, in plain view.</div></div></div><div class="activity-list" id="activity-list"></div></div>
           </section>
 
-          <aside class="timeline"><div class="timeline-head"><div class="section-title">This cycle</div><div class="section-sub">Approved milestone dates</div></div>
-            <div class="timeline-item done"><div class="timeline-date">Aug 8</div><div class="timeline-title">Annual memo distributed</div><div class="timeline-copy">Submission window opened to all head coaches.</div></div>
-            <div class="timeline-item done"><div class="timeline-date">Sep 4</div><div class="timeline-title">Proposals due</div><div class="timeline-copy">Staff review follows each completed submission.</div></div>
-            <div class="timeline-item"><div class="timeline-date">Sep 18</div><div class="timeline-title">Accepted proposals distributed</div><div class="timeline-copy">Coaching body sees the approved register.</div></div>
-            <div class="timeline-item"><div class="timeline-date">Dec 1</div><div class="timeline-title">Revision &amp; comment window closes</div><div class="timeline-copy">Threads become read-only; the record remains.</div></div>
-            <div class="timeline-item"><div class="timeline-date">May 2027</div><div class="timeline-title">Final coach vote</div><div class="timeline-copy">Quorum and threshold are calculated before submission.</div></div>
+          <aside class="timeline"><div class="timeline-head"><div class="section-title">This cycle</div><div class="section-sub">Configured milestone dates</div></div><div id="cycle-timeline"></div>
           </aside>
         </div>
+        <section class="access-panel" id="access-panel" hidden><div class="section-head"><div><div class="section-title">Access register</div><div class="section-sub">Commissioner-approved identities, program scope, and legislative permissions.</div></div></div><div class="access-list" id="access-list"></div><div id="cycle-controls"></div></section>
       </div>
     </main>
   </div>
@@ -436,7 +463,7 @@
   <div class="drawer-backdrop" id="drawer-backdrop"></div>
   <aside class="drawer" id="proposal-drawer" aria-label="Proposal detail" aria-hidden="true">
     <div class="drawer-head"><button class="drawer-close" id="drawer-close" aria-label="Close proposal detail">×</button><div class="kicker" id="drawer-kicker">Proposal record</div><div class="drawer-title" id="drawer-title"></div><div class="drawer-meta" id="drawer-meta"></div></div>
-    <div class="drawer-scroll"><div class="detail-grid" id="drawer-details"></div><div id="drawer-actions"></div><div id="drawer-governance"></div><div class="stage-line" id="drawer-stage"></div><div class="drawer-section"><h3>Proposal</h3><p class="body-copy" id="drawer-body"></p></div><div class="drawer-section"><h3>Supporting documents</h3><div id="drawer-files"></div></div><div class="drawer-section"><h3>Record history</h3><div id="drawer-audit"></div></div><div class="drawer-section"><h3>Discussion</h3><div id="comment-list"></div><form class="comment-form" id="comment-form"><label class="kicker" for="comment-input">Add to the record</label><textarea class="textarea" id="comment-input" placeholder="Add a comment to this proposal…" required></textarea><button class="button" type="submit">Post comment</button></form></div></div>
+    <div class="drawer-scroll"><div class="detail-grid" id="drawer-details"></div><div id="drawer-actions"></div><div id="drawer-governance"></div><div class="stage-line" id="drawer-stage"></div><div class="drawer-section"><h3>Version history</h3><div id="drawer-versions"></div></div><div class="drawer-section"><h3>Proposal</h3><p class="body-copy" id="drawer-body"></p></div><div class="drawer-section"><h3>Supporting documents</h3><div id="drawer-files"></div></div><div class="drawer-section"><h3>Record history</h3><div id="drawer-audit"></div></div><div class="drawer-section"><h3>Discussion</h3><div id="comment-list"></div><form class="comment-form" id="comment-form"><label class="kicker" for="comment-input">Add to the record</label><textarea class="textarea" id="comment-input" placeholder="Add a comment to this proposal…" required></textarea><button class="button" type="submit">Post comment</button></form></div></div>
   </aside>
 
   <div class="modal-backdrop" id="modal-backdrop"></div>
@@ -475,6 +502,7 @@
     let currentRole = 'coach';
     let authUser = null;
     let authEmail = '';
+    let cycle = null;
     const $ = (s) => document.querySelector(s);
     const esc = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
     const save = () => localStorage.setItem(storeKey, JSON.stringify(proposals));
@@ -498,6 +526,11 @@
     const memberPrograms = ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'];
     const roleLabels = { commissioner: 'CSA Commissioner', coach: 'Head coach', board_member: 'Board member', staff: 'CSA staff', administrator: 'Portal administrator', conference_observer: 'Conference observer' };
     const roleLabel = (user) => roleLabels[user.role] || user.role;
+    const phaseLabels = { submission: 'Submission window', review: 'Staff review', comment: 'Comment and revision window', vote: 'Coach vote', board: 'Board review', decision: 'Final decision', complete: 'Complete' };
+    const formatDate = (value, options = {}) => { if (!value) return '—'; const date = new Date(`${String(value).slice(0, 10)}T12:00:00`); return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', ...(options.year ? { year: 'numeric' } : {}) }).format(date); };
+    const formatWhen = (value) => { if (!value) return '—'; if (!/^\d{4}-\d{2}-\d{2}/.test(String(value))) return String(value); const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date); };
+    const cycleDeadline = (id) => cycle?.deadlines?.find(item => item.id === id) || null;
+    const deadlineText = (id, fallback) => { const item = cycleDeadline(id); return item ? `${item.label} · ${formatDate(item.date, { year: true })}` : fallback; };
     const canReview = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:admin')));
     const canModerate = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:moderation')));
     const canBoard = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:board')));
@@ -506,7 +539,7 @@
       select.innerHTML = `${placeholder ? `<option value="">${esc(placeholder)}</option>` : ''}${values.map(value => `<option value="${esc(value)}">${esc(value)}</option>`).join('')}`;
     }
     function populateProgramFields() {
-      const primaryPrograms = authUser && authUser.programs && authUser.programs.length ? authUser.programs : memberPrograms;
+      const primaryPrograms = canReview() ? memberPrograms : (authUser && authUser.programs && authUser.programs.length ? authUser.programs : memberPrograms);
       const selectedPrimary = $('#form-program').value;
       fillSelect($('#form-program'), primaryPrograms);
       if (primaryPrograms.includes(selectedPrimary)) $('#form-program').value = selectedPrimary;
@@ -521,11 +554,31 @@
       document.querySelector('.identity-role').textContent = `${roleLabel(user)}${user.programs?.length ? ` · ${user.programs[0]}` : ''}`;
       document.querySelector('.identity-name').textContent = user.name; document.querySelector('.avatar').textContent = user.name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
       const programSelect = $('#program-select');
-      fillSelect(programSelect, user.programs?.length ? user.programs : memberPrograms, user.programs?.length ? '' : 'All program accounts');
+      const visiblePrograms = canReview() ? memberPrograms : (user.programs?.length ? user.programs : memberPrograms);
+      fillSelect(programSelect, visiblePrograms, canReview() ? 'All program accounts' : '');
       programSelect.value = user.programs?.[0] || '';
       populateProgramFields();
       document.querySelector('[data-view="review"]').style.display = canReview() ? 'flex' : 'none';
+      $('#access-nav').style.display = canReview() ? 'flex' : 'none';
       $('#new-proposal').style.display = canSubmit() ? '' : 'none';
+    }
+    function renderCycle() {
+      if (!cycle) return;
+      const deadlines = cycle.deadlines || [];
+      const first = deadlines[0]; const last = deadlines[deadlines.length - 1];
+      $('#cycle-status').textContent = `${cycle.status || 'active'} phase`;
+      $('#cycle-name').textContent = `${cycle.id} · ${cycle.name}`;
+      $('#cycle-detail').textContent = `${cycle.note || 'Configured cycle record.'} Policy ${cycle.policyVersion || cycle.policy?.version || '—'} · quorum ${cycle.policy?.quorumRequired || '—'} · ${cycle.policy?.thresholdPercent || '—'}% threshold.`;
+      $('#cycle-start').textContent = first ? formatDate(first.date) : '—';
+      $('#cycle-phase').textContent = phaseLabels[cycle.phase] || cycle.phase || '—';
+      $('#cycle-end').textContent = last ? formatDate(last.date, { year: true }) : '—';
+      $('#cycle-next-date').textContent = cycle.nextDeadline ? formatDate(cycle.nextDeadline.date, { year: true }) : '—';
+      $('#cycle-next-action').textContent = cycle.nextDeadline?.label || 'No upcoming deadline';
+      $('#cycle-timeline').innerHTML = deadlines.length ? deadlines.map(item => `<div class="timeline-item ${new Date(`${item.date}T23:59:59`) < new Date() ? 'done' : ''}"><div class="timeline-date">${esc(formatDate(item.date, { year: true }))}</div><div class="timeline-title">${esc(item.label)}</div><div class="timeline-copy">${esc(phaseLabels[item.stage] || item.stage)} · ${esc(cycle.timeZone || 'cycle time')}</div></div>`).join('') : '<div class="empty">No cycle deadlines configured.</div>';
+    }
+    async function loadCycle() {
+      try { cycle = await api('/api/cycle'); renderCycle(); }
+      catch (error) { toast(`Could not load cycle schedule: ${error.message}`); }
     }
     async function loadProposals() {
       try { proposals = await api('/api/proposals'); serverBacked = true; }
@@ -533,7 +586,7 @@
       renderProposals(); renderActivity();
     }
     async function bootAuth() {
-      try { const session = await api('/api/auth/me'); applyAuthUser(session.user); await loadProposals(); }
+      try { const session = await api('/api/auth/me'); applyAuthUser(session.user); await loadCycle(); await loadProposals(); }
       catch (error) { document.body.classList.remove('authenticated'); }
     }
 
@@ -557,22 +610,64 @@
       const recent = proposals.slice(0, 4);
       $('#activity-list').innerHTML = recent.map(p => `<div class="activity-item"><span class="activity-mark" aria-hidden="true"></span><div class="activity-text"><strong>${esc(p.activity)}</strong><br><span>${esc(p.title)}</span></div><div class="activity-time">${esc(p.time)}</div></div>`).join('');
     }
+    async function renderAccess() {
+      if (!canReview()) return;
+      const list = $('#access-list');
+      list.innerHTML = '<div class="empty">Loading approved identities…</div>';
+      try {
+        const payload = await api('/api/access/users');
+        const roles = Object.entries(roleLabels).map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join('');
+        const permissions = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:moderation', 'legislative:board'];
+        const programs = ['CSA', ...memberPrograms];
+        list.innerHTML = payload.users.map(user => `<article class="access-row" data-user-id="${esc(user.id)}"><div><div class="access-name">${esc(user.name)}</div><div class="access-email">${esc(user.email)}</div></div><div class="access-controls"><label>Role</label><select data-access-role>${roles.replace(`value="${esc(user.role)}"`, `value="${esc(user.role)}" selected`)}</select><label class="access-active"><input type="checkbox" data-access-active ${user.active ? 'checked' : ''} /> Active</label></div><div class="access-controls"><label>Program scope</label><select multiple data-access-programs>${programs.map(program => `<option value="${esc(program)}" ${(user.programs || []).includes(program) ? 'selected' : ''}>${esc(program)}</option>`).join('')}</select><label>Permissions</label><select multiple data-access-permissions>${permissions.map(permission => `<option value="${esc(permission)}" ${(user.permissions || []).includes(permission) ? 'selected' : ''}>${esc(permission)}</option>`).join('')}</select></div><button class="button secondary" data-save-access>Save access</button></article>`).join('');
+        list.querySelectorAll('[data-save-access]').forEach(button => button.addEventListener('click', async () => {
+          const row = button.closest('[data-user-id]');
+          const selected = selector => Array.from(row.querySelectorAll(`${selector} option:checked`)).map(option => option.value);
+          button.disabled = true;
+          try {
+            await api(`/api/access/users/${row.dataset.userId}`, { method: 'PATCH', body: JSON.stringify({ role: row.querySelector('[data-access-role]').value, active: row.querySelector('[data-access-active]').checked, programs: selected('[data-access-programs]'), permissions: selected('[data-access-permissions]') }) });
+            toast('Access assignment saved to the register.');
+          } catch (error) { toast(`Could not save access: ${error.message}`); }
+          button.disabled = false;
+        }));
+        const controls = $('#cycle-controls');
+        const deadlines = cycle?.deadlines || [];
+        controls.innerHTML = `<section class="cycle-controls"><div class="section-head"><div><div class="section-title">Cycle controls</div><div class="section-sub">Operational dates for the ${esc(cycle?.id || 'current')} legislative cycle. Changes are recorded with the acting administrator.</div></div></div><div class="cycle-control-list">${deadlines.map(item => `<label class="cycle-control-row"><span class="cycle-control-label">${esc(item.label)}</span><span class="cycle-control-stage">${esc(phaseLabels[item.stage] || item.stage)}</span><input type="date" data-cycle-deadline="${esc(item.id)}" value="${esc(item.date)}" aria-label="${esc(item.label)} date" /></label>`).join('')}</div><div class="cycle-control-footer"><span class="deadline-note">Cycle timezone: ${esc(cycle?.timeZone || 'America/New_York')}. Policy changes remain a separate recorded action.</span><button class="button secondary" data-save-cycle ${deadlines.length ? '' : 'disabled'}>Save cycle schedule</button></div></section>`;
+        controls.querySelector('[data-save-cycle]')?.addEventListener('click', async (event) => {
+          const button = event.currentTarget;
+          const updatedDeadlines = Array.from(controls.querySelectorAll('[data-cycle-deadline]')).map(input => {
+            const source = deadlines.find(item => item.id === input.dataset.cycleDeadline);
+            return { ...source, date: input.value };
+          });
+          button.disabled = true;
+          try {
+            const result = await api('/api/cycle', { method: 'PATCH', body: JSON.stringify({ deadlines: updatedDeadlines }) });
+            cycle = result.cycle;
+            renderCycle();
+            toast('Cycle schedule saved to the governance record.');
+          } catch (error) { toast(`Could not save cycle schedule: ${error.message}`); }
+          button.disabled = false;
+        });
+      } catch (error) { list.innerHTML = `<div class="empty">${esc(error.message)}</div>`; }
+    }
     async function replaceProposal(updated, message) { proposals = proposals.map(item => item.id === updated.id ? updated : item); renderProposals(); renderActivity(); openDrawer(updated.id); if (message) toast(message); }
     function renderReviewActions(p) {
       const owner = Boolean(authUser && (p.proposerId ? p.proposerId === authUser.id : p.proposer === authUser.name));
+      const recordLink = `<a class="button secondary" href="/api/proposals/${encodeURIComponent(p.id)}/record.pdf" target="_blank" rel="noopener">Download record PDF</a>`;
       if (!canReview()) {
         const controls = [];
         if (p.status === 'draft' && owner) controls.push('<button class="button" id="edit-draft">Continue draft</button>');
         if (owner && ['comment', 'vote', 'board', 'decision'].includes(p.status)) controls.push('<button class="button secondary" id="create-revision">Create revision</button>');
-        $('#drawer-actions').innerHTML = controls.length ? `<div class="review-actions"><div class="review-note">${p.status === 'draft' ? 'Draft · private to your program account until you submit it.' : 'Proposer controls · a new version returns to staff review.'}</div>${controls.join('')}</div>` : '';
+        controls.push(recordLink);
+        $('#drawer-actions').innerHTML = `<div class="review-actions"><div class="review-note">${p.status === 'draft' ? 'Draft · private to your program account until you submit it.' : 'Record access · the PDF preserves the current version, discussion, and audit trail.'}</div>${controls.join('')}</div>`;
         if ($('#edit-draft')) $('#edit-draft').addEventListener('click', () => openModal(p));
         if ($('#create-revision')) $('#create-revision').addEventListener('click', () => openModal(p, 'revision'));
         return;
       }
       const reviewable = !['closed', 'vote', 'board', 'decision'].includes(p.status);
-      $('#drawer-actions').innerHTML = `<div class="review-actions"><div class="review-note">CSA governance authority · ${reviewable ? 'assign the route and move the record forward.' : 'the record is in a governed decision state.'}</div>${reviewable ? `<label class="form-label"><strong>Decision bucket</strong><select class="field" id="drawer-bucket"><option ${p.bucket === 'Unassigned' ? 'selected' : ''}>Unassigned</option><option ${p.bucket === 'Bucket 1' ? 'selected' : ''}>Bucket 1</option><option ${p.bucket === 'Bucket 2' ? 'selected' : ''}>Bucket 2</option><option ${p.bucket === 'Bucket 3' ? 'selected' : ''}>Bucket 3</option></select></label><button class="button secondary" id="assign-bucket">Assign bucket</button><button class="button" id="accept-review">Accept &amp; distribute</button><button class="button secondary" id="return-review">Return to proposer</button>` : ''}${p.status === 'comment' && ['Bucket 2', 'Bucket 3'].includes(p.bucket) ? '<button class="button" id="open-vote">Close comments &amp; open vote</button>' : ''}${p.status === 'vote' ? '<button class="button" id="finalize-vote">Finalize coach vote</button>' : ''}</div>`;
+      $('#drawer-actions').innerHTML = `<div class="review-actions"><div class="review-note">CSA governance authority · ${reviewable ? 'assign the route and move the record forward.' : 'the record is in a governed decision state.'}</div>${reviewable ? `<label class="form-label"><strong>Decision bucket</strong><select class="field" id="drawer-bucket"><option ${p.bucket === 'Unassigned' ? 'selected' : ''}>Unassigned</option><option ${p.bucket === 'Bucket 1' ? 'selected' : ''}>Bucket 1</option><option ${p.bucket === 'Bucket 2' ? 'selected' : ''}>Bucket 2</option><option ${p.bucket === 'Bucket 3' ? 'selected' : ''}>Bucket 3</option></select></label><button class="button secondary" id="assign-bucket">Assign bucket</button><button class="button" id="accept-review">Accept &amp; distribute</button><button class="button secondary" id="return-review">Return to proposer</button>` : ''}${p.status === 'comment' && ['Bucket 2', 'Bucket 3'].includes(p.bucket) ? '<button class="button" id="open-vote">Close comments &amp; open vote</button>' : ''}${p.status === 'vote' ? '<button class="button" id="finalize-vote">Finalize coach vote</button>' : ''}${recordLink}</div>`;
       if ($('#assign-bucket')) $('#assign-bucket').addEventListener('click', async () => { const value = $('#drawer-bucket').value; if (value === 'Unassigned') return toast('Choose a bucket before assigning.'); try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify({ bucket: value, next: 'Commissioner final review', activity: `Bucket assigned by ${authUser.name}`, statusLabel: p.statusLabel }) }); await replaceProposal(updated, `${value} assigned and recorded.`); } catch (error) { toast(`Could not assign bucket: ${error.message}`); } });
-      if ($('#accept-review')) $('#accept-review').addEventListener('click', async () => { if (p.bucket === 'Unassigned') return toast('Assign a decision bucket first.'); const patch = p.bucket === 'Bucket 1' ? { status: 'decision', statusLabel: 'Commissioner decision', next: 'Commissioner to record final outcome', activity: 'Accepted for Commissioner decision' } : { status: 'comment', statusLabel: 'Comment window', next: 'Comments close Dec 1', activity: 'Accepted and distributed' }; try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify(patch) }); await replaceProposal(updated, 'Proposal route recorded.'); } catch (error) { toast(`Could not accept proposal: ${error.message}`); } });
+      if ($('#accept-review')) $('#accept-review').addEventListener('click', async () => { if (p.bucket === 'Unassigned') return toast('Assign a decision bucket first.'); const patch = p.bucket === 'Bucket 1' ? { status: 'decision', statusLabel: 'Commissioner decision', next: 'Commissioner to record final outcome', activity: 'Accepted for Commissioner decision' } : { status: 'comment', statusLabel: 'Comment window', next: deadlineText('comment-close', 'Comment window close date not configured'), activity: 'Accepted and distributed' }; try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify(patch) }); await replaceProposal(updated, 'Proposal route recorded.'); } catch (error) { toast(`Could not accept proposal: ${error.message}`); } });
       if ($('#return-review')) $('#return-review').addEventListener('click', async () => { const reason = window.prompt('Reason to return this proposal to the proposer:'); if (!reason || !reason.trim()) return; try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify({ statusLabel: 'Returned to proposer', next: 'Correction required', reviewReason: reason.trim(), activity: 'Returned by CSA governance' }) }); await replaceProposal(updated, 'Proposal returned with a recorded reason.'); } catch (error) { toast(`Could not return proposal: ${error.message}`); } });
       if ($('#open-vote')) $('#open-vote').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/open-vote`, { method: 'POST' }); await replaceProposal(updated, 'Comments closed; coach vote is open.'); } catch (error) { toast(`Could not open vote: ${error.message}`); } });
       if ($('#finalize-vote')) $('#finalize-vote').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/finalize-vote`, { method: 'POST' }); await replaceProposal(updated, updated.vote?.result === 'passed' ? 'Vote finalized and routed.' : 'Vote finalized; proposal was not adopted.'); } catch (error) { toast(`Could not finalize vote: ${error.message}`); } });
@@ -589,7 +684,8 @@
         const eligible = (authUser?.programs || []).filter(unit => (p.vote.eligibleUnits || []).includes(unit));
         const voted = p.vote.myVotingUnits || [];
         const options = eligible.map(unit => `<option value="${esc(unit)}" ${voted.includes(unit) ? 'disabled' : ''}>${esc(unit)}${voted.includes(unit) ? ' · ballot recorded' : ''}</option>`).join('');
-        node.innerHTML = `<div class="governance-panel"><h3>Coach vote</h3><div class="governance-note">Ballots are immutable and confidential until CSA staff finalizes the vote. Quorum: ${esc(p.vote.quorumRequired)} of ${esc(p.vote.eligibleUnits.length)} voting units.</div>${eligible.length ? `<div class="governance-grid"><label class="form-label"><strong>Voting unit</strong><select class="field" id="vote-unit">${options}</select></label><label class="form-label"><strong>Ballot</strong><select class="field" id="vote-choice"><option value="yes">Yes</option><option value="no">No</option><option value="abstain">Abstain</option></select></label><button class="button" id="submit-vote" ${eligible.every(unit => voted.includes(unit)) ? 'disabled' : ''}>Submit immutable ballot</button></div>` : '<div class="version-note">No voting unit is authorized for this account.</div>'}${canReview() ? '<button class="button secondary" id="finalize-vote-inline" style="margin-top:12px;">Finalize vote</button>' : ''}</div>`;
+        const voteDeadline = p.vote.closeAt ? `Vote closes ${formatDate(p.vote.closeAt, { year: true })}.` : 'The close date is not configured.';
+        node.innerHTML = `<div class="governance-panel"><h3>Coach vote</h3><div class="governance-note">Ballots are immutable and confidential until CSA staff finalizes the vote. ${voteDeadline} Quorum: ${esc(p.vote.quorumRequired)} of ${esc(p.vote.eligibleUnits.length)} voting units; approval threshold: ${esc(p.vote.thresholdPercent)}% of decided ballots.</div>${eligible.length ? `<div class="governance-grid"><label class="form-label"><strong>Voting unit</strong><select class="field" id="vote-unit">${options}</select></label><label class="form-label"><strong>Ballot</strong><select class="field" id="vote-choice"><option value="yes">Yes</option><option value="no">No</option><option value="abstain">Abstain</option></select></label><button class="button" id="submit-vote" ${eligible.every(unit => voted.includes(unit)) ? 'disabled' : ''}>Submit immutable ballot</button></div>` : '<div class="version-note">No voting unit is authorized for this account.</div>'}${canReview() ? '<button class="button secondary" id="finalize-vote-inline" style="margin-top:12px;">Finalize vote</button>' : ''}</div>`;
         if ($('#submit-vote')) $('#submit-vote').addEventListener('click', async () => { const unit = $('#vote-unit').value; if (!unit || voted.includes(unit)) return toast('Choose an authorized voting unit without a recorded ballot.'); try { const updated = await api(`/api/proposals/${p.id}/votes`, { method: 'POST', body: JSON.stringify({ votingUnit: unit, choice: $('#vote-choice').value }) }); await replaceProposal(updated, 'Immutable ballot recorded.'); } catch (error) { toast(`Could not submit ballot: ${error.message}`); } });
         if ($('#finalize-vote-inline')) $('#finalize-vote-inline').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/finalize-vote`, { method: 'POST' }); await replaceProposal(updated, 'Vote finalized and routed.'); } catch (error) { toast(`Could not finalize vote: ${error.message}`); } });
       } else if (p.status === 'decision') {
@@ -607,7 +703,7 @@
     function renderComments(p) {
       const ownsComment = (comment) => Boolean(authUser && (comment.authorId ? comment.authorId === authUser.id : comment.author === authUser.name));
       const comments = Array.isArray(p.comments) ? p.comments : [];
-      $('#comment-list').innerHTML = comments.length ? comments.map((c, index) => `<div class="comment"><div class="comment-head"><strong>${esc(c.author)}</strong><span>${esc(c.date)}</span></div><p>${c.removed ? '<em>Comment removed from the visible thread.</em>' : esc(c.text)}</p>${(!c.removed && (canModerate() || ownsComment(c))) ? `<div class="comment-tools"><button class="comment-remove" data-comment-index="${index}">Remove comment</button></div>` : ''}</div>`).join('') : '<div class="empty">No comments yet.</div>';
+      $('#comment-list').innerHTML = comments.length ? comments.map((c, index) => `<div class="comment"><div class="comment-head"><strong>${esc(c.author)}</strong><span>${esc(formatWhen(c.date))}</span></div><p>${c.removed ? '<em>Comment removed from the visible thread.</em>' : esc(c.text)}</p>${(!c.removed && (canModerate() || ownsComment(c))) ? `<div class="comment-tools"><button class="comment-remove" data-comment-index="${index}">Remove comment</button></div>` : ''}</div>`).join('') : '<div class="empty">No comments yet.</div>';
       $('#comment-list').querySelectorAll('[data-comment-index]').forEach(button => button.addEventListener('click', async () => {
         const comment = comments[Number(button.dataset.commentIndex)];
         const moderating = canModerate() && !ownsComment(comment);
@@ -632,6 +728,10 @@
       $('#comment-form button').disabled = !open;
       $('#comment-form button').title = open ? '' : 'Comments are closed for this proposal';
     }
+    function renderVersions(p) {
+      const versions = Array.isArray(p.versions) ? p.versions : [];
+      $('#drawer-versions').innerHTML = versions.length ? versions.map(version => `<div class="version-row"><div class="version-row-head"><strong>Version ${esc(version.version)}${Number(version.version) === Number(p.version || 1) ? ' · current' : ''}</strong><span>${esc(formatWhen(version.createdAt))}</span></div><div class="version-row-copy">${esc(version.createdBy || 'CSA staff')} · ${esc(version.changeSummary || 'Original submission')}${version.changedFields?.length ? ` · <em>Changed: ${esc(version.changedFields.join(', '))}</em>` : ''}</div></div>`).join('') : '<div class="version-note">Version history will appear after the first submitted record.</div>';
+    }
     function setOverlayState(node, open) { node.setAttribute('aria-hidden', open ? 'false' : 'true'); }
     function openDrawer(id) {
       const p = proposals.find(item => item.id === id); if (!p) return; activeProposal = p;
@@ -643,9 +743,10 @@
       renderGovernance(p);
       const steps = ['Submitted','Staff review','Comment window','Coach vote','Board decision','Final decision']; const current = p.status === 'draft' ? -1 : p.status === 'review' ? 1 : p.status === 'comment' ? 2 : p.status === 'vote' ? 3 : p.status === 'board' ? 4 : 5;
       $('#drawer-stage').innerHTML = steps.map((step, i) => `<div class="stage ${i < current ? 'done' : i === current ? 'current' : ''}"><span>${i < current ? '✓' : i + 1}</span>${step}</div>`).join('');
+      renderVersions(p);
       $('#drawer-body').textContent = p.body; $('#drawer-files').innerHTML = (p.files || []).length ? p.files.map(f => `<div class="file-line"><span><span class="file-mark" aria-hidden="true"></span>${esc(f)}</span><small>Version ${esc(version)}</small></div>`).join('') : '<div class="empty">No supporting documents attached.</div>';
       renderComments(p); syncCommentState(p);
-      $('#drawer-audit').innerHTML = auditFor(p).map(item => `<div class="audit-row"><span class="audit-dot"></span><div class="audit-event"><strong>${esc(item.event)}</strong><br><span>${esc(item.by)}${item.reason ? ` · ${esc(item.reason)}` : ''}</span></div><div class="audit-meta">${esc(item.at)}</div></div>`).join('');
+      $('#drawer-audit').innerHTML = auditFor(p).map(item => `<div class="audit-row"><span class="audit-dot"></span><div class="audit-event"><strong>${esc(item.event)}</strong><br><span>${esc(item.by)}${item.reason ? ` · ${esc(item.reason)}` : ''}${item.fields?.length ? ` · fields: ${esc(item.fields.join(', '))}` : ''}</span></div><div class="audit-meta">${esc(formatWhen(item.at))}</div></div>`).join('');
       $('#drawer-backdrop').classList.add('open'); $('#proposal-drawer').classList.add('open'); setOverlayState($('#proposal-drawer'), true); $('#drawer-close').focus();
     }
     function closeDrawer() { $('#drawer-backdrop').classList.remove('open'); $('#proposal-drawer').classList.remove('open'); setOverlayState($('#proposal-drawer'), false); activeProposal = null; }
@@ -688,10 +789,10 @@
       } catch (error) { toast(`Could not save proposal: ${error.message}`); }
     }
 
-    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const view = btn.dataset.view; $('#crumb-view').textContent = btn.textContent.trim(); if (view === 'review') { currentFilter = 'attention'; renderProposals(); } if (['scheduler','awards','feedback','documents'].includes(view)) toast(`${view === 'scheduler' ? 'Scheduler' : view === 'awards' ? 'Awards' : view === 'feedback' ? 'Feedback' : 'Documents'} is mapped for a later release.`); }));
+    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => { document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active')); btn.classList.add('active'); const view = btn.dataset.view; $('#crumb-view').textContent = btn.textContent.trim(); if (view === 'access') { $('#proposal-workspace').hidden = true; $('#access-panel').hidden = false; renderAccess(); return; } $('#proposal-workspace').hidden = false; $('#access-panel').hidden = true; if (view === 'review') { currentFilter = 'attention'; renderProposals(); } if (['scheduler','awards','feedback','documents'].includes(view)) toast(`${view === 'scheduler' ? 'Scheduler' : view === 'awards' ? 'Awards' : view === 'feedback' ? 'Feedback' : 'Documents'} is mapped for a later release.`); }));
     document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => { currentFilter = tab.dataset.filter; renderProposals(); }));
     $('#program-select').addEventListener('change', () => { $('#stat-program').textContent = '1'; if (currentFilter === 'mine') renderProposals(); });
-    $('#role-select').addEventListener('change', () => { currentRole = $('#role-select').value; document.querySelector('.identity-role').textContent = currentRole === 'commissioner' ? 'CSA Commissioner' : 'Head coach · Columbia'; document.querySelector('.identity-name').textContent = currentRole === 'commissioner' ? 'Harry Smith' : 'Jordan Smith'; document.querySelector('.avatar').textContent = currentRole === 'commissioner' ? 'HS' : 'JS'; if (activeProposal) openDrawer(activeProposal.id); toast(currentRole === 'commissioner' ? 'Commissioner review tools enabled.' : 'Head coach view restored.'); });
+    $('#role-select').addEventListener('change', () => { if (authUser) toast(`Authorized role: ${roleLabel(authUser)}. Role changes are managed in the access register.`); });
     $('#new-proposal').addEventListener('click', () => openModal()); $('#modal-close').addEventListener('click', closeModal); $('#cancel-proposal').addEventListener('click', closeModal); $('#modal-backdrop').addEventListener('click', closeModal); $('#drawer-close').addEventListener('click', closeDrawer); $('#drawer-backdrop').addEventListener('click', closeDrawer);
     $('#save-draft').addEventListener('click', () => { if ($('#form-title').value.trim()) createProposal(false); else toast('Add a working title before saving.'); });
     $('#proposal-form').addEventListener('submit', (event) => { event.preventDefault(); createProposal(true); });
@@ -700,7 +801,7 @@
     $('#help-button').addEventListener('click', () => toast('Policy guide: approved rules are versioned by the Commissioner.'));
     $('#logout-button').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }).catch(() => {}); document.body.classList.remove('authenticated'); window.location.reload(); });
     $('#auth-request-form').addEventListener('submit', async (event) => { event.preventDefault(); authEmail = $('#auth-email').value.trim().toLowerCase(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/request-code', { method: 'POST', body: JSON.stringify({ email: authEmail }) }); $('#auth-request-form').style.display = 'none'; $('#auth-verify-form').classList.add('visible'); if (result.devCode) { $('#auth-dev-hint').hidden = false; $('#auth-dev-hint').textContent = `Local development code: ${result.devCode}`; } $('#auth-code').focus(); } catch (error) { $('#auth-error').textContent = error.message; } });
-    $('#auth-verify-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ email: authEmail, code: $('#auth-code').value.trim() }) }); applyAuthUser(result.user); await loadProposals(); } catch (error) { $('#auth-error').textContent = error.message; } });
+    $('#auth-verify-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ email: authEmail, code: $('#auth-code').value.trim() }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); } catch (error) { $('#auth-error').textContent = error.message; } });
     $('#auth-back').addEventListener('click', () => { $('#auth-verify-form').classList.remove('visible'); $('#auth-request-form').style.display = 'grid'; $('#auth-code').value = ''; $('#auth-dev-hint').hidden = true; });
     bootAuth();
   </script>

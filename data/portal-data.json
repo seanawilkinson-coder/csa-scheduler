@@ -1,14 +1,40 @@
 {
   "users": [
-    { "id": "u-jordan", "name": "Jordan Smith", "email": "jordan@columbia.edu", "role": "coach", "programs": ["Columbia"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
-    { "id": "u-will", "name": "Will Carlin", "email": "will@princeton.edu", "role": "coach", "programs": ["Princeton"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
-    { "id": "u-chris", "name": "Chris Bell", "email": "chris@penn.edu", "role": "coach", "programs": ["Penn"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
-    { "id": "u-commissioner", "name": "Harry Smith", "email": "commissioner@csasquash.org", "role": "commissioner", "programs": ["CSA"], "permissions": ["legislative:admin", "legislative:moderation", "legislative:board"] },
-    { "id": "u-maya", "name": "Maya Chen", "email": "board@csasquash.org", "role": "board_member", "programs": [], "permissions": ["legislative:board", "legislative:comment"] },
-    { "id": "u-staff", "name": "CSA Staff", "email": "staff@csasquash.org", "role": "staff", "programs": [], "permissions": ["legislative:admin", "legislative:moderation", "legislative:comment"] },
-    { "id": "u-admin", "name": "Portal Administrator", "email": "admin@columbia.edu", "role": "administrator", "programs": ["Columbia"], "permissions": ["legislative:admin", "legislative:moderation", "legislative:comment"] },
-    { "id": "u-observer", "name": "Conference Observer", "email": "observer@conference.org", "role": "conference_observer", "programs": [], "permissions": ["legislative:comment"] }
+    { "id": "u-jordan", "name": "Jordan Smith", "email": "jordan@columbia.edu", "role": "coach", "active": true, "programs": ["Columbia"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
+    { "id": "u-will", "name": "Will Carlin", "email": "will@princeton.edu", "role": "coach", "active": true, "programs": ["Princeton"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
+    { "id": "u-chris", "name": "Chris Bell", "email": "chris@penn.edu", "role": "coach", "active": true, "programs": ["Penn"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
+    { "id": "u-commissioner", "name": "Harry Smith", "email": "commissioner@csasquash.org", "role": "commissioner", "active": true, "programs": ["CSA"], "permissions": ["legislative:admin", "legislative:moderation", "legislative:board"] },
+    { "id": "u-maya", "name": "Maya Chen", "email": "board@csasquash.org", "role": "board_member", "active": true, "programs": [], "permissions": ["legislative:board", "legislative:comment"] },
+    { "id": "u-staff", "name": "CSA Staff", "email": "staff@csasquash.org", "role": "staff", "active": true, "programs": [], "permissions": ["legislative:admin", "legislative:moderation", "legislative:comment"] },
+    { "id": "u-admin", "name": "Portal Administrator", "email": "admin@columbia.edu", "role": "administrator", "active": true, "programs": ["Columbia"], "permissions": ["legislative:admin", "legislative:moderation", "legislative:comment"] },
+    { "id": "u-observer", "name": "Conference Observer", "email": "observer@conference.org", "role": "conference_observer", "active": true, "programs": [], "permissions": ["legislative:comment"] }
   ],
+  "cycle": {
+    "id": "2026-27",
+    "name": "Annual Legislative Cycle",
+    "status": "pilot",
+    "phase": "review",
+    "timeZone": "America/New_York",
+    "policyVersion": "v4",
+    "note": "Pilot timing is configurable by CSA governance authority.",
+    "deadlines": [
+      { "id": "submission-close", "label": "Proposal submission window closes", "date": "2026-09-04", "stage": "review" },
+      { "id": "distribution", "label": "Accepted proposals distributed", "date": "2026-09-18", "stage": "comment" },
+      { "id": "comment-close", "label": "Comment and revision window closes", "date": "2026-12-01", "stage": "vote" },
+      { "id": "vote-close", "label": "Coach vote closes", "date": "2027-05-07", "stage": "board" },
+      { "id": "board-review", "label": "Board ratification window", "date": "2027-05-21", "stage": "decision" }
+    ],
+    "audit": []
+  },
+  "policy": {
+    "version": "v4",
+    "effectiveDate": "2026-08-01",
+    "quorumRequired": 3,
+    "thresholdPercent": 50,
+    "eligibleVotingUnits": ["Columbia", "Princeton", "Penn", "Trinity", "Yale"],
+    "proxyRegistrationHours": 72
+  },
+  "accessAudit": [],
   "proposals": [
     {
       "id": "p1",
