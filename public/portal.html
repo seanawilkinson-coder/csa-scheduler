@@ -497,7 +497,7 @@
       <nav class="nav" aria-label="Primary navigation">
         <button class="active" data-view="overview"><span class="nav-icon circle" aria-hidden="true"></span><span>Overview</span></button>
         <button data-view="proposals"><span class="nav-icon line" aria-hidden="true"></span><span>Proposals</span></button>
-        <button data-view="review"><span class="nav-icon check" aria-hidden="true"></span><span>Review queue</span></button>
+        <button data-view="review"><span class="nav-icon check" aria-hidden="true"></span><span>Review Queue</span></button>
         <button data-view="admin" id="access-nav" style="display:none"><span class="nav-icon square" aria-hidden="true"></span><span>Administration</span></button>
         <button data-view="feedback"><span class="nav-icon corner" aria-hidden="true"></span><span>Feedback</span></button>
         <button data-view="documents"><span class="nav-icon square" aria-hidden="true"></span><span>Documents</span></button>
@@ -523,7 +523,7 @@
 
       <div class="content">
         <section class="page-head" id="page-head">
-          <div><p class="kicker" id="page-kicker">2026–27 · Annual Legislative Cycle</p><h1 id="page-title">Annual Legislative Cycle</h1><p class="lede" id="page-lede">Cycle status, proposals, and next actions.</p></div>
+          <div><p class="kicker" id="page-kicker">2026–27</p><h1 id="page-title">Annual Legislative Cycle</h1><p class="lede" id="page-lede">Status, proposals, and next actions.</p></div>
           <button class="button gold" id="new-proposal">New proposal</button>
         </section>
 
@@ -541,45 +541,45 @@
         </section>
 
         <section class="module-panel" id="overview-panel" hidden>
-          <div class="section-head"><div><div class="section-title">At a glance</div><div class="section-sub">Priority items.</div></div></div>
+          <div class="section-head"><div><div class="section-title">At a Glance</div><div class="section-sub">Priority items.</div></div></div>
           <div class="module-register" id="overview-register"></div>
         </section>
 
         <div class="workspace" id="proposal-workspace" hidden>
           <section>
-            <div class="section-head"><div><div class="section-title" id="workspace-title">Proposal register</div><div class="section-sub" id="workspace-sub">Current proposals and their next actions.</div></div><button class="button secondary" id="view-all">View register</button></div>
+            <div class="section-head"><div><div class="section-title" id="workspace-title">Proposal Register</div><div class="section-sub" id="workspace-sub">Current proposal records.</div></div><button class="button secondary" id="view-all">View Register</button></div>
             <div class="tabs" role="tablist"><button class="tab active" data-filter="all" role="tab" aria-selected="true">All proposals</button><button class="tab" data-filter="attention" role="tab" aria-selected="false">Needs attention</button><button class="tab" data-filter="mine" role="tab" aria-selected="false">My proposals</button></div>
             <div class="proposal-list" id="proposal-list"></div>
-            <div class="activity"><div class="section-head"><div><div class="section-title">Recent activity</div><div class="section-sub">Latest events.</div></div></div><div class="activity-list" id="activity-list"></div></div>
+            <div class="activity"><div class="section-head"><div><div class="section-title">Recent Activity</div><div class="section-sub">Latest events.</div></div></div><div class="activity-list" id="activity-list"></div></div>
           </section>
 
-          <aside class="timeline"><div class="timeline-head"><div class="section-title">Deadlines</div><div class="section-sub">Cycle dates</div></div><div id="cycle-timeline"></div>
+          <aside class="timeline"><div class="timeline-head"><div class="section-title">Deadlines</div><div class="section-sub">Cycle Dates</div></div><div id="cycle-timeline"></div>
           </aside>
         </div>
         <section class="module-panel" id="module-panel" hidden>
-          <div class="section-head"><div><div class="section-title" id="module-title">Feedback</div><div class="section-sub" id="module-sub">Cycle notes and open requests.</div></div></div>
+          <div class="section-head"><div><div class="section-title" id="module-title">Feedback</div><div class="section-sub" id="module-sub">Comments.</div></div></div>
           <div id="module-content"></div>
         </section>
 
         <section class="admin-panel access-panel" id="access-panel" hidden>
-          <div class="section-head"><div><div class="section-title">Administration</div><div class="section-sub">Queue, policy, access, and audit.</div></div></div>
+          <div class="section-head"><div><div class="section-title">Administration</div><div class="section-sub">Queue, policy, access &amp; audit.</div></div></div>
           <div class="admin-overview" id="admin-overview"></div>
           <div class="admin-tabs" id="admin-tabs" aria-label="Commissioner workflows">
             <span class="admin-tabs-label">Commissioner workflows</span>
-            <button class="admin-tab active" data-admin-tab="queue">Review queue</button>
-            <button class="admin-tab" data-admin-tab="cycle">Cycle &amp; policy</button>
+            <button class="admin-tab active" data-admin-tab="queue">Review Queue</button>
+            <button class="admin-tab" data-admin-tab="cycle">Cycle &amp; Policy</button>
             <button class="admin-tab" data-admin-tab="access">Access</button>
             <button class="admin-tab" data-admin-tab="audit">Audit</button>
           </div>
           <div class="admin-pane admin-pane-split" data-admin-pane="queue">
-            <section class="admin-section"><div class="section-head"><div><div class="section-title">Governance queue</div><div class="section-sub">Records waiting for a governance action.</div></div></div><div class="admin-queue" id="admin-queue"></div></section>
-            <aside class="admin-section admin-rail"><div class="section-head"><div><div class="section-title">Next deadline</div><div class="section-sub">Next milestone.</div></div></div><div class="module-register" id="admin-next-deadline"></div></aside>
+            <section class="admin-section"><div class="section-head"><div><div class="section-title">Governance Queue</div><div class="section-sub">Needs action.</div></div></div><div class="admin-queue" id="admin-queue"></div></section>
+            <aside class="admin-section admin-rail"><div class="section-head"><div><div class="section-title">Next Deadline</div><div class="section-sub">Next milestone.</div></div></div><div class="module-register" id="admin-next-deadline"></div></aside>
           </div>
           <div class="admin-pane" data-admin-pane="cycle" hidden>
-            <section class="admin-section"><div class="section-head"><div><div class="section-title">Cycle and policy</div><div class="section-sub">Active rules and milestone dates.</div></div></div><div id="cycle-controls"></div></section>
+            <section class="admin-section"><div class="section-head"><div><div class="section-title">Cycle &amp; Policy</div><div class="section-sub">Active rules and milestone dates.</div></div></div><div id="cycle-controls"></div></section>
           </div>
-          <section class="admin-pane admin-section" data-admin-pane="access" hidden><div class="section-head"><div><div class="section-title">Access register</div><div class="section-sub">Approved identities and permissions.</div></div></div><div class="access-invite" id="access-invite"></div><div class="access-list" id="access-list"></div></section>
-          <section class="admin-pane admin-section" data-admin-pane="audit" hidden><div class="section-head"><div><div class="section-title">Audit register</div><div class="section-sub">Configuration, access, and proposal events.</div></div></div><div class="admin-audit" id="admin-audit"></div></section>
+          <section class="admin-pane admin-section" data-admin-pane="access" hidden><div class="section-head"><div><div class="section-title">Access Register</div><div class="section-sub">Approved identities and permissions.</div></div></div><div class="access-invite" id="access-invite"></div><div class="access-list" id="access-list"></div></section>
+          <section class="admin-pane admin-section" data-admin-pane="audit" hidden><div class="section-head"><div><div class="section-title">Audit Register</div><div class="section-sub">Configuration, access, and proposal events.</div></div></div><div class="admin-audit" id="admin-audit"></div></section>
         </section>
       </div>
     </main>
@@ -587,13 +587,13 @@
 
   <div class="drawer-backdrop" id="drawer-backdrop"></div>
   <aside class="drawer" id="proposal-drawer" aria-label="Proposal detail" aria-hidden="true">
-    <div class="drawer-head"><button class="drawer-close" id="drawer-close" aria-label="Close proposal detail">×</button><div class="kicker" id="drawer-kicker">Proposal record</div><div class="drawer-title" id="drawer-title"></div><div class="drawer-meta" id="drawer-meta"></div></div>
-    <div class="drawer-scroll"><div class="detail-grid" id="drawer-details"></div><div id="drawer-actions"></div><div id="drawer-governance"></div><div class="stage-line" id="drawer-stage"></div><div class="drawer-section"><h3>Version history</h3><div id="drawer-versions"></div></div><div class="drawer-section"><h3>Proposal</h3><p class="body-copy" id="drawer-body"></p></div><div class="drawer-section"><h3>Supporting documents</h3><div id="drawer-files"></div></div><div class="drawer-section"><h3>Record history</h3><div id="drawer-audit"></div></div><div class="drawer-section"><h3>Discussion</h3><div id="comment-list"></div><form class="comment-form" id="comment-form"><label class="kicker" for="comment-input">Add to the record</label><textarea class="textarea" id="comment-input" placeholder="Add a comment to this proposal…" required></textarea><button class="button" type="submit">Post comment</button></form></div></div>
+    <div class="drawer-head"><button class="drawer-close" id="drawer-close" aria-label="Close proposal detail">×</button><div class="kicker" id="drawer-kicker">Proposal Record</div><div class="drawer-title" id="drawer-title"></div><div class="drawer-meta" id="drawer-meta"></div></div>
+    <div class="drawer-scroll"><div class="detail-grid" id="drawer-details"></div><div id="drawer-actions"></div><div id="drawer-governance"></div><div class="stage-line" id="drawer-stage"></div><div class="drawer-section"><h3>Version History</h3><div id="drawer-versions"></div></div><div class="drawer-section"><h3>Proposal</h3><p class="body-copy" id="drawer-body"></p></div><div class="drawer-section"><h3>Supporting Documents</h3><div id="drawer-files"></div></div><div class="drawer-section"><h3>Record History</h3><div id="drawer-audit"></div></div><div class="drawer-section"><h3>Discussion</h3><div id="comment-list"></div><form class="comment-form" id="comment-form"><label class="kicker" for="comment-input">Add to the record</label><textarea class="textarea" id="comment-input" placeholder="Add a comment to this proposal…" required></textarea><button class="button" type="submit">Post comment</button></form></div></div>
   </aside>
 
   <div class="modal-backdrop" id="modal-backdrop"></div>
   <section class="modal" id="proposal-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
-    <div class="modal-head"><div><div class="kicker">New legislative proposal</div><h2 id="modal-title">Start a proposal</h2></div><button class="modal-close" id="modal-close" aria-label="Close proposal form">×</button></div>
+    <div class="modal-head"><div><div class="kicker">New Legislative Proposal</div><h2 id="modal-title">Start a proposal</h2></div><button class="modal-close" id="modal-close" aria-label="Close proposal form">×</button></div>
     <form id="proposal-form"><div class="modal-body"><div class="form-grid">
       <label class="form-label"><strong>Proposal title</strong><input class="field" id="form-title" required placeholder="A clear working title" /><span class="form-help">Use a specific title.</span></label>
       <label class="form-label"><strong>Primary program</strong><select class="field" id="form-program"><option>Columbia</option><option>Columbia Men</option><option>Columbia Women</option></select></label>
@@ -723,7 +723,7 @@
       const next = adminOverview.cycle?.nextDeadline;
       const signals = [
         { value: active, label: 'records in motion', note: `${counts.total || 0} total proposal records` },
-        { value: adminOverview.queue?.length || 0, label: 'governance queue', note: `${counts.review || 0} awaiting staff review` },
+        { value: adminOverview.queue?.length || 0, label: 'Governance Queue', note: `${counts.review || 0} awaiting staff review` },
         { value: adminOverview.access?.active || 0, label: 'active identities', note: `${adminOverview.access?.inactive || 0} inactive record${adminOverview.access?.inactive === 1 ? '' : 's'}` },
         { value: next ? formatDate(next.date, { year: true }) : '—', label: 'next deadline', note: next?.label || 'No deadline configured' }
       ];
@@ -733,7 +733,7 @@
       const node = $('#admin-queue');
       if (!node || !adminOverview) return;
       const queue = adminOverview.queue || [];
-      node.innerHTML = queue.length ? queue.map(p => `<article class="admin-queue-row"><button class="admin-queue-open" data-admin-proposal="${esc(p.id)}"><div class="admin-queue-title">${esc(p.title)}</div><div class="admin-queue-meta">${esc(p.program)} · ${esc(p.proposer)} · ${esc(p.bucket)}</div></button><div class="admin-queue-status">${esc(p.statusLabel)}</div><div class="admin-queue-next"><strong>Next action</strong>${esc(p.next)}</div></article>`).join('') : '<div class="empty">The governance queue is clear.</div>';
+      node.innerHTML = queue.length ? queue.map(p => `<article class="admin-queue-row"><button class="admin-queue-open" data-admin-proposal="${esc(p.id)}"><div class="admin-queue-title">${esc(p.title)}</div><div class="admin-queue-meta">${esc(p.program)} · ${esc(p.proposer)} · ${esc(p.bucket)}</div></button><div class="admin-queue-status">${esc(p.statusLabel)}</div><div class="admin-queue-next"><strong>Next action</strong>${esc(p.next)}</div></article>`).join('') : '<div class="empty">Governance Queue is clear.</div>';
       node.querySelectorAll('[data-admin-proposal]').forEach(button => button.addEventListener('click', () => openDrawer(button.dataset.adminProposal)));
     }
     function renderAdminCycle() {
@@ -857,7 +857,7 @@
         const title = view === 'scheduler' ? 'Scheduler' : 'Awards';
         const copy = view === 'scheduler' ? 'Not available yet.' : 'Not available yet.';
         $('#module-title').textContent = title;
-        $('#module-sub').textContent = 'Coming later.';
+        $('#module-sub').textContent = 'Not available yet.';
         node.innerHTML = `<p class="module-note">${esc(copy)}</p><div class="module-actions"><button class="button secondary" data-jump="overview">Back to overview</button></div>`;
       }
       node.querySelectorAll('[data-jump]').forEach(button => button.addEventListener('click', () => setView(button.dataset.jump)));
@@ -877,14 +877,14 @@
     function setView(view) {
       currentView = view;
       const configs = {
-        overview: ['2026–27 · Cycle', 'Annual Legislative Cycle', 'Status, proposals, and next actions.'],
-        proposals: ['2026–27 · Proposals', 'Proposals', 'Submit and track the legislative record.'],
-        review: ['2026–27 · Review', 'Review queue', 'Records that need a governance action.'],
-        admin: ['2026–27 · Administration', 'Administration', 'Cycle, access, and audit.'],
-        feedback: ['2026–27 · Feedback', 'Feedback', 'Comments and requests.'],
-        documents: ['2026–27 · Documents', 'Documents', 'Files attached to records.'],
-        scheduler: ['2026–27 · Scheduler', 'Scheduler', 'Coming later.'],
-        awards: ['2026–27 · Awards', 'Awards', 'Coming later.']
+        overview: ['2026–27', 'Annual Legislative Cycle', 'Status, proposals, and next actions.'],
+        proposals: ['2026–27', 'Proposals', 'Legislative records.'],
+        review: ['2026–27', 'Review Queue', 'Records needing action.'],
+        admin: ['2026–27', 'Administration', 'Cycle, access & audit.'],
+        feedback: ['2026–27', 'Feedback', 'Comments and requests.'],
+        documents: ['2026–27', 'Documents', 'Files on proposal records.'],
+        scheduler: ['2026–27', 'Scheduler', 'Not available yet.'],
+        awards: ['2026–27', 'Awards', 'Not available yet.']
       };
       const [kicker, title, lede] = configs[view] || configs.overview;
       $('#page-kicker').textContent = kicker;
@@ -900,8 +900,8 @@
       $('#access-panel').hidden = view !== 'admin';
       $('#new-proposal').style.display = ['proposals', 'review'].includes(view) && canSubmit() ? '' : 'none';
       if (view === 'overview') renderOverview();
-      if (view === 'proposals') { currentFilter = 'all'; $('#workspace-title').textContent = 'Proposal register'; $('#workspace-sub').textContent = 'Current proposals and next actions.'; renderProposals(); }
-      if (view === 'review') { currentFilter = 'attention'; $('#workspace-title').textContent = 'Review queue'; $('#workspace-sub').textContent = 'Records that need a governance action.'; renderProposals(); }
+      if (view === 'proposals') { currentFilter = 'all'; $('#workspace-title').textContent = 'Proposal Register'; $('#workspace-sub').textContent = 'Current proposal records.'; renderProposals(); }
+      if (view === 'review') { currentFilter = 'attention'; $('#workspace-title').textContent = 'Review Queue'; $('#workspace-sub').textContent = 'Records needing action.'; renderProposals(); }
       if (view === 'admin') { setAdminPanel('queue'); loadAdmin(); }
       if (['feedback', 'documents', 'scheduler', 'awards'].includes(view)) renderModule(view);
       window.scrollTo({ top: 0, behavior: 'smooth' });
