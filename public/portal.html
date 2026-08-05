@@ -512,7 +512,7 @@
 
     <main class="main" id="main-content" tabindex="-1">
       <header class="topbar">
-        <div class="crumb"><strong>Legislative Cycle</strong><span> / </span><span id="crumb-view">Overview</span></div>
+        <div class="crumb"><strong>Legislative Cycle</strong></div>
         <div class="top-actions">
           <button class="top-link" id="help-button">Policy guide</button>
           <select class="role-select" id="role-select" aria-label="Preview role"><option value="coach">Head coach</option><option value="commissioner">Commissioner</option></select>
@@ -523,7 +523,7 @@
 
       <div class="content">
         <section class="page-head" id="page-head">
-          <div><p class="kicker" id="page-kicker">2026–27</p><h1 id="page-title">Annual Legislative Cycle</h1><p class="lede" id="page-lede">Status, proposals, and next actions.</p></div>
+          <div><h1 id="page-title">Annual Legislative Cycle</h1></div>
           <button class="button gold" id="new-proposal">New proposal</button>
         </section>
 
@@ -541,7 +541,7 @@
         </section>
 
         <section class="module-panel" id="overview-panel" hidden>
-          <div class="section-head"><div><div class="section-title">At a Glance</div><div class="section-sub">Priority items.</div></div></div>
+          <div class="section-head"><div><div class="section-title">At a Glance</div></div></div>
           <div class="module-register" id="overview-register"></div>
         </section>
 
@@ -697,7 +697,7 @@
       const deadlines = cycle.deadlines || [];
       const first = deadlines[0]; const last = deadlines[deadlines.length - 1];
       $('#cycle-status').textContent = `${cycle.status || 'active'} phase`;
-      $('#cycle-name').textContent = `${cycle.id} · ${cycle.name}`;
+      $('#cycle-name').textContent = cycle.name;
       $('#cycle-detail').textContent = `Policy ${cycle.policyVersion || cycle.policy?.version || '—'} · quorum ${cycle.policy?.quorumRequired || '—'} · threshold ${cycle.policy?.thresholdPercent || '—'}%.`;
       $('#cycle-start').textContent = first ? formatDate(first.date) : '—';
       $('#cycle-phase').textContent = phaseLabels[cycle.phase] || cycle.phase || '—';
@@ -877,20 +877,17 @@
     function setView(view) {
       currentView = view;
       const configs = {
-        overview: ['2026–27', 'Annual Legislative Cycle', 'Status, proposals, and next actions.'],
-        proposals: ['2026–27', 'Proposals', 'Legislative records.'],
-        review: ['2026–27', 'Review Queue', 'Records needing action.'],
-        admin: ['2026–27', 'Administration', 'Cycle, access & audit.'],
-        feedback: ['2026–27', 'Feedback', 'Comments and requests.'],
-        documents: ['2026–27', 'Documents', 'Files on proposal records.'],
-        scheduler: ['2026–27', 'Scheduler', 'Not available yet.'],
-        awards: ['2026–27', 'Awards', 'Not available yet.']
+        overview: ['Annual Legislative Cycle'],
+        proposals: ['Proposals'],
+        review: ['Review Queue'],
+        admin: ['Administration'],
+        feedback: ['Feedback'],
+        documents: ['Documents'],
+        scheduler: ['Scheduler'],
+        awards: ['Awards']
       };
-      const [kicker, title, lede] = configs[view] || configs.overview;
-      $('#page-kicker').textContent = kicker;
+      const [title] = configs[view] || configs.overview;
       $('#page-title').textContent = title;
-      $('#page-lede').textContent = lede;
-      $('#crumb-view').textContent = title;
       document.querySelectorAll('.nav button').forEach(button => button.classList.toggle('active', button.dataset.view === view));
       $('#cycle-strip').hidden = view !== 'overview';
       $('#cycle-stats').hidden = view !== 'overview';
