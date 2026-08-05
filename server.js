@@ -1,10 +1,1120 @@
 const express = require('express');
 const path    = require('path');
+const fs      = require('fs');
+const crypto  = require('crypto');
 const PDFDocument = require('pdfkit');
 const app     = express();
 
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+
+app.get('/portal', (req, res) => res.sendFile(path.join(__dirname, 'public', 'portal.html')));
+
+// ── Legislative portal persistence + passwordless development auth ──────────
+// The JSON store keeps this slice runnable without provisioning Supabase first.
+// The API boundary is intentionally shaped so the store can be replaced later.
+const SEED_DATA_FILE = path.join(__dirname, 'data', 'portal-data.json');
+const DATA_FILE = process.env.CSA_PORTAL_DATA_FILE || SEED_DATA_FILE;
+if (DATA_FILE !== SEED_DATA_FILE && !fs.existsSync(DATA_FILE)) {
+  fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
+  fs.copyFileSync(SEED_DATA_FILE, DATA_FILE);
+}
+const sessions = new Map();
+const loginCodes = new Map();
+const hostedDeployment = Boolean(process.env.RAILWAY_PROJECT_ID || process.env.RAILWAY_ENVIRONMENT_ID || process.env.RAILWAY_SERVICE_ID);
+// Local development is enabled by default; hosted access requires an explicit flag.
+const developmentAuthEnabled = process.env.CSA_DEV_AUTH_ENABLED === 'true' || (process.env.NODE_ENV !== 'production' && !hostedDeployment && process.env.CSA_DEV_AUTH_ENABLED !== 'false');
+const developmentAuthUsername = String(process.env.CSA_DEV_USERNAME || 'commissioner@csasquash.org').trim().toLowerCase();
+const developmentAuthPassword = String(process.env.CSA_DEV_PASSWORD || 'CSA-commissioner-dev-2026');
+const developmentAuthUserEmail = String(process.env.CSA_DEV_USER_EMAIL || 'commissioner@csasquash.org').trim().toLowerCase();
+const ROLE_VALUES = ['coach', 'institutional_representative', 'commissioner', 'board_member', 'staff', 'administrator', 'conference_observer'];
+const PERMISSION_VALUES = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:access', 'legislative:configuration', 'legislative:records', 'legislative:moderation', 'legislative:board'];
+const DEFAULT_POLICY = {
+  version: 'v4',
+  effectiveDate: '2026-08-01',
+  quorumRequired: 3,
+  thresholdPercent: 50,
+  eligibleVotingUnits: ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'],
+  proxyRegistrationHours: 72
+};
+const DEFAULT_CYCLE = {
+  id: '2026-27',
+  name: 'Annual Legislative Cycle',
+  status: 'pilot',
+  phase: 'review',
+  timeZone: 'America/New_York',
+  policyVersion: 'v4',
+  note: 'Pilot timing is configurable by CSA governance authority.',
+  deadlines: [
+    { id: 'submission-close', label: 'Proposal submission window closes', date: '2026-09-04', stage: 'review' },
+    { id: 'distribution', label: 'Accepted proposals distributed', date: '2026-09-18', stage: 'comment' },
+    { id: 'comment-close', label: 'Comment and revision window closes', date: '2026-12-01', stage: 'vote' },
+    { id: 'vote-close', label: 'Coach vote closes', date: '2027-05-07', stage: 'board' },
+    { id: 'board-review', label: 'Board ratification window', date: '2027-05-21', stage: 'decision' }
+  ],
+  audit: []
+};
+
+function nowStamp() {
+  return new Date().toISOString();
+}
+
+function readPortalData() {
+  return JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+}
+
+function writePortalData(data) {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2) + '\n');
+}
+
+function getSession(req) {
+  const cookie = req.headers.cookie || '';
+  const match = cookie.match(/(?:^|; )csa_session=([^;]+)/);
+  if (!match) return null;
+  const session = sessions.get(match[1]);
+  if (!session) return null;
+  const data = readPortalData();
+  const user = data.users.find(item => item.id === session.id);
+  if (!user || user.active === false) {
+    sessions.delete(match[1]);
+    return null;
+  }
+  const refreshed = publicUser(user);
+  sessions.set(match[1], refreshed);
+  return refreshed;
+}
+
+function requireSession(req, res, next) {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Sign-in required' });
+  req.user = session;
+  next();
+}
+
+function publicUser(user) {
+  return { id: user.id, name: user.name, email: user.email, role: user.role, active: user.active !== false, programs: user.programs || [], permissions: user.permissions || [] };
+}
+
+const PROPOSAL_LIMITS = { title: 160, body: 4000, fileCount: 20, fileName: 200, coSponsorCount: 5, statusLabel: 80, next: 160, activity: 200, reason: 1000 };
+const FEEDBACK_CATEGORIES = ['Bug', 'Copy', 'Design', 'Workflow', 'Other'];
+const FEEDBACK_LIMITS = { category: 40, message: 2000, page: 80, proposalId: 120 };
+
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function requiredText(value, label, max) {
+  if (typeof value !== 'string') return { error: `${label} must be text` };
+  const text = value.trim();
+  if (!text) return { error: `${label} is required` };
+  if (text.length > max) return { error: `${label} must be ${max} characters or fewer` };
+  return { value: text };
+}
+
+function optionalText(value, label, max) {
+  if (value === undefined) return { value: undefined };
+  return requiredText(value, label, max);
+}
+
+function canSubmitForProgram(user, program) {
+  if (user.role === 'commissioner' || hasPermission(user, 'legislative:admin')) return true;
+  return (user.programs || []).some(account => program === account || program.startsWith(`${account} `));
+}
+
+function isDraftOwner(user, proposal) {
+  if (proposal.status !== 'draft' || !['coach', 'institutional_representative'].includes(user.role)) return false;
+  return proposal.proposerId ? proposal.proposerId === user.id : proposal.proposer === user.name;
+}
+
+function hasPermission(user, permission) {
+  const permissions = user.permissions || [];
+  return user.role === 'commissioner' || permissions.includes('*') || permissions.includes(permission) || (permissions.includes('legislative:admin') && ['legislative:access', 'legislative:configuration', 'legislative:records'].includes(permission));
+}
+
+function isGovernanceAdmin(user) {
+  return hasPermission(user, 'legislative:admin');
+}
+
+function canManageAccess(user) {
+  return hasPermission(user, 'legislative:access');
+}
+
+function canManageConfiguration(user) {
+  return hasPermission(user, 'legislative:configuration');
+}
+
+function canReadGovernanceRecords(user) {
+  return hasPermission(user, 'legislative:records');
+}
+
+function isModerator(user) {
+  return hasPermission(user, 'legislative:moderation');
+}
+
+function isBoardMember(user) {
+  return hasPermission(user, 'legislative:board');
+}
+
+function requireGovernanceAdmin(req, res, next) {
+  if (!isGovernanceAdmin(req.user)) return res.status(403).json({ error: 'CSA staff or Commissioner permission required' });
+  next();
+}
+
+function requireAccessAdmin(req, res, next) {
+  if (!canManageAccess(req.user)) return res.status(403).json({ error: 'Access administration permission required' });
+  next();
+}
+
+function requireConfigurationAdmin(req, res, next) {
+  if (!canManageConfiguration(req.user)) return res.status(403).json({ error: 'Cycle and policy configuration permission required' });
+  next();
+}
+
+function requireRecordsAdmin(req, res, next) {
+  if (!canReadGovernanceRecords(req.user)) return res.status(403).json({ error: 'Governance records permission required' });
+  next();
+}
+
+function requireBoardAuthority(req, res, next) {
+  if (!isBoardMember(req.user)) return res.status(403).json({ error: 'Board decision permission required' });
+  next();
+}
+
+function appendAudit(proposal, event, by, extra = {}) {
+  proposal.audit = [...(proposal.audit || []), { event, by, at: nowStamp(), ...extra }];
+}
+
+const MEMBER_PROGRAMS = ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'];
+const PROGRAM_SCOPE = [...MEMBER_PROGRAMS, 'CSA'];
+const VOTE_CHOICES = ['yes', 'no', 'abstain'];
+
+function cycleFor(data) {
+  const cycle = isRecord(data.cycle) ? JSON.parse(JSON.stringify(data.cycle)) : JSON.parse(JSON.stringify(DEFAULT_CYCLE));
+  cycle.deadlines = Array.isArray(cycle.deadlines) ? cycle.deadlines : [];
+  cycle.audit = Array.isArray(cycle.audit) ? cycle.audit : [];
+  return cycle;
+}
+
+function policyFor(data) {
+  return { ...DEFAULT_POLICY, ...(isRecord(data.policy) ? data.policy : {}) };
+}
+
+function publicCycle(data) {
+  const cycle = cycleFor(data);
+  const policy = policyFor(data);
+  const today = new Date();
+  const deadlines = cycle.deadlines
+    .filter(item => isRecord(item) && typeof item.date === 'string')
+    .map(item => ({ id: item.id, label: item.label, date: item.date, stage: item.stage }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  const nextDeadline = deadlines.find(item => new Date(`${item.date}T23:59:59`) >= today) || null;
+  return {
+    id: cycle.id,
+    name: cycle.name,
+    status: cycle.status,
+    phase: cycle.phase,
+    timeZone: cycle.timeZone,
+    policyVersion: cycle.policyVersion || policy.version,
+    note: cycle.note || '',
+    today: today.toISOString(),
+    deadlines,
+    nextDeadline,
+    policy: {
+      version: policy.version,
+      effectiveDate: policy.effectiveDate,
+      quorumRequired: policy.quorumRequired,
+      thresholdPercent: policy.thresholdPercent,
+      eligibleVotingUnits: policy.eligibleVotingUnits,
+      proxyRegistrationHours: policy.proxyRegistrationHours
+    }
+  };
+}
+
+function governanceAudit(data, limit = 40) {
+  const accessEvents = (Array.isArray(data.governanceAudit) ? data.governanceAudit : (data.accessAudit || [])).map(item => ({ ...item, scope: item.scope || 'Administration' }));
+  const proposalEvents = (data.proposals || []).flatMap(proposal => (proposal.audit || []).map(item => ({
+    ...item,
+    scope: 'Proposal',
+    proposalId: proposal.id,
+    proposalTitle: proposal.title
+  })));
+  return [...accessEvents, ...proposalEvents]
+    .sort((a, b) => String(b.at || '').localeCompare(String(a.at || '')))
+    .slice(0, limit);
+}
+
+function publicAdminOverview(data, user) {
+  const proposals = serializeProposals(data.proposals || [], user);
+  const counts = proposals.reduce((result, proposal) => {
+    result.total += 1;
+    result[proposal.status] = (result[proposal.status] || 0) + 1;
+    return result;
+  }, { total: 0, draft: 0, review: 0, comment: 0, vote: 0, board: 0, decision: 0, closed: 0 });
+  const byBucket = proposals.reduce((result, proposal) => {
+    result[proposal.bucket] = (result[proposal.bucket] || 0) + 1;
+    return result;
+  }, {});
+  const queue = proposals.filter(proposal => ['review', 'comment', 'vote', 'board', 'decision'].includes(proposal.status)).slice(0, 40);
+  const users = data.users || [];
+  return {
+    cycle: publicCycle(data),
+    policyHistory: Array.isArray(data.policyHistory) ? data.policyHistory : [],
+    counts,
+    byBucket,
+    queue,
+    access: {
+      total: users.length,
+      active: users.filter(item => item.active !== false).length,
+      inactive: users.filter(item => item.active === false).length,
+      byRole: users.reduce((result, item) => { result[item.role] = (result[item.role] || 0) + 1; return result; }, {})
+    },
+    recentAudit: governanceAudit(data)
+  };
+}
+
+function canViewProposal(user, proposal) {
+  const owner = proposal.proposerId ? proposal.proposerId === user.id : proposal.proposer === user.name;
+  if (owner || isGovernanceAdmin(user) || isBoardMember(user)) return true;
+  return !['draft', 'review'].includes(proposal.status);
+}
+
+function versionSummaries(proposal) {
+  const versions = Array.isArray(proposal.versions) && proposal.versions.length
+    ? proposal.versions
+    : [proposalSnapshot(proposal, currentVersion(proposal), proposal.proposer || 'CSA staff', proposal.time || 'Original record')];
+  const fields = ['title', 'program', 'coSponsors', 'body', 'files'];
+  return versions.map((version, index) => {
+    const previous = versions[index - 1];
+    const changed = previous ? fields.filter(field => JSON.stringify(previous[field]) !== JSON.stringify(version[field])) : [];
+    return {
+      version: version.version || index + 1,
+      title: version.title,
+      program: version.program,
+      coSponsors: Array.isArray(version.coSponsors) ? [...version.coSponsors] : [],
+      files: Array.isArray(version.files) ? [...version.files] : [],
+      createdBy: version.createdBy,
+      createdAt: version.createdAt,
+      changeSummary: version.changeSummary || (index === 0 ? 'Original submission' : ''),
+      changedFields: changed
+    };
+  });
+}
+
+function currentVersion(proposal) {
+  return Number.isInteger(proposal.version) && proposal.version > 0 ? proposal.version : (Array.isArray(proposal.versions) && proposal.versions.length ? proposal.versions.length : 1);
+}
+
+function proposalSnapshot(proposal, version, createdBy, createdAt = 'Just now') {
+  return {
+    version,
+    title: proposal.title,
+    program: proposal.program,
+    coSponsors: Array.isArray(proposal.coSponsors) ? [...proposal.coSponsors] : [],
+    body: proposal.body,
+    files: Array.isArray(proposal.files) ? [...proposal.files] : [],
+    comments: JSON.parse(JSON.stringify(proposal.comments || [])),
+    audit: JSON.parse(JSON.stringify(proposal.audit || [])),
+    createdBy,
+    createdAt
+  };
+}
+
+function ensureVersionHistory(proposal) {
+  if (!Array.isArray(proposal.versions) || !proposal.versions.length) {
+    proposal.versions = [proposalSnapshot(proposal, 1, proposal.proposer || 'CSA staff', proposal.time || 'Original record')];
+  }
+  proposal.version = currentVersion(proposal);
+  return proposal.versions;
+}
+
+function initializeVote(proposal, data = {}) {
+  const policy = policyFor(data);
+  if (!proposal.vote || !isRecord(proposal.vote)) {
+    proposal.vote = {
+      eligibleUnits: [...(policy.eligibleVotingUnits || MEMBER_PROGRAMS)],
+      quorumRequired: policy.quorumRequired,
+      thresholdPercent: policy.thresholdPercent,
+      ballots: [],
+      status: 'open',
+      result: null,
+      counts: null,
+      quorumMet: null,
+      thresholdMet: null
+    };
+  } else {
+    proposal.vote.eligibleUnits = Array.isArray(proposal.vote.eligibleUnits) && proposal.vote.eligibleUnits.length ? [...proposal.vote.eligibleUnits] : [...(policy.eligibleVotingUnits || MEMBER_PROGRAMS)];
+    proposal.vote.quorumRequired = Number.isInteger(proposal.vote.quorumRequired) ? proposal.vote.quorumRequired : policy.quorumRequired;
+    proposal.vote.thresholdPercent = typeof proposal.vote.thresholdPercent === 'number' ? proposal.vote.thresholdPercent : policy.thresholdPercent;
+    proposal.vote.ballots = Array.isArray(proposal.vote.ballots) ? proposal.vote.ballots : [];
+    proposal.vote.status = proposal.vote.status || 'open';
+  }
+  return proposal.vote;
+}
+
+function publicProposal(proposal, user) {
+  const result = JSON.parse(JSON.stringify(proposal));
+  result.versions = versionSummaries(proposal);
+  const vote = result.vote;
+  if (vote) {
+    const votedUnits = (vote.ballots || []).filter(ballot => (user.programs || []).includes(ballot.votingUnit)).map(ballot => ballot.votingUnit);
+    result.vote = { ...vote, ballots: [], myVotingUnits: votedUnits };
+    if (vote.status !== 'finalized') {
+      result.vote.counts = null;
+      result.vote.result = null;
+      result.vote.quorumMet = null;
+      result.vote.thresholdMet = null;
+    }
+  }
+  if (Array.isArray(result.voteHistory)) {
+    result.voteHistory = result.voteHistory.map(historyVote => ({
+      ...historyVote,
+      ballots: [],
+      counts: historyVote.status === 'finalized' ? historyVote.counts : null,
+      result: historyVote.status === 'finalized' ? historyVote.result : null
+    }));
+  }
+  return result;
+}
+
+function serializeProposals(proposals, user) {
+  return proposals.filter(proposal => canViewProposal(user, proposal)).map(proposal => publicProposal(proposal, user));
+}
+
+function validateProposalInput(body, user) {
+  if (!isRecord(body)) return { error: 'Proposal payload must be an object' };
+  const title = requiredText(body.title, 'Title', PROPOSAL_LIMITS.title);
+  if (title.error) return title;
+  const program = requiredText(body.program, 'Program', PROPOSAL_LIMITS.title);
+  if (program.error) return program;
+  if (!canSubmitForProgram(user, program.value)) return { error: 'You may only submit for your program account' };
+  const proposalBody = requiredText(body.body, 'Proposal body', PROPOSAL_LIMITS.body);
+  if (proposalBody.error) return proposalBody;
+  const submissionState = body.submissionState === undefined ? 'submit' : body.submissionState;
+  if (!['draft', 'submit'].includes(submissionState)) return { error: 'Submission state must be draft or submit' };
+  const coSponsors = body.coSponsors === undefined ? [] : body.coSponsors;
+  if (!Array.isArray(coSponsors)) return { error: 'Co-sponsors must be an array' };
+  if (coSponsors.length > PROPOSAL_LIMITS.coSponsorCount) return { error: `Co-sponsors must contain ${PROPOSAL_LIMITS.coSponsorCount} items or fewer` };
+  const normalizedCoSponsors = [];
+  for (const sponsor of coSponsors) {
+    const normalized = requiredText(sponsor, 'Co-sponsor', PROPOSAL_LIMITS.title);
+    if (normalized.error) return normalized;
+    if (normalized.value === program.value) return { error: 'The primary program cannot co-sponsor its own proposal' };
+    if (normalizedCoSponsors.includes(normalized.value)) return { error: 'Co-sponsors must be different programs' };
+    normalizedCoSponsors.push(normalized.value);
+  }
+  if (submissionState === 'submit' && normalizedCoSponsors.length < 2) return { error: 'At least two co-sponsoring programs are required before submission' };
+  const files = body.files === undefined ? [] : body.files;
+  if (!Array.isArray(files)) return { error: 'Files must be an array' };
+  if (files.length > PROPOSAL_LIMITS.fileCount) return { error: `Files must contain ${PROPOSAL_LIMITS.fileCount} items or fewer` };
+  const normalizedFiles = [];
+  for (const file of files) {
+    const normalized = requiredText(file, 'File name', PROPOSAL_LIMITS.fileName);
+    if (normalized.error) return normalized;
+    normalizedFiles.push(normalized.value);
+  }
+  return { value: { title: title.value, program: program.value, body: proposalBody.value, files: normalizedFiles, coSponsors: normalizedCoSponsors, submissionState } };
+}
+
+function nextProposalId(data) {
+  let id;
+  do id = `p${Date.now()}-${crypto.randomUUID()}`;
+  while (data.proposals.some(proposal => proposal.id === id));
+  return id;
+}
+
+function validatePatchInput(body) {
+  if (!isRecord(body)) return { error: 'Patch payload must be an object' };
+  const patch = {};
+  if (Object.hasOwn(body, 'audit')) return { error: 'Audit history is server-managed' };
+  if (Object.hasOwn(body, 'bucket')) {
+    if (!['Unassigned', 'Bucket 1', 'Bucket 2', 'Bucket 3'].includes(body.bucket)) return { error: 'Invalid decision bucket' };
+    patch.bucket = body.bucket;
+  }
+  if (Object.hasOwn(body, 'status')) {
+    if (!['draft', 'review', 'comment', 'vote', 'board', 'decision', 'closed'].includes(body.status)) return { error: 'Invalid proposal status' };
+    patch.status = body.status;
+  }
+  for (const [key, max] of Object.entries({ statusLabel: PROPOSAL_LIMITS.statusLabel, next: PROPOSAL_LIMITS.next, activity: PROPOSAL_LIMITS.activity, time: 80, reviewReason: PROPOSAL_LIMITS.reason })) {
+    if (Object.hasOwn(body, key)) {
+      const value = optionalText(body[key], key, max);
+      if (value.error) return value;
+      patch[key] = value.value;
+    }
+  }
+  return { value: patch };
+}
+
+function auditIsAppendOnly(previous, next) {
+  if (!Array.isArray(next) || next.length < previous.length) return false;
+  return previous.every((entry, index) => JSON.stringify(entry) === JSON.stringify(next[index]));
+}
+
+function validateCyclePatch(body, currentPolicy = DEFAULT_POLICY) {
+  if (!isRecord(body)) return { error: 'Cycle payload must be an object' };
+  const patch = {};
+  if (Object.hasOwn(body, 'phase')) {
+    const phase = requiredText(body.phase, 'Cycle phase', 40);
+    if (phase.error || !['submission', 'review', 'comment', 'vote', 'board', 'decision', 'complete'].includes(phase.value)) return { error: 'Invalid cycle phase' };
+    patch.phase = phase.value;
+  }
+  if (Object.hasOwn(body, 'status')) {
+    const status = requiredText(body.status, 'Cycle status', 40);
+    if (status.error || !['pilot', 'active', 'paused', 'closed'].includes(status.value)) return { error: 'Invalid cycle status' };
+    patch.status = status.value;
+  }
+  if (Object.hasOwn(body, 'timeZone')) {
+    const timeZone = requiredText(body.timeZone, 'Cycle timezone', 80);
+    if (timeZone.error) return timeZone;
+    patch.timeZone = timeZone.value;
+  }
+  if (Object.hasOwn(body, 'note')) {
+    const note = optionalText(body.note, 'Cycle note', 400);
+    if (note.error) return note;
+    patch.note = note.value || '';
+  }
+  if (Object.hasOwn(body, 'deadlines')) {
+    if (!Array.isArray(body.deadlines) || body.deadlines.length > 20) return { error: 'Deadlines must be an array of 20 items or fewer' };
+    const deadlines = [];
+    for (const item of body.deadlines) {
+      if (!isRecord(item)) return { error: 'Each deadline must be an object' };
+      const id = requiredText(item.id, 'Deadline id', 80);
+      const label = requiredText(item.label, 'Deadline label', 160);
+      const date = requiredText(item.date, 'Deadline date', 10);
+      const stage = requiredText(item.stage, 'Deadline stage', 40);
+      if (id.error || label.error || date.error || stage.error) return { error: 'Deadline fields are invalid' };
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date.value) || Number.isNaN(Date.parse(`${date.value}T00:00:00Z`))) return { error: 'Deadline dates must use YYYY-MM-DD' };
+      if (!['submission', 'review', 'comment', 'vote', 'board', 'decision', 'complete'].includes(stage.value)) return { error: 'Deadline stage is invalid' };
+      deadlines.push({ id: id.value, label: label.value, date: date.value, stage: stage.value });
+    }
+    if (new Set(deadlines.map(item => item.id)).size !== deadlines.length) return { error: 'Deadline ids must be unique' };
+    patch.deadlines = deadlines;
+  }
+  if (Object.hasOwn(body, 'policy')) {
+    if (!isRecord(body.policy)) return { error: 'Policy must be an object' };
+    const policy = { ...DEFAULT_POLICY, ...currentPolicy };
+    if (body.policy.version !== undefined) {
+      const version = requiredText(body.policy.version, 'Policy version', 40);
+      if (version.error) return version;
+      policy.version = version.value;
+    }
+    if (body.policy.effectiveDate !== undefined) {
+      const effectiveDate = requiredText(body.policy.effectiveDate, 'Policy effective date', 10);
+      if (effectiveDate.error || !/^\d{4}-\d{2}-\d{2}$/.test(effectiveDate.value)) return { error: 'Policy effective date must use YYYY-MM-DD' };
+      policy.effectiveDate = effectiveDate.value;
+    }
+    if (body.policy.quorumRequired !== undefined) policy.quorumRequired = Number(body.policy.quorumRequired);
+    if (body.policy.thresholdPercent !== undefined) policy.thresholdPercent = Number(body.policy.thresholdPercent);
+    if (body.policy.proxyRegistrationHours !== undefined) policy.proxyRegistrationHours = Number(body.policy.proxyRegistrationHours);
+    if (!Number.isInteger(policy.quorumRequired) || policy.quorumRequired < 1 || policy.quorumRequired > MEMBER_PROGRAMS.length) return { error: 'Quorum must be a whole number within the member program count' };
+    if (!Number.isFinite(policy.thresholdPercent) || policy.thresholdPercent < 0 || policy.thresholdPercent > 100) return { error: 'Threshold must be between 0 and 100 percent' };
+    if (!Number.isInteger(policy.proxyRegistrationHours) || policy.proxyRegistrationHours < 1) return { error: 'Proxy registration hours must be a positive whole number' };
+    if (body.policy.eligibleVotingUnits !== undefined) {
+      if (!Array.isArray(body.policy.eligibleVotingUnits) || !body.policy.eligibleVotingUnits.length || body.policy.eligibleVotingUnits.some(unit => !MEMBER_PROGRAMS.includes(unit))) return { error: 'Eligible voting units are invalid' };
+      policy.eligibleVotingUnits = [...new Set(body.policy.eligibleVotingUnits)];
+    }
+    patch.policy = policy;
+  }
+  return { value: patch };
+}
+
+function validateAccessPatch(body) {
+  if (!isRecord(body)) return { error: 'Access payload must be an object' };
+  const patch = {};
+  if (Object.hasOwn(body, 'active')) {
+    if (typeof body.active !== 'boolean') return { error: 'Active must be true or false' };
+    patch.active = body.active;
+  }
+  if (Object.hasOwn(body, 'role')) {
+    const role = requiredText(body.role, 'Role', 60);
+    if (role.error || !ROLE_VALUES.includes(role.value)) return { error: 'Role is invalid' };
+    patch.role = role.value;
+  }
+  if (Object.hasOwn(body, 'programs')) {
+    if (!Array.isArray(body.programs) || body.programs.some(program => typeof program !== 'string' || !PROGRAM_SCOPE.includes(program))) return { error: 'Program scope is invalid' };
+    patch.programs = [...new Set(body.programs)];
+  }
+  if (Object.hasOwn(body, 'permissions')) {
+    if (!Array.isArray(body.permissions) || body.permissions.some(permission => typeof permission !== 'string' || !PERMISSION_VALUES.includes(permission))) return { error: 'Permission scope is invalid' };
+    patch.permissions = [...new Set(body.permissions)];
+  }
+  if (!Object.keys(patch).length) return { error: 'Provide an access change' };
+  return { value: patch };
+}
+
+function validateAccessRecord(body) {
+  if (!isRecord(body)) return { error: 'Access record must be an object' };
+  const name = requiredText(body.name, 'Name', 120);
+  const email = requiredText(body.email, 'Email', 180);
+  if (name.error) return name;
+  if (email.error) return email;
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) return { error: 'Email must be valid' };
+  const access = validateAccessPatch({
+    active: body.active === undefined ? true : body.active,
+    role: body.role,
+    programs: body.programs || [],
+    permissions: body.permissions || []
+  });
+  if (access.error) return access;
+  return { value: { name: name.value, email: email.value.toLowerCase(), ...access.value } };
+}
+
+function appendAccessAudit(data, event, by, extra = {}) {
+  const record = { event, by, at: nowStamp(), ...extra };
+  data.accessAudit = [...(Array.isArray(data.accessAudit) ? data.accessAudit : []), record];
+  data.governanceAudit = [...(Array.isArray(data.governanceAudit) ? data.governanceAudit : []), record];
+}
+
+function validateDecisionInput(body) {
+  if (!isRecord(body)) return { error: 'Decision payload must be an object' };
+  const outcome = requiredText(body.outcome, 'Decision outcome', 20);
+  if (outcome.error) return outcome;
+  if (!['Adopted', 'Rejected', 'Tabled'].includes(outcome.value)) return { error: 'Decision outcome must be Adopted, Rejected, or Tabled' };
+  const reason = body.reason === undefined ? { value: '' } : optionalText(body.reason, 'Decision reason', PROPOSAL_LIMITS.reason);
+  if (reason.error) return reason;
+  const effectiveDate = body.effectiveDate === undefined ? { value: '' } : optionalText(body.effectiveDate, 'Effective date', 40);
+  if (effectiveDate.error) return effectiveDate;
+  if (outcome.value === 'Adopted' && !effectiveDate.value) return { error: 'An effective date is required for an Adopted decision' };
+  if (['Rejected', 'Tabled'].includes(outcome.value) && !reason.value) return { error: `A reason is required for a ${outcome.value} decision` };
+  return { value: { outcome: outcome.value, reason: reason.value, effectiveDate: effectiveDate.value } };
+}
+
+function validateFeedbackInput(body) {
+  if (!isRecord(body)) return { error: 'Feedback payload must be an object' };
+  const category = requiredText(body.category, 'Category', FEEDBACK_LIMITS.category);
+  if (category.error || !FEEDBACK_CATEGORIES.includes(category.value)) return { error: 'Feedback category is invalid' };
+  const message = requiredText(body.message, 'Message', FEEDBACK_LIMITS.message);
+  if (message.error) return message;
+  const page = body.page === undefined ? { value: 'Portal' } : optionalText(body.page, 'Page', FEEDBACK_LIMITS.page);
+  if (page.error) return page;
+  const proposalId = body.proposalId === undefined ? { value: '' } : optionalText(body.proposalId, 'Proposal', FEEDBACK_LIMITS.proposalId);
+  if (proposalId.error) return proposalId;
+  return { value: { category: category.value, message: message.value, page: page.value || 'Portal', proposalId: proposalId.value || '' } };
+}
+
+function validateFeedbackPatch(body) {
+  if (!isRecord(body)) return { error: 'Feedback update must be an object' };
+  const status = requiredText(body.status, 'Status', 20);
+  if (status.error || !['Open', 'Resolved'].includes(status.value)) return { error: 'Feedback status must be Open or Resolved' };
+  return { value: { status: status.value } };
+}
+
+function publicFeedback(item) {
+  return {
+    id: item.id,
+    category: item.category,
+    message: item.message,
+    page: item.page || 'Portal',
+    proposalId: item.proposalId || '',
+    proposalTitle: item.proposalTitle || '',
+    author: item.author || 'Member',
+    status: item.status || 'Open',
+    createdAt: item.createdAt || item.at || ''
+  };
+}
+
+function feedbackFor(data) {
+  return Array.isArray(data.feedback) ? data.feedback : [];
+}
+
+function recordDecision(proposal, input, user) {
+  proposal.decision = {
+    outcome: input.outcome,
+    reason: input.reason,
+    effectiveDate: input.effectiveDate,
+    decidedBy: user.name,
+    decidedAt: 'Just now'
+  };
+  proposal.status = 'closed';
+  proposal.statusLabel = input.outcome;
+  proposal.next = input.outcome === 'Adopted' ? `Effective ${input.effectiveDate}` : 'Decision recorded';
+  proposal.activity = `${input.outcome} decision recorded by ${user.name}`;
+  proposal.time = 'Just now';
+  appendAudit(proposal, `${input.outcome} decision recorded`, user.name, {
+    reason: input.reason || undefined,
+    effectiveDate: input.effectiveDate || undefined
+  });
+}
+
+app.get('/api/health', (req, res) => res.json({ ok: true, service: 'csa-legislative-portal', persistence: 'json' }));
+
+app.get('/api/auth/me', (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not signed in' });
+  res.json({ user: session });
+});
+
+app.get('/api/auth/config', (req, res) => {
+  res.json({ development: developmentAuthEnabled, username: developmentAuthEnabled ? developmentAuthUsername : null });
+});
+
+app.get('/api/cycle', requireSession, (req, res) => {
+  const data = readPortalData();
+  res.json(publicCycle(data));
+});
+
+app.get('/api/feedback', requireSession, (req, res) => {
+  const data = readPortalData();
+  const feedback = feedbackFor(data)
+    .filter(item => isGovernanceAdmin(req.user) || item.authorId === req.user.id)
+    .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  res.json({ feedback: feedback.map(publicFeedback) });
+});
+
+app.post('/api/feedback', requireSession, (req, res) => {
+  const data = readPortalData();
+  const input = validateFeedbackInput(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  const proposal = input.value.proposalId ? data.proposals.find(item => item.id === input.value.proposalId) : null;
+  if (input.value.proposalId && !proposal) return res.status(404).json({ error: 'Proposal context not found' });
+  const feedback = {
+    id: `f-${crypto.randomUUID()}`,
+    category: input.value.category,
+    message: input.value.message,
+    page: input.value.page,
+    proposalId: input.value.proposalId,
+    proposalTitle: proposal?.title || '',
+    authorId: req.user.id,
+    author: req.user.name,
+    status: 'Open',
+    createdAt: nowStamp()
+  };
+  data.feedback = [feedback, ...feedbackFor(data)];
+  appendAccessAudit(data, 'Product feedback submitted', req.user.name, { scope: 'Feedback', feedbackId: feedback.id, category: feedback.category });
+  writePortalData(data);
+  res.status(201).json({ feedback: publicFeedback(feedback) });
+});
+
+app.patch('/api/feedback/:id', requireSession, requireGovernanceAdmin, (req, res) => {
+  const data = readPortalData();
+  const feedback = feedbackFor(data).find(item => item.id === req.params.id);
+  if (!feedback) return res.status(404).json({ error: 'Feedback not found' });
+  const input = validateFeedbackPatch(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  feedback.status = input.value.status;
+  appendAccessAudit(data, 'Product feedback status updated', req.user.name, { scope: 'Feedback', feedbackId: feedback.id, status: feedback.status });
+  writePortalData(data);
+  res.json({ feedback: publicFeedback(feedback) });
+});
+
+app.get('/api/admin/overview', requireSession, requireGovernanceAdmin, (req, res) => {
+  const data = readPortalData();
+  res.json(publicAdminOverview(data, req.user));
+});
+
+app.get('/api/admin/audit', requireSession, requireRecordsAdmin, (req, res) => {
+  const data = readPortalData();
+  const limit = Math.min(Math.max(Number(req.query.limit) || 40, 1), 100);
+  res.json({ audit: governanceAudit(data, limit) });
+});
+
+app.patch('/api/cycle', requireSession, requireConfigurationAdmin, (req, res) => {
+  const data = readPortalData();
+  const input = validateCyclePatch(req.body, policyFor(data));
+  if (input.error) return res.status(400).json({ error: input.error });
+  const before = publicCycle(data);
+  const cycle = cycleFor(data);
+  const previousPolicy = policyFor(data);
+  if (input.value.policy) {
+    const nextPolicy = input.value.policy;
+    if (JSON.stringify(previousPolicy) !== JSON.stringify(nextPolicy)) {
+      data.policyHistory = [...(Array.isArray(data.policyHistory) ? data.policyHistory : []), { ...previousPolicy, retiredAt: nowStamp(), retiredBy: req.user.name }];
+    }
+    data.policy = nextPolicy;
+    cycle.policyVersion = nextPolicy.version;
+  }
+  const cyclePatch = { ...input.value };
+  delete cyclePatch.policy;
+  Object.assign(cycle, cyclePatch);
+  data.cycle = cycle;
+  appendAccessAudit(data, 'Cycle configuration updated', req.user.name, { scope: 'Configuration', fields: Object.keys(input.value), policyVersion: input.value.policy?.version });
+  writePortalData(data);
+  res.json({ cycle: publicCycle(data), previous: before });
+});
+
+app.get('/api/access/users', requireSession, requireAccessAdmin, (req, res) => {
+  const data = readPortalData();
+  res.json({ users: data.users.map(publicUser), audit: data.accessAudit || [] });
+});
+
+app.post('/api/access/users', requireSession, requireAccessAdmin, (req, res) => {
+  const data = readPortalData();
+  const input = validateAccessRecord(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  if (data.users.some(user => user.email.toLowerCase() === input.value.email)) return res.status(409).json({ error: 'An approved identity already uses that email' });
+  const user = { id: `u-${crypto.randomUUID()}`, ...input.value };
+  data.users.push(user);
+  appendAccessAudit(data, 'Approved identity added', req.user.name, { scope: 'Access', user: user.email, fields: ['name', 'email', 'role', 'programs', 'permissions', 'active'] });
+  writePortalData(data);
+  res.status(201).json({ user: publicUser(user) });
+});
+
+app.patch('/api/access/users/:id', requireSession, requireAccessAdmin, (req, res) => {
+  const data = readPortalData();
+  const user = data.users.find(item => item.id === req.params.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  const input = validateAccessPatch(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  if (user.id === req.user.id && input.value.active === false) return res.status(409).json({ error: 'You cannot deactivate your own access' });
+  const changed = Object.keys(input.value).filter(key => JSON.stringify(user[key]) !== JSON.stringify(input.value[key]));
+  Object.assign(user, input.value);
+  appendAccessAudit(data, 'User access updated', req.user.name, { user: user.email, fields: changed });
+  writePortalData(data);
+  res.json({ user: publicUser(user) });
+});
+
+app.post('/api/auth/request-code', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const data = readPortalData();
+  const user = data.users.find(item => item.email.toLowerCase() === email);
+  // Keep the response generic for unknown emails; only approved users receive a code.
+  if (!user) return res.json({ sent: true });
+  const code = String(crypto.randomInt(100000, 1000000));
+  loginCodes.set(email, { code, expires: Date.now() + 10 * 60 * 1000 });
+  const response = { sent: true };
+  if (process.env.NODE_ENV !== 'production') response.devCode = code;
+  res.json(response);
+});
+
+app.post('/api/auth/dev-login', (req, res) => {
+  if (!developmentAuthEnabled) return res.status(404).json({ error: 'Not found' });
+  const username = String(req.body.username || '').trim().toLowerCase();
+  const password = String(req.body.password || '');
+  if (username !== developmentAuthUsername || password !== developmentAuthPassword) return res.status(401).json({ error: 'Invalid development credentials' });
+  const data = readPortalData();
+  const user = data.users.find(item => item.email.toLowerCase() === developmentAuthUserEmail);
+  if (!user || user.active === false) return res.status(401).json({ error: 'The development identity is not approved or active' });
+  const token = crypto.randomBytes(32).toString('hex');
+  const session = publicUser(user);
+  sessions.set(token, session);
+  res.setHeader('Set-Cookie', `csa_session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=28800`);
+  res.json({ user: session, development: true });
+});
+
+app.post('/api/auth/verify-code', (req, res) => {
+  const email = String(req.body.email || '').trim().toLowerCase();
+  const code = String(req.body.code || '').trim();
+  const pending = loginCodes.get(email);
+  if (!pending || pending.expires < Date.now() || pending.code !== code) return res.status(401).json({ error: 'Invalid or expired code' });
+  const data = readPortalData();
+  const user = data.users.find(item => item.email.toLowerCase() === email);
+  if (!user || user.active === false) return res.status(401).json({ error: 'This email is not approved for CSA Portal access' });
+  loginCodes.delete(email);
+  const token = crypto.randomBytes(32).toString('hex');
+  const session = publicUser(user);
+  sessions.set(token, session);
+  res.setHeader('Set-Cookie', `csa_session=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=28800`);
+  res.json({ user: session });
+});
+
+app.post('/api/auth/logout', (req, res) => {
+  const cookie = req.headers.cookie || '';
+  const match = cookie.match(/(?:^|; )csa_session=([^;]+)/);
+  if (match) sessions.delete(match[1]);
+  res.setHeader('Set-Cookie', 'csa_session=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0');
+  res.json({ ok: true });
+});
+
+app.get('/api/proposals', requireSession, (req, res) => {
+  const data = readPortalData();
+  res.json(serializeProposals(data.proposals, req.user));
+});
+
+app.post('/api/proposals', requireSession, (req, res) => {
+  const data = readPortalData();
+  const input = validateProposalInput(req.body, req.user);
+  if (input.error) return res.status(400).json({ error: input.error });
+  const draft = input.value.submissionState === 'draft';
+  const proposal = {
+    id: nextProposalId(data),
+    title: input.value.title,
+    program: input.value.program,
+    body: input.value.body,
+    files: input.value.files,
+    coSponsors: input.value.coSponsors,
+    proposerId: req.user.id,
+    proposer: req.user.name,
+    bucket: 'Unassigned',
+    status: draft ? 'draft' : 'review',
+    statusLabel: draft ? 'Draft' : 'Staff review',
+    next: draft ? 'Complete and submit' : 'CSA staff review',
+    comments: [],
+    audit: [{ event: draft ? 'Draft saved' : 'Proposal submitted', by: req.user.name, at: nowStamp() }],
+    activity: draft ? 'Draft saved' : 'Submitted for staff review',
+    time: nowStamp(),
+    version: 1,
+    versions: []
+  };
+  proposal.versions.push(proposalSnapshot(proposal, 1, req.user.name));
+  data.proposals.unshift(proposal);
+  writePortalData(data);
+  res.status(201).json(publicProposal(proposal, req.user));
+});
+
+app.patch('/api/proposals/:id', requireSession, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+
+  if (!isGovernanceAdmin(req.user)) {
+    if (!isDraftOwner(req.user, proposal)) return res.status(403).json({ error: 'Only the draft owner may edit this proposal' });
+    const input = validateProposalInput(req.body, req.user);
+    if (input.error) return res.status(400).json({ error: input.error });
+    const submitting = input.value.submissionState === 'submit';
+    Object.assign(proposal, {
+      title: input.value.title,
+      program: input.value.program,
+      body: input.value.body,
+      files: input.value.files,
+      coSponsors: input.value.coSponsors,
+      status: submitting ? 'review' : 'draft',
+      statusLabel: submitting ? 'Staff review' : 'Draft',
+      next: submitting ? 'CSA staff review' : 'Complete and submit',
+      activity: submitting ? 'Submitted for staff review' : 'Draft updated',
+      time: nowStamp(),
+      audit: [...(proposal.audit || []), { event: submitting ? 'Proposal submitted' : 'Draft updated', by: req.user.name, at: nowStamp() }]
+    });
+    writePortalData(data);
+    return res.json(publicProposal(proposal, req.user));
+  }
+
+  const patch = validatePatchInput(req.body);
+  if (patch.error) return res.status(400).json({ error: patch.error });
+  const changedFields = Object.keys(patch.value).filter(key => JSON.stringify(proposal[key]) !== JSON.stringify(patch.value[key]));
+  Object.assign(proposal, patch.value);
+  if (changedFields.length) appendAudit(proposal, 'Proposal record updated', req.user.name, { fields: changedFields });
+  writePortalData(data);
+  res.json(publicProposal(proposal, req.user));
+});
+
+app.post('/api/proposals/:id/open-vote', requireSession, requireGovernanceAdmin, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  if (!['Bucket 2', 'Bucket 3'].includes(proposal.bucket)) return res.status(409).json({ error: 'Only Bucket 2 and Bucket 3 proposals use a coach vote' });
+  if (!['comment', 'review'].includes(proposal.status)) return res.status(409).json({ error: 'Proposal is not ready to open a coach vote' });
+  initializeVote(proposal, data);
+  const voteDeadline = cycleFor(data).deadlines.find(item => item.id === 'vote-close');
+  proposal.vote.closeAt = voteDeadline?.date || null;
+  proposal.vote.policyVersion = policyFor(data).version;
+  proposal.status = 'vote';
+  proposal.statusLabel = 'Coach vote open';
+  proposal.next = voteDeadline ? `Vote closes ${voteDeadline.date}` : 'Quorum and threshold calculated at close';
+  proposal.activity = `Coach vote opened by ${req.user.name}`;
+  proposal.time = nowStamp();
+  appendAudit(proposal, 'Coach vote opened', req.user.name);
+  writePortalData(data);
+  res.json(publicProposal(proposal, req.user));
+});
+
+app.post('/api/proposals/:id/votes', requireSession, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  if (proposal.status !== 'vote') return res.status(409).json({ error: 'Coach voting is not open' });
+  const choice = requiredText(req.body?.choice, 'Vote choice', 10);
+  if (choice.error || !VOTE_CHOICES.includes(choice.value)) return res.status(400).json({ error: 'Vote choice must be yes, no, or abstain' });
+  const votingUnit = requiredText(req.body?.votingUnit, 'Voting unit', 120);
+  if (votingUnit.error) return res.status(400).json({ error: votingUnit.error });
+  const vote = initializeVote(proposal, data);
+  if (!vote.eligibleUnits.includes(votingUnit.value)) return res.status(400).json({ error: 'That program is not an eligible voting unit' });
+  const proxyFor = req.body?.proxyFor === undefined ? '' : optionalText(req.body.proxyFor, 'Proxy holder', 120);
+  if (proxyFor.error) return res.status(400).json({ error: proxyFor.error });
+  const isProxy = Boolean(proxyFor.value);
+  if (isProxy && !isGovernanceAdmin(req.user)) return res.status(403).json({ error: 'Only CSA staff may record a proxy ballot' });
+  if (!isProxy && !(req.user.programs || []).some(account => votingUnit.value === account || votingUnit.value.startsWith(`${account} `))) {
+    return res.status(403).json({ error: 'You may only vote for your authorized program account' });
+  }
+  if (vote.ballots.some(ballot => ballot.votingUnit === votingUnit.value)) return res.status(409).json({ error: 'That voting unit has already submitted a ballot' });
+  vote.ballots.push({
+    votingUnit: votingUnit.value,
+    choice: choice.value,
+    voterId: req.user.id,
+    submittedBy: req.user.name,
+    proxyFor: isProxy ? proxyFor.value : undefined,
+    submittedAt: nowStamp()
+  });
+  proposal.activity = `Coach ballot recorded for ${votingUnit.value}`;
+  proposal.time = nowStamp();
+  appendAudit(proposal, 'Coach ballot recorded', req.user.name, { votingUnit: votingUnit.value });
+  writePortalData(data);
+  res.status(201).json(publicProposal(proposal, req.user));
+});
+
+app.post('/api/proposals/:id/finalize-vote', requireSession, requireGovernanceAdmin, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  if (proposal.status !== 'vote') return res.status(409).json({ error: 'Proposal is not in the coach vote stage' });
+  const vote = initializeVote(proposal, data);
+  if (vote.status === 'finalized') return res.status(409).json({ error: 'Coach vote is already finalized' });
+  const counts = { yes: 0, no: 0, abstain: 0 };
+  vote.ballots.forEach(ballot => { counts[ballot.choice] += 1; });
+  const represented = new Set(vote.ballots.map(ballot => ballot.votingUnit)).size;
+  const quorumMet = represented >= vote.quorumRequired;
+  const decided = counts.yes + counts.no;
+  const yesPercent = decided ? (counts.yes / decided) * 100 : 0;
+  const thresholdMet = decided > 0 && yesPercent >= vote.thresholdPercent;
+  const passed = quorumMet && thresholdMet;
+  vote.status = 'finalized';
+  vote.counts = { ...counts, represented, eligible: vote.eligibleUnits.length, yesPercent: Number(yesPercent.toFixed(2)) };
+  vote.quorumMet = quorumMet;
+  vote.thresholdMet = thresholdMet;
+  vote.result = passed ? 'passed' : 'failed';
+  vote.finalizedAt = nowStamp();
+  vote.finalizedBy = req.user.name;
+  if (!passed) {
+    proposal.status = 'closed';
+    proposal.statusLabel = 'Vote not adopted';
+    proposal.next = 'Next legislative cycle';
+    proposal.decision = { outcome: 'Rejected', reason: `Coach vote did not meet ${quorumMet ? 'the approval threshold' : 'quorum'}.`, effectiveDate: '', decidedBy: req.user.name, decidedAt: nowStamp() };
+    proposal.activity = `Coach vote not adopted by ${req.user.name}`;
+  } else if (proposal.bucket === 'Bucket 3') {
+    proposal.status = 'board';
+    proposal.statusLabel = 'Board decision';
+    proposal.next = 'Board to record Adopted, Rejected, or Tabled';
+    proposal.activity = `Coach vote passed; routed to Board by ${req.user.name}`;
+  } else {
+    proposal.status = 'decision';
+    proposal.statusLabel = 'Commissioner decision';
+    proposal.next = 'Commissioner to record final outcome';
+    proposal.activity = `Coach vote passed; awaiting Commissioner decision`;
+  }
+  proposal.time = nowStamp();
+  appendAudit(proposal, passed ? 'Coach vote finalized: passed' : 'Coach vote finalized: not adopted', req.user.name, {
+    reason: `Represented ${represented}/${vote.eligibleUnits.length}; ${counts.yes} yes, ${counts.no} no, ${counts.abstain} abstain`
+  });
+  writePortalData(data);
+  res.json(publicProposal(proposal, req.user));
+});
+
+app.post('/api/proposals/:id/decision', requireSession, requireGovernanceAdmin, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  if (proposal.bucket === 'Bucket 3') return res.status(409).json({ error: 'Bucket 3 proposals require a Board decision' });
+  if (proposal.status !== 'decision' && !(proposal.bucket === 'Bucket 1' && ['review', 'comment'].includes(proposal.status))) return res.status(409).json({ error: 'Proposal is not awaiting a Commissioner decision' });
+  const input = validateDecisionInput(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  recordDecision(proposal, input.value, req.user);
+  writePortalData(data);
+  res.json(publicProposal(proposal, req.user));
+});
+
+app.post('/api/proposals/:id/board-decision', requireSession, requireBoardAuthority, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  if (proposal.bucket !== 'Bucket 3' || proposal.status !== 'board') return res.status(409).json({ error: 'Proposal is not awaiting a Board decision' });
+  const input = validateDecisionInput(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  recordDecision(proposal, input.value, req.user);
+  appendAudit(proposal, 'Board decision recorded', req.user.name);
+  writePortalData(data);
+  res.json(publicProposal(proposal, req.user));
+});
+
+app.post('/api/proposals/:id/revisions', requireSession, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  const owner = proposal.proposerId ? proposal.proposerId === req.user.id : proposal.proposer === req.user.name;
+  if (!owner || !['comment', 'vote', 'board', 'decision'].includes(proposal.status)) return res.status(403).json({ error: 'Only the proposer may revise an active proposal' });
+  const input = validateProposalInput({ ...req.body, submissionState: 'submit' }, req.user);
+  if (input.error) return res.status(400).json({ error: input.error });
+  const changeSummary = requiredText(req.body?.changeSummary, 'Change summary', PROPOSAL_LIMITS.reason);
+  if (changeSummary.error) return changeSummary;
+  const versions = ensureVersionHistory(proposal);
+  const nextVersion = currentVersion(proposal) + 1;
+  versions.push({ version: nextVersion, title: input.value.title, program: input.value.program, coSponsors: [...input.value.coSponsors], body: input.value.body, files: [...input.value.files], createdBy: req.user.name, createdAt: nowStamp(), changeSummary: changeSummary.value });
+  Object.assign(proposal, { title: input.value.title, program: input.value.program, coSponsors: input.value.coSponsors, body: input.value.body, files: input.value.files, version: nextVersion, bucket: 'Unassigned', status: 'review', statusLabel: 'Staff review', next: 'CSA staff review', activity: `Version ${nextVersion} submitted for staff review`, time: nowStamp() });
+  if (proposal.vote) proposal.voteHistory = [...(proposal.voteHistory || []), proposal.vote];
+  proposal.vote = null;
+  proposal.decision = null;
+  appendAudit(proposal, `Revision ${nextVersion} submitted`, req.user.name, { reason: changeSummary.value });
+  writePortalData(data);
+  res.status(201).json(publicProposal(proposal, req.user));
+});
+
+app.post('/api/proposals/:id/comments', requireSession, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  if (proposal.status !== 'comment') return res.status(409).json({ error: 'Comment window is closed' });
+  const text = requiredText(req.body?.text, 'Comment text', 2000);
+  if (text.error) return res.status(400).json({ error: text.error });
+  if (!canViewProposal(req.user, proposal)) return res.status(403).json({ error: 'You do not have access to this proposal' });
+  proposal.comments.push({ authorId: req.user.id, author: req.user.name, date: nowStamp(), text: text.value });
+  proposal.activity = `Comment added by ${req.user.name}`;
+  proposal.time = nowStamp();
+  appendAudit(proposal, 'Comment added', req.user.name);
+  writePortalData(data);
+  res.status(201).json(publicProposal(proposal, req.user));
+});
+
+app.delete('/api/proposals/:id/comments/:index', requireSession, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!/^\d+$/.test(req.params.index)) return res.status(400).json({ error: 'Comment index must be a non-negative integer' });
+  const index = Number(req.params.index);
+  if (!Number.isSafeInteger(index)) return res.status(400).json({ error: 'Comment index is out of range' });
+  if (!proposal || !proposal.comments[index]) return res.status(404).json({ error: 'Comment not found' });
+  if (!canViewProposal(req.user, proposal)) return res.status(403).json({ error: 'You do not have access to this proposal' });
+  const comment = proposal.comments[index];
+  const isOwner = comment.authorId ? comment.authorId === req.user.id : comment.author === req.user.name;
+  if (!isOwner && !isModerator(req.user)) return res.status(403).json({ error: 'You may only remove your own comments' });
+  const suppliedReason = req.body?.reason;
+  if (suppliedReason !== undefined && typeof suppliedReason !== 'string') return res.status(400).json({ error: 'Removal reason must be text' });
+  const reason = (suppliedReason || (isOwner ? 'Removed by commenter' : '')).trim();
+  if (reason.length > PROPOSAL_LIMITS.reason) return res.status(400).json({ error: `Removal reason must be ${PROPOSAL_LIMITS.reason} characters or fewer` });
+  if (isModerator(req.user) && !isOwner && !reason) return res.status(400).json({ error: 'A moderation reason is required' });
+  comment.removed = true;
+  comment.originalText = comment.text;
+  comment.removedBy = req.user.name;
+  comment.removedReason = reason;
+  appendAudit(proposal, 'Comment removed', req.user.name, { reason });
+  proposal.activity = 'Comment removed from visible thread';
+  proposal.time = nowStamp();
+  writePortalData(data);
+  res.json(publicProposal(proposal, req.user));
+});
+
+app.get('/api/proposals/:id/record.pdf', requireSession, (req, res) => {
+  const data = readPortalData();
+  const proposal = data.proposals.find(item => item.id === req.params.id);
+  if (!proposal) return res.status(404).json({ error: 'Proposal not found' });
+  if (!canViewProposal(req.user, proposal)) return res.status(403).json({ error: 'You do not have access to this proposal' });
+  const cycle = publicCycle(data);
+  const versions = versionSummaries(proposal);
+  const doc = new PDFDocument({ size: 'LETTER', margins: { top: 48, right: 52, bottom: 48, left: 52 } });
+  const filename = `${proposal.id}-${String(proposal.title).replace(/[^a-z0-9]+/gi, '-').replace(/^-|-$/g, '').slice(0, 60) || 'proposal'}-record.pdf`;
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  doc.pipe(res);
+  const text = value => String(value ?? '').replace(/\s+/g, ' ').trim();
+  doc.fillColor('#1b2a4a').font('Helvetica-Bold').fontSize(18).text('CSA LEGISLATIVE RECORD');
+  doc.moveDown(0.35).fillColor('#c4933f').font('Helvetica').fontSize(10).text(`${cycle.id} · ${cycle.name} · Policy ${cycle.policyVersion}`);
+  doc.moveDown(1).fillColor('#1b2a4a').font('Helvetica-Bold').fontSize(16).text(text(proposal.title));
+  doc.moveDown(0.4).fillColor('#555555').font('Helvetica').fontSize(10).text(`${text(proposal.program)} · ${text(proposal.bucket)} · ${text(proposal.statusLabel)} · Version ${proposal.version || 1}`);
+  doc.moveDown(1).fillColor('#1b2a4a').font('Helvetica-Bold').fontSize(11).text('Proposal');
+  doc.moveDown(0.25).fillColor('#333333').font('Helvetica').fontSize(10).text(text(proposal.body), { lineGap: 3 });
+  doc.moveDown(0.8).fillColor('#1b2a4a').font('Helvetica-Bold').fontSize(11).text('Decision record');
+  const decision = proposal.decision || {};
+  doc.moveDown(0.25).fillColor('#333333').font('Helvetica').fontSize(10).text([decision.outcome, decision.effectiveDate && `Effective ${decision.effectiveDate}`, decision.reason].filter(Boolean).join(' · ') || 'No final decision recorded.', { lineGap: 3 });
+  doc.moveDown(0.8).fillColor('#1b2a4a').font('Helvetica-Bold').fontSize(11).text('Version history');
+  versions.forEach(version => {
+    doc.moveDown(0.2).fillColor('#333333').font('Helvetica').fontSize(10).text(`Version ${version.version} · ${text(version.createdBy)} · ${text(version.createdAt)}${version.changeSummary ? ` · ${text(version.changeSummary)}` : ''}`);
+    if (version.changedFields.length) doc.fillColor('#666666').fontSize(9).text(`Changed fields: ${version.changedFields.join(', ')}`);
+  });
+  doc.moveDown(0.8).fillColor('#1b2a4a').font('Helvetica-Bold').fontSize(11).text('Discussion');
+  const comments = (proposal.comments || []).filter(comment => !comment.removed);
+  doc.moveDown(0.25).fillColor('#333333').font('Helvetica').fontSize(10).text(comments.length ? comments.map(comment => `${text(comment.author)} · ${text(comment.date)}: ${text(comment.text)}`).join('\n') : 'No visible comments recorded.', { lineGap: 3 });
+  doc.moveDown(0.8).fillColor('#1b2a4a').font('Helvetica-Bold').fontSize(11).text('Audit trail');
+  (proposal.audit || []).forEach(item => {
+    const fields = item.fields?.length ? ` · fields: ${item.fields.join(', ')}` : '';
+    doc.moveDown(0.18).fillColor('#333333').font('Helvetica').fontSize(9).text(`${text(item.at)} · ${text(item.by)} · ${text(item.event)}${item.reason ? ` · ${text(item.reason)}` : ''}${fields}`);
+  });
+  doc.end();
+});
 
 // ── Colors (exact match to app CSS) ──────────────────────────────────────────
 const C = {
@@ -173,6 +1283,13 @@ app.post('/generate-pdf', (req, res) => {
   });
 
   doc.end();
+});
+
+app.use((error, req, res, next) => {
+  if (error instanceof SyntaxError && error.status === 400 && Object.hasOwn(error, 'body')) {
+    return res.status(400).json({ error: 'Request body must be valid JSON' });
+  }
+  next(error);
 });
 
 app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));

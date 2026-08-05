@@ -4,7 +4,8 @@
   "description": "Princeton Squash CSA Season Scheduler",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "prototype:proposal-hardening": "node .scratch/csa-portal/prototypes/proposal-hardening/run.mjs"
   },
   "dependencies": {
     "express": "^4.18.2",

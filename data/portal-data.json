@@ -1,0 +1,166 @@
+{
+  "users": [
+    { "id": "u-jordan", "name": "Jordan Smith", "email": "jordan@columbia.edu", "role": "coach", "active": true, "programs": ["Columbia"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
+    { "id": "u-will", "name": "Will Carlin", "email": "will@princeton.edu", "role": "coach", "active": true, "programs": ["Princeton"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
+    { "id": "u-chris", "name": "Chris Bell", "email": "chris@penn.edu", "role": "coach", "active": true, "programs": ["Penn"], "permissions": ["legislative:submit", "legislative:comment", "legislative:vote"] },
+    { "id": "u-commissioner", "name": "Harry Smith", "email": "commissioner@csasquash.org", "role": "commissioner", "active": true, "programs": ["CSA"], "permissions": ["legislative:admin", "legislative:moderation", "legislative:board"] },
+    { "id": "u-maya", "name": "Maya Chen", "email": "board@csasquash.org", "role": "board_member", "active": true, "programs": [], "permissions": ["legislative:board", "legislative:comment"] },
+    { "id": "u-staff", "name": "CSA Staff", "email": "staff@csasquash.org", "role": "staff", "active": true, "programs": [], "permissions": ["legislative:admin", "legislative:moderation", "legislative:comment"] },
+    { "id": "u-admin", "name": "Portal Administrator", "email": "admin@columbia.edu", "role": "administrator", "active": true, "programs": ["Columbia"], "permissions": ["legislative:admin", "legislative:moderation", "legislative:comment"] },
+    { "id": "u-observer", "name": "Conference Observer", "email": "observer@conference.org", "role": "conference_observer", "active": true, "programs": [], "permissions": ["legislative:comment"] }
+  ],
+  "cycle": {
+    "id": "2026-27",
+    "name": "Annual Legislative Cycle",
+    "status": "pilot",
+    "phase": "review",
+    "timeZone": "America/New_York",
+    "policyVersion": "v4",
+    "note": "Pilot timing is configurable by CSA governance authority.",
+    "deadlines": [
+      { "id": "submission-close", "label": "Proposal submission window closes", "date": "2026-09-04", "stage": "review" },
+      { "id": "distribution", "label": "Accepted proposals distributed", "date": "2026-09-18", "stage": "comment" },
+      { "id": "comment-close", "label": "Comment and revision window closes", "date": "2026-12-01", "stage": "vote" },
+      { "id": "vote-close", "label": "Coach vote closes", "date": "2027-05-07", "stage": "board" },
+      { "id": "board-review", "label": "Board ratification window", "date": "2027-05-21", "stage": "decision" }
+    ],
+    "audit": []
+  },
+  "policy": {
+    "version": "v4",
+    "effectiveDate": "2026-08-01",
+    "quorumRequired": 3,
+    "thresholdPercent": 50,
+    "eligibleVotingUnits": ["Columbia", "Princeton", "Penn", "Trinity", "Yale"],
+    "proxyRegistrationHours": 72
+  },
+  "accessAudit": [],
+  "governanceAudit": [],
+  "policyHistory": [],
+  "proposals": [
+    {
+      "id": "p1",
+      "title": "Standardize championship host selection criteria",
+      "program": "Princeton",
+      "proposer": "Will Carlin",
+      "proposerId": "u-will",
+      "coSponsors": ["Penn", "Yale"],
+      "bucket": "Bucket 3",
+      "status": "comment",
+      "statusLabel": "Comment window",
+      "next": "Revisions due Dec 1",
+      "body": "Create a transparent host-selection process that accounts for facility readiness, travel burden, broadcast capacity, and student-athlete experience.",
+      "comments": [
+        { "author": "Jordan Smith", "date": "Nov 14", "text": "The travel burden language should include a consistent distance threshold." },
+        { "author": "Maya Chen", "date": "Nov 13", "text": "Support the direction. Would like to see the facility checklist before December." }
+      ],
+      "files": ["Host selection draft v2.pdf"],
+      "activity": "Comment added by Jordan Smith",
+      "time": "18 min ago",
+      "audit": [
+        { "event": "Proposal submitted", "by": "Will Carlin", "at": "Sep 4" },
+        { "event": "Bucket assigned: Bucket 3", "by": "Commissioner", "at": "Sep 6" },
+        { "event": "Accepted and distributed", "by": "Commissioner", "at": "Sep 18" }
+      ]
+    },
+    {
+      "id": "p2",
+      "title": "Clarify ranking data submission windows",
+      "program": "Columbia",
+      "proposer": "Jordan Smith",
+      "proposerId": "u-jordan",
+      "coSponsors": ["Princeton", "Penn"],
+      "bucket": "Bucket 2",
+      "status": "review",
+      "statusLabel": "Staff review",
+      "next": "Awaiting Commissioner review",
+      "body": "Establish a shared submission window and correction protocol for ranking match data across the regular season.",
+      "comments": [],
+      "files": ["Ranking data proposal.docx"],
+      "activity": "Submitted for staff review",
+      "time": "Yesterday",
+      "audit": [
+        { "event": "Proposal submitted", "by": "Jordan Smith", "at": "Nov 14" }
+      ]
+    },
+    {
+      "id": "p3",
+      "title": "Member program travel support pilot",
+      "program": "Yale",
+      "proposer": "Anna Morales",
+      "coSponsors": ["Columbia", "Princeton"],
+      "bucket": "Bucket 3",
+      "status": "vote",
+      "statusLabel": "Coach vote open",
+      "next": "Quorum and threshold calculated at close",
+      "body": "Pilot a needs-based travel support fund for qualifying member programs attending CSA championship events.",
+      "comments": [
+        { "author": "Alex Reed", "date": "Oct 28", "text": "Would like to understand the proposed funding source." }
+      ],
+      "files": ["Travel support pilot.pdf", "Budget assumptions.xlsx"],
+      "activity": "Moved to coach vote",
+      "time": "Oct 29",
+      "vote": {
+        "eligibleUnits": ["Columbia", "Princeton", "Penn", "Trinity", "Yale"],
+        "quorumRequired": 3,
+        "thresholdPercent": 50,
+        "ballots": [],
+        "status": "open",
+        "result": null,
+        "counts": null,
+        "quorumMet": null,
+        "thresholdMet": null
+      },
+      "audit": [
+        { "event": "Proposal submitted", "by": "Anna Morales", "at": "Sep 2" },
+        { "event": "Accepted and distributed", "by": "Commissioner", "at": "Sep 18" },
+        { "event": "Comment window closed", "by": "CSA staff", "at": "Dec 1" }
+      ]
+    },
+    {
+      "id": "p4",
+      "title": "Update emergency session notice language",
+      "program": "Trinity",
+      "proposer": "Maya Chen",
+      "proposerId": "u-maya",
+      "coSponsors": ["Columbia", "Penn"],
+      "bucket": "Bucket 1",
+      "status": "closed",
+      "statusLabel": "Decision recorded",
+      "next": "Decision recorded Nov 2",
+      "body": "Clarify emergency session notices and the circumstances in which the Commissioner may authorize an exception.",
+      "comments": [],
+      "files": [],
+      "activity": "Decision recorded by Commissioner",
+      "time": "Nov 2",
+      "decision": { "outcome": "Adopted", "reason": "Administrative clarification", "effectiveDate": "2026-11-02", "decidedBy": "Harry Smith", "decidedAt": "Nov 2" },
+      "audit": [
+        { "event": "Proposal submitted", "by": "Maya Chen", "at": "Oct 20" },
+        { "event": "Bucket assigned: Bucket 1", "by": "Commissioner", "at": "Oct 22" },
+        { "event": "Decision recorded", "by": "Commissioner", "at": "Nov 2", "reason": "Administrative clarification" }
+      ]
+    },
+    {
+      "id": "p5",
+      "title": "Create a shared rules change archive",
+      "program": "Penn",
+      "proposer": "Chris Bell",
+      "proposerId": "u-chris",
+      "coSponsors": ["Princeton", "Trinity"],
+      "bucket": "Bucket 2",
+      "status": "comment",
+      "statusLabel": "Comment window",
+      "next": "Comments close Dec 1",
+      "body": "Create a durable, searchable archive of approved and rejected proposals, effective dates, and policy versions.",
+      "comments": [],
+      "files": ["Archive outline.pdf"],
+      "activity": "Document updated",
+      "time": "Nov 8",
+      "audit": [
+        { "event": "Proposal submitted", "by": "Chris Bell", "at": "Sep 3" },
+        { "event": "Accepted and distributed", "by": "Commissioner", "at": "Sep 18" },
+        { "event": "Document updated", "by": "Chris Bell", "at": "Nov 8" }
+      ]
+    }
+  ]
+}

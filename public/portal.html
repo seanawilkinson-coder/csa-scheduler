@@ -1,0 +1,1209 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CSA Portal — Legislative Cycle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600;6..72,700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #172435;
+      --navy: #152b43;
+      --navy-soft: #203d5c;
+      --maroon: #8b1f2b;
+      --gold: #c59a58;
+      --paper: #fbfaf7;
+      --tray: #eef0ee;
+      --white: #ffffff;
+      --muted: #687580;
+      --quiet: #9aa5ac;
+      --rule: rgba(23, 36, 53, .16);
+      --green: #3a6547;
+      --green-soft: #e0ebe1;
+      --blue: #315f78;
+      --blue-soft: #e1ebf2;
+      --rust: #91574d;
+      --rust-soft: #f3e1dc;
+      --serif: 'Newsreader', Georgia, serif;
+      --sans: 'DM Sans', system-ui, sans-serif;
+      --data: 'DM Mono', ui-monospace, monospace;
+      --ease-out: cubic-bezier(.22, .8, .25, 1);
+      --ease-in: cubic-bezier(.7, 0, .84, 0);
+      --sidebar-width: 224px;
+      --z-nav: 10;
+      --z-scrim: 40;
+      --z-sheet: 50;
+      --z-toast: 60;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    html, body { margin: 0; min-height: 100%; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--paper); color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; }
+    body, button, input, textarea, select { text-wrap: pretty; }
+    button, input, textarea, select { font: inherit; }
+    button { cursor: pointer; touch-action: manipulation; }
+    button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+    h1, h2, h3, p { margin: 0; }
+    h1, h2, h3 { font-family: var(--serif); font-weight: 600; }
+    .mono { font-family: var(--data); font-variant-numeric: tabular-nums lining-nums; }
+    .kicker { color: var(--muted); font: 500 11px/1 var(--data); letter-spacing: .18em; text-transform: uppercase; }
+    .skip-link { position: fixed; left: 18px; top: 14px; z-index: var(--z-toast); transform: translateY(-160%); background: var(--gold); color: var(--navy); padding: 10px 14px; font-weight: 700; transition: transform .2s var(--ease-out); }
+    .skip-link:focus { transform: translateY(0); }
+
+    /* The sign-in surface is a field, not a centered SaaS card. */
+    .auth-gate { min-height: 100dvh; background: var(--navy); color: var(--white); padding: 42px 6vw; display: grid; align-items: center; }
+    .auth-shell { width: min(1180px, 100%); margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(320px, .9fr); gap: 9vw; align-items: center; }
+    .auth-logo { display: block; width: 126px; height: auto; }
+    .auth-brandline { display: flex; align-items: center; gap: 13px; }
+    .auth-brandline strong { font-size: 14px; letter-spacing: -.01em; }
+    .auth-brandline span { display: block; color: rgba(255,255,255,.52); font-size: 11px; margin-top: 2px; }
+    .auth-copy h1 { max-width: 8ch; margin-top: 34px; color: var(--white); font-size: clamp(58px, 8vw, 112px); line-height: .84; letter-spacing: -.06em; }
+    .auth-copy .lede { max-width: 45ch; margin-top: 30px; color: rgba(255,255,255,.7); font-size: 17px; line-height: 1.6; }
+    .auth-form { display: grid; gap: 18px; }
+    .auth-panel { border-top: 1px solid rgba(255,255,255,.38); padding-top: 23px; }
+    .auth-panel .kicker { color: var(--gold); }
+    .auth-panel .form-label, .auth-panel .form-label strong { color: var(--white); }
+    .auth-panel .field { background: transparent; color: var(--white); border-color: rgba(255,255,255,.38); border-width: 0 0 1px; border-radius: 0; padding-left: 0; padding-right: 0; }
+    .auth-panel .field::placeholder { color: rgba(255,255,255,.42); }
+    .auth-panel .field:focus { border-color: var(--gold); box-shadow: 0 1px 0 var(--gold); }
+    .auth-panel .button { width: fit-content; min-width: 170px; }
+    .auth-error { min-height: 18px; color: #f0b9ac; font-size: 12px; }
+    .auth-code { display: none; }
+    .auth-code.visible { display: grid; gap: 18px; }
+    .auth-hint { padding: 11px 13px; background: rgba(197,154,88,.16); color: #f6d9a3; font: 500 12px/1.45 var(--data); }
+    .auth-back { width: fit-content; border: 0; border-bottom: 1px solid rgba(255,255,255,.35); padding: 0 0 3px; background: transparent; color: rgba(255,255,255,.62); font-size: 12px; }
+    .auth-dev-panel { margin-top: 30px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,.2); }
+    .auth-dev-title { color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .15em; text-transform: uppercase; }
+    .auth-dev-copy { margin-top: 8px; color: rgba(255,255,255,.52); font-size: 11px; line-height: 1.5; }
+    .auth-dev-form { margin-top: 16px; }
+    body.authenticated .auth-gate { display: none; }
+    body:not(.authenticated) .app { display: none; }
+
+    /* The app shell keeps navigation dark and the working record light. */
+    .app { min-height: 100dvh; display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+    .sidebar { display: flex; flex-direction: column; padding: 26px 18px 18px; background: var(--navy); color: var(--white); }
+    .brand { display: flex; align-items: center; gap: 12px; padding: 0 10px 35px; }
+    .brand-logo { display: block; width: 66px; height: auto; }
+    .brand-title { font: 600 18px/1 var(--serif); }
+    .brand-sub { margin-top: 4px; color: rgba(255,255,255,.48); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; }
+    .side-label { padding: 0 11px; color: rgba(255,255,255,.4); font: 500 10px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
+    .nav { display: grid; gap: 2px; margin-top: 12px; }
+    .nav button { min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 10px 11px; border: 0; border-left: 2px solid transparent; background: transparent; color: rgba(255,255,255,.62); text-align: left; transition: color .18s var(--ease-out), background .18s var(--ease-out), border-color .18s var(--ease-out); }
+    .nav button:hover { background: rgba(255,255,255,.06); color: var(--white); }
+    .nav button.active { border-left-color: var(--gold); background: rgba(255,255,255,.1); color: var(--white); }
+    .nav-count { margin-left: auto; color: var(--gold); font: 500 10px/1 var(--data); }
+    .nav-icon { position: relative; width: 13px; height: 13px; flex: 0 0 13px; color: var(--gold); }
+    .nav-icon::before { content: ''; position: absolute; inset: 2px; border: 1px solid currentColor; }
+    .nav-icon.circle::before { border-radius: 50%; }
+    .nav-icon.line::before { top: 6px; bottom: auto; height: 1px; border: 0; background: currentColor; }
+    .nav-icon.check::before { border-width: 0 1px 1px 0; transform: rotate(45deg) translate(-1px, -2px); }
+    .nav-icon.corner::before { border-width: 0 0 1px 1px; }
+    .nav-icon.square::before { border-radius: 1px; }
+    .side-bottom { margin-top: auto; padding: 18px 10px 0; border-top: 1px solid rgba(255,255,255,.14); }
+    .identity { display: flex; align-items: center; gap: 10px; }
+    .avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: var(--navy); font-weight: 700; }
+    .identity-name { color: var(--white); font-size: 12px; font-weight: 600; }
+    .identity-role { margin-top: 2px; color: rgba(255,255,255,.48); font-size: 11px; }
+
+    .main { min-width: 0; background: var(--paper); }
+    .topbar { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 0 42px; border-bottom: 1px solid var(--rule); background: var(--paper); }
+    .crumb { color: var(--muted); font-size: 12px; }
+    .crumb strong { color: var(--ink); font-weight: 600; }
+    .top-actions { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: flex-end; }
+    .top-link { min-height: 44px; border: 0; border-bottom: 1px solid transparent; padding: 0; background: transparent; color: var(--muted); font-size: 12px; }
+    .top-link:hover { border-color: var(--ink); color: var(--ink); }
+    .field, .program-select, .role-select { min-height: 44px; width: 100%; border: 1px solid var(--rule); border-radius: 0; background: var(--white); color: var(--ink); padding: 9px 11px; outline: none; }
+    .program-select, .role-select { width: auto; min-width: 130px; background: transparent; font-size: 12px; }
+    .role-select { color: var(--muted); font-size: 11px; }
+    .field:focus, .program-select:focus, .role-select:focus { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(197,154,88,.14); }
+    .content { width: min(1400px, calc(100% - 84px)); margin: 0 auto; padding: 43px 0 80px; }
+    .page-head { display: flex; align-items: end; justify-content: space-between; gap: 30px; margin-bottom: 33px; }
+    .page-head h1 { margin-top: 12px; font-size: clamp(43px, 5.3vw, 76px); line-height: .9; letter-spacing: -.055em; }
+    .lede { max-width: 57ch; margin-top: 17px; color: var(--muted); font-size: 16px; line-height: 1.6; }
+    .button { min-height: 44px; border: 1px solid var(--navy); border-radius: 4px; padding: 10px 15px; background: var(--navy); color: var(--white); font-size: 12px; font-weight: 700; transition: background .18s var(--ease-out), border-color .18s var(--ease-out), color .18s var(--ease-out), transform .18s var(--ease-out); }
+    .button:hover { background: var(--navy-soft); border-color: var(--navy-soft); transform: translateY(-1px); }
+    .button:disabled { cursor: not-allowed; opacity: .45; transform: none; }
+    .button.secondary { border-color: var(--rule); background: transparent; color: var(--ink); }
+    .button.secondary:hover { border-color: var(--ink); background: transparent; }
+    .button.gold { border-color: var(--gold); background: var(--gold); color: var(--navy); }
+    .button.gold:hover { border-color: #d1a965; background: #d1a965; }
+
+    /* The active cycle is one dark field with a rail. It is not a card. */
+    .cycle-strip { display: grid; grid-template-columns: minmax(240px, .9fr) minmax(340px, 1.5fr) auto; gap: 38px; align-items: center; padding: 27px 28px 31px; background: var(--navy); color: var(--white); }
+    .cycle-kicker { color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
+    .cycle-detail { max-width: 32ch; margin-top: 8px; color: rgba(255,255,255,.68); font-size: 12px; }
+    .cycle-progress { display: grid; gap: 10px; }
+    .progress-labels { display: flex; justify-content: space-between; gap: 16px; color: rgba(255,255,255,.7); font: 500 10px/1 var(--data); letter-spacing: .07em; text-transform: uppercase; }
+    .progress-labels strong { color: var(--gold); font-weight: 500; }
+    .progress-track { position: relative; height: 1px; margin: 3px 0 11px; background: rgba(255,255,255,.42); }
+    .progress-track::after { content: ''; position: absolute; left: 0; top: -4px; width: 9px; height: 9px; border-radius: 50%; background: var(--gold); }
+    .progress-track span { display: none; }
+    .cycle-next { padding-left: 24px; border-left: 1px solid rgba(255,255,255,.25); min-width: 150px; }
+    .cycle-next-label { color: rgba(255,255,255,.52); font: 500 10px/1 var(--data); letter-spacing: .12em; text-transform: uppercase; }
+    .cycle-next-date { margin-top: 8px; font: 500 26px/1 var(--data); letter-spacing: -.08em; }
+    .cycle-next-action { margin-top: 5px; color: var(--gold); font-size: 12px; }
+
+    /* Summary is a sentence-like register, never a KPI card mosaic. */
+    .stats { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 25px; padding: 20px 0 19px; border-bottom: 1px solid var(--rule); }
+    .stat { display: inline-flex; align-items: baseline; gap: 7px; }
+    .stat-label { color: var(--muted); font-size: 12px; }
+    .stat-value { font: 500 24px/1 var(--serif); }
+    .stat-note { color: var(--muted); font-size: 12px; }
+
+    .workspace { display: grid; grid-template-columns: minmax(0, 1fr) 290px; gap: 70px; margin-top: 46px; }
+    .section-head { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 18px; }
+    .section-title { font-size: 16px; font-weight: 700; letter-spacing: -.02em; }
+    .section-sub { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .tabs { display: flex; gap: 24px; margin-bottom: 0; border-bottom: 1px solid var(--rule); }
+    .tab { min-height: 44px; border: 0; border-bottom: 2px solid transparent; padding: 0 0 10px; background: transparent; color: var(--muted); font-size: 12px; }
+    .tab:hover, .tab.active { border-bottom-color: var(--gold); color: var(--ink); }
+    .tab.active { font-weight: 700; }
+    .proposal-list { border-top: 1px solid var(--ink); }
+    .proposal-row { display: block; min-height: 0; padding: 18px 0; border-bottom: 1px solid var(--rule); cursor: pointer; transition: background .18s var(--ease-out), padding .18s var(--ease-out); }
+    .proposal-row:hover { padding-left: 11px; padding-right: 11px; background: rgba(238,240,238,.72); }
+    .proposal-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; }
+    .proposal-row-state { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 18px; margin-top: 11px; }
+    .proposal-title { font-size: 14px; font-weight: 700; letter-spacing: -.015em; }
+    .proposal-meta { margin-top: 5px; color: var(--muted); font-size: 12px; }
+    .status, .bucket { display: inline-flex; align-items: center; width: fit-content; gap: 7px; min-height: 0; padding: 0; border-radius: 0; font: 500 11px/1.25 var(--data); white-space: nowrap; }
+    .status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+    .status.review { color: var(--blue); }
+    .status.comment { color: var(--green); }
+    .status.vote { color: #80602a; }
+    .status.board, .status.decision { color: var(--maroon); }
+    .status.closed { color: var(--rust); }
+    .status.draft { color: var(--muted); }
+    .bucket { color: var(--muted); }
+    .next-action { display: flex; align-items: baseline; gap: 8px; margin-left: auto; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .next-action strong { color: var(--ink); font: 500 10px/1 var(--data); letter-spacing: .12em; text-transform: uppercase; }
+    .empty { padding: 24px 0; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 13px; }
+
+    .activity { margin-top: 52px; }
+    .activity-list { border-top: 1px solid var(--ink); }
+    .activity-item { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; padding: 15px 0; border: 0; border-bottom: 1px solid var(--rule); background: transparent; color: inherit; text-align: left; cursor: pointer; animation: activity-rise .28s var(--ease-out) both; transition: background .18s var(--ease-out), padding .18s var(--ease-out); }
+    .activity-item:hover { padding-left: 10px; padding-right: 10px; background: rgba(238,240,238,.72); }
+    .activity-item:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--gold); outline-offset: -2px; }
+    .activity-mark { width: 8px; height: 8px; margin-top: 5px; border: 2px solid var(--gold); border-radius: 50%; }
+    .activity-text { font-size: 12px; }
+    .activity-text strong { font-weight: 700; }
+    .activity-source { display: block; margin-top: 4px; color: var(--muted); font: 500 10px/1.4 var(--data); }
+    .activity-time { color: var(--quiet); font: 500 10px/1.3 var(--data); white-space: nowrap; }
+    @keyframes activity-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    .module-panel { margin-top: 40px; padding-top: 26px; border-top: 1px solid var(--ink); }
+    .module-register { margin-top: 18px; border-top: 1px solid var(--ink); }
+    .module-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 22px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--rule); }
+    .module-row-label { color: var(--gold); font: 500 10px/1.35 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .module-row-value { font-size: 13px; font-weight: 700; }
+    .module-row-copy { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+    .module-note { margin-top: 18px; max-width: 58ch; color: var(--muted); font-size: 13px; line-height: 1.55; }
+    .module-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+    .feedback-form { max-width: 760px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--ink); }
+    .feedback-fields { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 0 20px; align-items: start; }
+    .feedback-fields .form-label { padding: 13px 0; border-bottom: 0; }
+    .feedback-form .textarea { min-height: 130px; }
+    .feedback-form-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 8px; }
+    .feedback-form-note { color: var(--muted); font-size: 11px; }
+    .feedback-list { margin-top: 45px; }
+    .feedback-list .section-head { margin-bottom: 18px; }
+    .feedback-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 16px; align-items: start; padding: 17px 0; border-top: 1px solid var(--rule); }
+    .feedback-category { color: var(--gold); font: 500 10px/1.35 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .feedback-message { font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+    .feedback-context { margin-top: 5px; color: var(--muted); font: 500 10px/1.4 var(--data); }
+    .feedback-byline { color: var(--muted); font: 500 10px/1.35 var(--data); text-align: right; white-space: nowrap; }
+    .feedback-resolve { margin-top: 8px; border: 0; border-bottom: 1px solid var(--rule); padding: 0 0 2px; background: transparent; color: var(--ink); font: 500 10px/1.3 var(--data); }
+    .feedback-resolve:hover { border-bottom-color: var(--gold); color: var(--gold); }
+
+    /* The cycle sidebar is a vertical rail, not a stack of milestone cards. */
+    .timeline { padding-left: 23px; border-left: 1px solid var(--rule); }
+    .timeline-head { margin-bottom: 28px; }
+    .timeline-item { position: relative; padding: 0 0 25px 17px; }
+    .timeline-item::before { content: ''; position: absolute; left: -28px; top: 2px; width: 9px; height: 9px; border: 2px solid var(--gold); border-radius: 50%; background: var(--paper); }
+    .timeline-item.done::before { background: var(--gold); }
+    .timeline-item:not(:last-child)::after { content: ''; position: absolute; left: -23px; top: 15px; bottom: -4px; width: 1px; background: var(--rule); }
+    .timeline-date { color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .timeline-title { margin-top: 7px; font-size: 13px; font-weight: 700; }
+    .timeline-copy { margin-top: 5px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .access-panel { margin-top: 46px; padding-top: 26px; border-top: 1px solid var(--ink); }
+    .access-list { margin-top: 18px; border-top: 1px solid var(--ink); }
+    .access-row { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(130px, .7fr) minmax(190px, 1fr) auto; gap: 18px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--rule); }
+    .access-name { font-weight: 700; }
+    .access-email { margin-top: 4px; color: var(--muted); font: 500 10px/1.3 var(--data); }
+    .access-controls { display: grid; gap: 5px; }
+    .access-controls label { color: var(--muted); font: 500 10px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .access-controls select { min-height: 36px; width: 100%; border: 1px solid var(--rule); border-radius: 0; background: var(--white); color: var(--ink); padding: 7px 8px; font-size: 12px; }
+    .access-controls select[multiple] { min-height: 72px; }
+    .access-active { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; white-space: nowrap; }
+    .access-active input { width: 17px; height: 17px; accent-color: var(--navy); }
+    .cycle-controls { margin-top: 42px; padding-top: 26px; border-top: 1px solid var(--ink); }
+    .cycle-control-list { margin-top: 18px; border-top: 1px solid var(--ink); }
+    .cycle-control-row { display: grid; grid-template-columns: minmax(190px, 1fr) 180px minmax(180px, 1.4fr); gap: 18px; align-items: center; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    .cycle-control-label { font-size: 12px; font-weight: 700; }
+    .cycle-control-stage { color: var(--muted); font: 500 10px/1.3 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .cycle-control-row input { width: 100%; min-height: 36px; border: 1px solid var(--rule); border-radius: 0; background: var(--white); color: var(--ink); padding: 7px 8px; font: 500 12px/1.2 var(--data); }
+    .cycle-control-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-top: 17px; }
+    .cycle-control-footer .button { flex: 0 0 auto; }
+    .version-row { padding: 13px 0; border-bottom: 1px solid var(--rule); }
+    .version-row-head { display: flex; justify-content: space-between; gap: 15px; color: var(--muted); font: 500 10px/1.35 var(--data); }
+    .version-row-head strong { color: var(--ink); font-family: var(--sans); font-size: 12px; }
+    .version-row-copy { margin-top: 6px; color: var(--muted); font-size: 12px; }
+    .version-row-copy em { color: var(--ink); font-style: normal; }
+    .deadline-note { color: var(--muted); font-size: 11px; }
+
+    /* Administration is a set of operating rails, never a grid of cells. */
+    .admin-panel { margin-top: 46px; padding-top: 26px; border-top: 1px solid var(--ink); }
+    .admin-overview { margin-top: 28px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    .admin-signal { display: flex; align-items: baseline; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    .admin-signal:last-child { border-bottom: 0; }
+    .admin-signal-value { font: 600 24px/.95 var(--serif); letter-spacing: -.03em; }
+    .admin-signal-label { margin-top: 7px; color: var(--muted); font: 500 10px/1.3 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .admin-signal-note { margin-left: auto; color: var(--muted); font-size: 11px; }
+    .admin-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 0 23px; margin-top: 28px; border-bottom: 1px solid var(--rule); }
+    .admin-tabs-label { margin-right: 3px; color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .14em; text-transform: uppercase; }
+    .admin-tab { min-height: 43px; border: 0; border-bottom: 2px solid transparent; padding: 0 0 11px; background: transparent; color: var(--muted); font-size: 12px; }
+    .admin-tab:hover, .admin-tab.active { border-bottom-color: var(--gold); color: var(--ink); }
+    .admin-tab.active { font-weight: 700; }
+    .admin-pane { margin-top: 32px; }
+    .admin-pane-split { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(320px, .78fr); gap: 46px; }
+    .admin-section { min-width: 0; }
+    .admin-rail { padding-left: 28px; border-left: 1px solid var(--rule); }
+    .admin-queue { margin-top: 19px; border-top: 1px solid var(--ink); }
+    .admin-queue-row { padding: 17px 0; border-bottom: 1px solid var(--rule); }
+    .admin-queue-row:hover .admin-queue-title { color: var(--maroon); }
+    .admin-queue-open { width: 100%; border: 0; padding: 0; background: transparent; color: inherit; text-align: left; }
+    .admin-queue-title { font-weight: 700; transition: color .18s var(--ease-out); }
+    .admin-queue-meta { margin-top: 5px; color: var(--muted); font: 500 10px/1.35 var(--data); }
+    .admin-queue-status { display: inline-block; margin-top: 11px; color: var(--muted); font: 500 10px/1.35 var(--data); letter-spacing: .05em; text-transform: uppercase; }
+    .admin-queue-next { display: inline-flex; align-items: baseline; gap: 8px; margin-left: 18px; color: var(--muted); font-size: 11px; }
+    .admin-queue-next strong { color: var(--ink); font-size: 10px; }
+    .admin-config { margin-top: 18px; }
+    .admin-config-intro { margin-bottom: 5px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .admin-config-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .admin-config-fields .form-label.full { grid-column: 1 / -1; }
+    .admin-config-fields .form-label { padding: 13px 0; }
+    .admin-config input, .admin-config select, .admin-config textarea, .invite-form input, .invite-form select { width: 100%; min-height: 36px; border: 1px solid var(--rule); border-radius: 0; background: var(--white); color: var(--ink); padding: 7px 8px; }
+    .admin-config textarea { min-height: 62px; resize: vertical; }
+    .admin-config select[multiple], .invite-form select[multiple] { min-height: 74px; }
+    .admin-config .form-label, .invite-form .form-label { gap: 7px; }
+    .policy-rule { margin-top: 19px; padding-top: 18px; border-top: 1px solid var(--ink); }
+    .policy-rule-title { color: var(--muted); font: 500 10px/1 var(--data); letter-spacing: .12em; text-transform: uppercase; }
+    .policy-fields { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0 13px; }
+    .policy-units { margin: 13px 0 0; padding: 0; border: 0; }
+    .policy-units legend { margin-bottom: 9px; color: var(--muted); font: 500 10px/1 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .policy-unit-list { display: flex; flex-wrap: wrap; gap: 8px 15px; }
+    .policy-unit { display: flex; align-items: center; gap: 7px; color: var(--ink); font-size: 11px; }
+    .policy-unit input { width: 16px; height: 16px; min-height: 16px; accent-color: var(--navy); }
+    .policy-history { margin-top: 22px; border-top: 1px solid var(--rule); }
+    .policy-history .version-row:first-child { border-top: 0; }
+    .admin-config-footer { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 18px; padding-top: 15px; border-top: 1px solid var(--ink); }
+    .admin-section + .admin-section { margin-top: 42px; }
+    .access-invite { margin-top: 18px; padding: 15px 0 18px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--rule); }
+    .invite-form { display: grid; grid-template-columns: minmax(160px, 1fr) minmax(180px, 1fr) minmax(150px, .8fr) auto; gap: 0 15px; align-items: end; }
+    .invite-form .form-label { padding: 0; border: 0; }
+    .invite-form .form-label.wide { grid-column: span 2; }
+    .invite-form .invite-permissions { grid-column: span 2; }
+    .invite-form .access-active { align-self: center; padding: 8px 0; }
+    .invite-form .button { align-self: end; min-height: 36px; }
+    .admin-audit { margin-top: 18px; border-top: 1px solid var(--ink); }
+    .admin-audit-row { display: grid; grid-template-columns: 88px minmax(0, 1fr) auto; gap: 15px; align-items: start; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    .admin-audit-scope { color: var(--gold); font: 500 10px/1.35 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .admin-audit-event { font-size: 12px; }
+    .admin-audit-detail { margin-top: 4px; color: var(--muted); font: 500 10px/1.45 var(--data); }
+    .admin-audit-time { color: var(--muted); font: 500 10px/1.35 var(--data); text-align: right; white-space: nowrap; }
+
+    /* Detail is a sheet with flowing records. No card outline, no boxed metadata. */
+    .drawer-backdrop, .modal-backdrop { position: fixed; inset: 0; z-index: var(--z-scrim); background: rgba(14,27,41,.52); opacity: 0; pointer-events: none; transition: opacity .2s var(--ease-out); }
+    .drawer-backdrop { left: var(--sidebar-width); }
+    .drawer-backdrop.open, .modal-backdrop.open { opacity: 1; pointer-events: auto; }
+    .drawer { position: fixed; z-index: var(--z-sheet); top: 0; right: 0; bottom: 0; width: min(650px, 100%); display: flex; flex-direction: column; background: var(--paper); border-left: 1px solid var(--ink); transform: translateX(100%); transition: transform .28s var(--ease-out); }
+    .drawer.open { transform: translateX(0); }
+    .drawer-head { padding: 28px 34px 22px; border-bottom: 1px solid var(--ink); }
+    .drawer-close, .modal-close { min-width: 44px; min-height: 44px; float: right; border: 0; padding: 0; background: transparent; color: var(--muted); font-size: 25px; line-height: 1; }
+    .drawer-close:hover, .modal-close:hover { color: var(--ink); }
+    .drawer-title { max-width: 490px; margin-top: 10px; font: 600 36px/.96 var(--serif); letter-spacing: -.045em; }
+    .drawer-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 17px; }
+    .drawer-scroll { overflow-y: auto; padding: 0 34px 50px; }
+    .detail-grid { border-bottom: 1px solid var(--rule); }
+    .detail-grid > div { display: block; padding: 15px 0; border-bottom: 1px solid var(--rule); }
+    .detail-grid > div:last-child { border-bottom: 0; }
+    .detail-label { color: var(--muted); font: 500 10px/1.2 var(--data); letter-spacing: .1em; text-transform: uppercase; }
+    .detail-value { margin-top: 5px; font-size: 13px; }
+    .route-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
+    .route-description { color: var(--muted); font-size: 11px; }
+    .route-description::before { content: '·  '; color: var(--quiet); }
+    .review-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 19px 0 21px; border-bottom: 1px solid var(--rule); }
+    .review-note { width: 100%; margin-bottom: 3px; color: var(--muted); font-size: 12px; }
+    .review-actions .form-label { min-width: 150px; flex: 1; }
+    .review-actions .button { padding: 8px 11px; }
+    .governance-panel { padding: 19px 0 21px; border-bottom: 1px solid var(--rule); }
+    .governance-panel h3 { margin-bottom: 10px; font: 700 11px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
+    .governance-note { margin-bottom: 14px; color: var(--muted); font-size: 12px; }
+    .governance-grid { display: grid; gap: 12px; }
+    .governance-grid .button { justify-self: start; }
+    .governance-results { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 13px; color: var(--muted); font: 500 11px/1.3 var(--data); }
+    .governance-results strong { color: var(--ink); }
+    .version-note { color: var(--muted); font-size: 11px; }
+    .stage-line { display: flex; align-items: start; margin: 28px 0 34px; }
+    .stage { position: relative; display: flex; flex: 1; align-items: center; gap: 7px; color: var(--quiet); font: 500 10px/1.2 var(--data); }
+    .stage span { display: grid; place-items: center; width: 22px; height: 22px; flex: 0 0 22px; border: 1px solid var(--rule); border-radius: 50%; color: var(--muted); }
+    .stage:not(:last-child)::after { content: ''; height: 1px; flex: 1; margin: 0 8px; background: var(--rule); }
+    .stage.done, .stage.current { color: var(--ink); }
+    .stage.done span { border-color: var(--gold); background: var(--gold); color: var(--navy); }
+    .stage.current span { border-color: var(--gold); color: var(--gold); }
+    .drawer-section { margin-top: 30px; }
+    .drawer-section h3 { margin-bottom: 12px; font: 700 11px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
+    .body-copy { max-width: 58ch; color: var(--muted); font-size: 14px; line-height: 1.7; white-space: pre-line; }
+    .file-line { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 12px 0; border-bottom: 1px solid var(--rule); font-size: 13px; }
+    .file-line small { color: var(--muted); font: 500 10px/1 var(--data); }
+    .file-mark { display: inline-block; width: 8px; height: 10px; margin-right: 8px; border: 1px solid var(--gold); vertical-align: -1px; }
+    #comment-list .comment { padding: 16px 0; border-bottom: 1px solid var(--rule); }
+    #comment-list .comment-head { display: flex; justify-content: space-between; gap: 20px; color: var(--muted); font: 500 10px/1.4 var(--data); }
+    #comment-list .comment-head strong { color: var(--ink); font-family: var(--sans); font-size: 12px; }
+    #comment-list .comment p { margin-top: 7px; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    #comment-list .comment p em { color: var(--rust); font-style: normal; }
+    .comment-tools { margin-top: 9px; }
+    .comment-remove { border: 0; border-bottom: 1px solid rgba(145,87,77,.4); padding: 0 0 2px; background: transparent; color: var(--rust); font-size: 11px; }
+    .audit-row { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; gap: 11px; align-items: start; padding: 13px 0; border-bottom: 1px solid var(--rule); }
+    .audit-dot { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: var(--gold); }
+    .audit-event { font-size: 12px; }
+    .audit-event strong { font-weight: 700; }
+    .audit-meta { color: var(--muted); font: 500 10px/1.4 var(--data); text-align: right; white-space: nowrap; }
+    .comment-form { display: grid; gap: 10px; margin-top: 15px; }
+    .textarea { min-height: 92px; resize: vertical; }
+    .comment-form .button { justify-self: start; }
+
+    /* Proposal form: long-form document, never a field matrix. */
+    .modal { position: fixed; z-index: var(--z-sheet); left: 50%; top: 50%; width: min(720px, calc(100% - 32px)); max-height: min(850px, calc(100dvh - 32px)); overflow-y: auto; background: var(--paper); border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); transform: translate(-50%, -47%) scale(.985); opacity: 0; pointer-events: none; transition: transform .22s var(--ease-out), opacity .18s var(--ease-out); }
+    .modal.open { transform: translate(-50%, -50%) scale(1); opacity: 1; pointer-events: auto; }
+    .modal-head { display: flex; justify-content: space-between; gap: 22px; padding: 26px 30px 21px; border-bottom: 1px solid var(--ink); }
+    .modal-head h2 { margin-top: 10px; font-size: 37px; line-height: .96; letter-spacing: -.045em; }
+    .modal-body { padding: 0 30px; }
+    .form-grid { display: block; }
+    .split-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 9px; }
+    .form-label { display: grid; gap: 8px; padding: 19px 0; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 12px; }
+    .form-label strong { color: var(--ink); font-weight: 700; }
+    .form-help { color: var(--muted); font-size: 11px; }
+    .textarea { width: 100%; }
+    .upload { display: grid; gap: 8px; padding: 16px 0; background: var(--tray); }
+    .upload input { min-height: 44px; padding: 9px 12px; }
+    .check-row { display: flex; align-items: start; gap: 10px; padding: 19px 0; color: var(--ink); font-size: 12px; }
+    .check-row input { width: 18px; height: 18px; flex: 0 0 18px; margin: 0; accent-color: var(--navy); }
+    .modal-foot { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 30px 24px; border-top: 1px solid var(--ink); }
+    .foot-right { display: flex; gap: 9px; }
+
+    .toast { position: fixed; right: 24px; bottom: 24px; z-index: var(--z-toast); max-width: min(390px, calc(100% - 48px)); padding: 13px 15px; border-left: 3px solid var(--gold); background: var(--navy); color: var(--white); box-shadow: 0 12px 24px rgba(14,27,41,.18); font-size: 12px; transform: translateY(16px); opacity: 0; pointer-events: none; transition: transform .2s var(--ease-out), opacity .2s var(--ease-out); }
+    .toast.show { transform: translateY(0); opacity: 1; }
+
+    @media (max-width: 1080px) {
+      :root { --sidebar-width: 76px; }
+      .app { grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
+      .sidebar { padding-left: 10px; padding-right: 10px; }
+      .brand { justify-content: center; padding-left: 0; padding-right: 0; }
+      .brand-title, .brand-sub, .side-label, .nav button span:not(.nav-icon), .identity-name, .identity-role { display: none; }
+      .nav button { justify-content: center; padding-left: 0; padding-right: 0; }
+      .side-bottom { padding-left: 0; padding-right: 0; }
+      .identity { justify-content: center; }
+      .workspace { gap: 44px; }
+      .topbar { padding-left: 28px; padding-right: 28px; }
+      .content { width: min(100% - 56px, 1400px); }
+    }
+    @media (max-width: 860px) {
+      .auth-shell { grid-template-columns: 1fr; gap: 46px; }
+      .auth-copy h1 { max-width: 9ch; }
+      .cycle-strip { grid-template-columns: 1fr; gap: 26px; }
+      .cycle-next { padding: 18px 0 0; border-top: 1px solid rgba(255,255,255,.25); border-left: 0; }
+      .workspace { grid-template-columns: 1fr; }
+      .timeline { padding: 25px 0 0 23px; border-top: 1px solid var(--rule); border-left: 1px solid var(--rule); }
+      .access-row, .cycle-control-row { grid-template-columns: 1fr 1fr; }
+      .access-row > :first-child, .access-row > :last-child { grid-column: 1 / -1; }
+      .admin-pane-split { grid-template-columns: 1fr; gap: 40px; }
+      .admin-rail { padding-left: 0; padding-top: 28px; border-top: 1px solid var(--rule); border-left: 0; }
+      .invite-form { grid-template-columns: 1fr 1fr; }
+      .invite-form .button { grid-column: 1 / -1; justify-self: start; }
+    }
+    @media (max-width: 680px) {
+      .drawer-backdrop { left: 0; }
+      .topbar { align-items: flex-start; flex-direction: column; padding-top: 17px; padding-bottom: 17px; }
+      .top-actions { width: 100%; justify-content: flex-start; gap: 8px 14px; }
+      .program-select, .role-select { flex: 1; }
+      .page-head { display: block; }
+      .page-head .button { margin-top: 24px; }
+      .content { width: min(100% - 36px, 600px); padding-top: 32px; }
+      .stats { gap: 12px 0; }
+      .stat { flex-wrap: wrap; }
+      .stat-note { width: 100%; padding-left: 0; }
+      .proposal-row-head { display: block; }
+      .proposal-row-state { gap: 8px 14px; }
+      .next-action { width: 100%; margin-left: 0; }
+      .stage-line { display: block; }
+      .stage { min-height: 40px; }
+      .stage:not(:last-child)::after { position: absolute; left: 10px; top: 24px; bottom: -11px; width: 1px; height: auto; }
+      .drawer-head, .drawer-scroll { padding-left: 22px; padding-right: 22px; }
+      .modal-head, .modal-body, .modal-foot { padding-left: 22px; padding-right: 22px; }
+      .modal-foot { align-items: stretch; flex-direction: column; }
+      .foot-right { justify-content: flex-end; }
+    }
+    @media (max-width: 480px) {
+      .auth-gate { padding: 28px 20px; }
+      .auth-copy h1 { font-size: 58px; }
+      .brand-logo { width: 58px; }
+      .sidebar { padding-top: 18px; }
+      .top-actions .top-link { font-size: 11px; }
+      .cycle-strip { padding: 23px 20px 27px; }
+      .detail-value { margin-top: 5px; }
+      .split-fields { grid-template-columns: 1fr; }
+      .access-row, .cycle-control-row { grid-template-columns: 1fr; }
+      .feedback-fields { grid-template-columns: 1fr; }
+      .feedback-form-footer { align-items: stretch; flex-direction: column; }
+      .feedback-row { grid-template-columns: 1fr; gap: 7px; }
+      .feedback-byline { text-align: left; }
+      .access-row > :first-child, .access-row > :last-child { grid-column: auto; }
+      .cycle-control-footer { align-items: stretch; flex-direction: column; }
+      .admin-signal { flex-wrap: wrap; }
+      .admin-signal-note { width: 100%; margin-left: 0; }
+      .admin-queue-status { display: block; }
+      .admin-queue-next { display: flex; margin: 8px 0 0; }
+      .module-row { grid-template-columns: 1fr; gap: 8px; }
+      .module-row .button { justify-self: start; }
+      .admin-config-fields, .policy-fields, .invite-form { grid-template-columns: 1fr; }
+      .admin-config-fields .form-label.full, .invite-form .form-label.wide, .invite-form .invite-permissions { grid-column: auto; }
+      .invite-form .button { grid-column: auto; }
+      .admin-audit-row { grid-template-columns: 1fr auto; gap: 8px 14px; }
+      .admin-audit-scope { grid-column: 1 / -1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Skip to portal</a>
+
+  <section class="auth-gate" id="auth-gate">
+    <div class="auth-shell">
+      <div class="auth-copy">
+        <div class="auth-brandline"><img class="auth-logo" src="/assets/csa-logo.png" alt="CSA" /><div><strong>College Squash Association</strong></div></div>
+        <h1>Member sign-in.</h1>
+        <p class="lede">Approved members only.</p>
+      </div>
+      <div class="auth-panel">
+        <p class="kicker">Member access</p>
+        <form class="auth-form" id="auth-request-form" style="margin-top: 23px;">
+          <label class="form-label"><strong>Email address</strong><input class="field" id="auth-email" type="email" autocomplete="email" required placeholder="you@college.edu" /></label>
+          <button class="button gold" type="submit">Send sign-in code</button>
+          <div class="auth-error" id="auth-error" role="alert" aria-live="polite"></div>
+        </form>
+        <form class="auth-code" id="auth-verify-form">
+          <label class="form-label"><strong>One-time code</strong><input class="field" id="auth-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required placeholder="6 digits" /></label>
+          <div class="auth-hint" id="auth-dev-hint" hidden></div>
+          <button class="button gold" type="submit">Enter portal</button>
+          <button class="auth-back" type="button" id="auth-back">Use a different email</button>
+        </form>
+        <section class="auth-dev-panel" id="auth-dev-panel" hidden>
+          <div class="auth-dev-title">Development access</div>
+          <p class="auth-dev-copy">Commissioner development access.</p>
+          <form class="auth-form auth-dev-form" id="auth-dev-form">
+            <label class="form-label"><strong>Username</strong><input class="field" id="auth-dev-username" autocomplete="username" required /></label>
+            <label class="form-label"><strong>Password</strong><input class="field" id="auth-dev-password" type="password" autocomplete="current-password" required /></label>
+            <button class="button gold" type="submit">Enter as commissioner</button>
+            <div class="auth-error" id="auth-dev-error" role="alert" aria-live="polite"></div>
+          </form>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><img class="brand-logo" src="/assets/csa-logo.png" alt="CSA" /></div>
+      <div class="side-label">Workspace</div>
+      <nav class="nav" aria-label="Primary navigation">
+        <button class="active" data-view="overview"><span class="nav-icon circle" aria-hidden="true"></span><span>Overview</span></button>
+        <button data-view="proposals"><span class="nav-icon line" aria-hidden="true"></span><span>Proposals</span></button>
+        <button data-view="review"><span class="nav-icon check" aria-hidden="true"></span><span>Review Queue</span></button>
+        <button data-view="admin" id="access-nav" style="display:none"><span class="nav-icon square" aria-hidden="true"></span><span>Administration</span></button>
+        <button data-view="feedback"><span class="nav-icon corner" aria-hidden="true"></span><span>Feedback</span><span class="nav-count" id="feedback-count" hidden></span></button>
+        <button data-view="documents"><span class="nav-icon square" aria-hidden="true"></span><span>Documents</span></button>
+      </nav>
+      <div class="side-label" style="margin-top: 28px;">Later</div>
+      <nav class="nav" aria-label="Future modules">
+        <button data-view="scheduler"><span class="nav-icon square" aria-hidden="true"></span><span>Scheduler</span></button>
+        <button data-view="awards"><span class="nav-icon circle" aria-hidden="true"></span><span>Awards</span></button>
+      </nav>
+      <div class="side-bottom"><div class="identity"><div class="avatar">JS</div><div><div class="identity-name">Jordan Smith</div><div class="identity-role">Head coach · Columbia</div></div></div></div>
+    </aside>
+
+    <main class="main" id="main-content" tabindex="-1">
+      <header class="topbar">
+        <div class="crumb"><strong>Legislative Cycle</strong></div>
+        <div class="top-actions">
+          <button class="top-link" id="help-button">Policy guide</button>
+          <select class="role-select" id="role-select" aria-label="Preview role"><option value="coach">Head coach</option><option value="commissioner">Commissioner</option></select>
+          <select class="program-select" id="program-select" aria-label="Program account"><option>Columbia</option><option>Columbia Men</option><option>Columbia Women</option></select>
+          <button class="top-link" id="logout-button">Sign out</button>
+        </div>
+      </header>
+
+      <div class="content">
+        <section class="page-head" id="page-head">
+          <div><h1 id="page-title">Annual Legislative Cycle</h1></div>
+          <button class="button gold" id="new-proposal">New proposal</button>
+        </section>
+
+        <section class="cycle-strip" id="cycle-strip" aria-label="Current cycle status">
+          <div><div class="cycle-kicker" id="cycle-status">Current phase</div><div class="cycle-detail" id="cycle-detail">Loading the current cycle record.</div></div>
+          <div class="cycle-progress"><div class="progress-labels"><span id="cycle-start">—</span><strong id="cycle-phase">—</strong><span id="cycle-end">—</span></div><div class="progress-track" aria-hidden="true"><span></span></div></div>
+          <div class="cycle-next"><div class="cycle-next-label">Next deadline</div><div class="cycle-next-date" id="cycle-next-date">—</div><div class="cycle-next-action" id="cycle-next-action">Loading</div></div>
+        </section>
+
+        <section class="stats" id="cycle-stats" aria-label="Cycle summary">
+          <div class="stat"><span class="stat-value" id="stat-active">4</span><span class="stat-label">active proposals</span><span class="stat-note">2 need your review</span></div>
+          <div class="stat"><span class="stat-value">4</span><span class="stat-label">open comment threads</span><span class="stat-note">18 comments this week</span></div>
+          <div class="stat"><span class="stat-value">May</span><span class="stat-label">next formal vote</span><span class="stat-note">quorum visible at vote</span></div>
+          <div class="stat"><span class="stat-value" id="stat-program">1</span><span class="stat-label">active program account</span></div>
+        </section>
+
+        <section class="module-panel" id="overview-panel" hidden>
+          <div class="section-head"><div><div class="section-title">At a Glance</div></div></div>
+          <div class="module-register" id="overview-register"></div>
+        </section>
+
+        <div class="workspace" id="proposal-workspace" hidden>
+          <section>
+            <div class="section-head"><div><div class="section-title" id="workspace-title">Proposal Register</div><div class="section-sub" id="workspace-sub">Current proposal records.</div></div><button class="button secondary" id="view-all">View Register</button></div>
+            <div class="tabs" role="tablist"><button class="tab active" data-filter="all" role="tab" aria-selected="true">All proposals</button><button class="tab" data-filter="attention" role="tab" aria-selected="false">Needs attention</button><button class="tab" data-filter="mine" role="tab" aria-selected="false">My proposals</button></div>
+            <div class="proposal-list" id="proposal-list"></div>
+            <div class="activity"><div class="section-head"><div><div class="section-title">Recent Activity</div><div class="section-sub">Latest events.</div></div></div><div class="activity-list" id="activity-list"></div></div>
+          </section>
+
+          <aside class="timeline"><div class="timeline-head"><div class="section-title">Deadlines</div><div class="section-sub">Cycle Dates</div></div><div id="cycle-timeline"></div>
+          </aside>
+        </div>
+        <section class="module-panel" id="module-panel" hidden>
+          <div class="section-head"><div><div class="section-title" id="module-title">Feedback</div><div class="section-sub" id="module-sub">Comments.</div></div></div>
+          <div id="module-content"></div>
+        </section>
+
+        <section class="admin-panel access-panel" id="access-panel" hidden>
+          <div class="section-head"><div><div class="section-title">Administration</div><div class="section-sub">Queue, policy, access &amp; audit.</div></div></div>
+          <div class="admin-overview" id="admin-overview"></div>
+          <div class="admin-tabs" id="admin-tabs" aria-label="Commissioner workflows">
+            <span class="admin-tabs-label">Commissioner workflows</span>
+            <button class="admin-tab active" data-admin-tab="queue">Review Queue</button>
+            <button class="admin-tab" data-admin-tab="cycle">Cycle &amp; Policy</button>
+            <button class="admin-tab" data-admin-tab="access">Access</button>
+            <button class="admin-tab" data-admin-tab="audit">Audit</button>
+          </div>
+          <div class="admin-pane admin-pane-split" data-admin-pane="queue">
+            <section class="admin-section"><div class="section-head"><div><div class="section-title">Governance Queue</div><div class="section-sub">Needs action.</div></div></div><div class="admin-queue" id="admin-queue"></div></section>
+            <aside class="admin-section admin-rail"><div class="section-head"><div><div class="section-title">Next Deadline</div><div class="section-sub">Next milestone.</div></div></div><div class="module-register" id="admin-next-deadline"></div></aside>
+          </div>
+          <div class="admin-pane" data-admin-pane="cycle" hidden>
+            <section class="admin-section"><div class="section-head"><div><div class="section-title">Cycle &amp; Policy</div><div class="section-sub">Active rules and milestone dates.</div></div></div><div id="cycle-controls"></div></section>
+          </div>
+          <section class="admin-pane admin-section" data-admin-pane="access" hidden><div class="section-head"><div><div class="section-title">Access Register</div><div class="section-sub">Approved identities and permissions.</div></div></div><div class="access-invite" id="access-invite"></div><div class="access-list" id="access-list"></div></section>
+          <section class="admin-pane admin-section" data-admin-pane="audit" hidden><div class="section-head"><div><div class="section-title">Audit Register</div><div class="section-sub">Configuration, access, and proposal events.</div></div></div><div class="admin-audit" id="admin-audit"></div></section>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="drawer-backdrop" id="drawer-backdrop"></div>
+  <aside class="drawer" id="proposal-drawer" aria-label="Proposal detail" aria-hidden="true">
+    <div class="drawer-head"><button class="drawer-close" id="drawer-close" aria-label="Close proposal detail">×</button><div class="kicker" id="drawer-kicker">Proposal Record</div><div class="drawer-title" id="drawer-title"></div><div class="drawer-meta" id="drawer-meta"></div></div>
+    <div class="drawer-scroll"><div class="detail-grid" id="drawer-details"></div><div id="drawer-actions"></div><div id="drawer-governance"></div><div class="stage-line" id="drawer-stage"></div><div class="drawer-section"><h3>Version History</h3><div id="drawer-versions"></div></div><div class="drawer-section"><h3>Proposal</h3><p class="body-copy" id="drawer-body"></p></div><div class="drawer-section"><h3>Supporting Documents</h3><div id="drawer-files"></div></div><div class="drawer-section"><h3>Record History</h3><div id="drawer-audit"></div></div><div class="drawer-section"><h3>Discussion</h3><div id="comment-list"></div><form class="comment-form" id="comment-form"><label class="kicker" for="comment-input">Add to the record</label><textarea class="textarea" id="comment-input" placeholder="Add a comment to this proposal…" required></textarea><button class="button" type="submit">Post comment</button></form></div></div>
+  </aside>
+
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <section class="modal" id="proposal-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+    <div class="modal-head"><div><div class="kicker">New Legislative Proposal</div><h2 id="modal-title">Start a proposal</h2></div><button class="modal-close" id="modal-close" aria-label="Close proposal form">×</button></div>
+    <form id="proposal-form"><div class="modal-body"><div class="form-grid">
+      <label class="form-label"><strong>Proposal title</strong><input class="field" id="form-title" required placeholder="A clear working title" /><span class="form-help">Use a specific title.</span></label>
+      <label class="form-label"><strong>Primary program</strong><select class="field" id="form-program"><option>Columbia</option><option>Columbia Men</option><option>Columbia Women</option></select></label>
+      <label class="form-label"><strong>Co-sponsoring programs</strong><div class="split-fields"><select class="field" id="form-sponsor-1"><option value="">Select first co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select><select class="field" id="form-sponsor-2"><option value="">Select second co-sponsor</option><option>Princeton</option><option>Penn</option><option>Trinity</option><option>Yale</option></select></div><span class="form-help">Select two different co-sponsors.</span></label>
+      <label class="form-label"><strong>1. Current issue</strong><textarea class="textarea" id="form-issue" required placeholder="What problem, gap, or inequity does this address?"></textarea></label>
+      <label class="form-label"><strong>2. Association impact</strong><textarea class="textarea" id="form-impact" required placeholder="How does this affect CSA operations and member institutions?"></textarea></label>
+      <label class="form-label"><strong>3. Financial implications</strong><textarea class="textarea" id="form-financial" required placeholder="State the cost implications, or say none are expected."></textarea></label>
+      <label class="form-label"><strong>4. Benefit to the student-athlete</strong><textarea class="textarea" id="form-benefit" required placeholder="How does this improve fairness, safety, experience, or recognition?"></textarea></label>
+      <label class="form-label"><strong>Supporting documents</strong><span class="upload"><input type="file" id="form-files" multiple /><span class="form-help">PDF, DOCX, XLSX, or image. Versions are retained.</span></span></label>
+      <label class="form-label" id="revision-summary-field" hidden><strong>What changed in this version?</strong><textarea class="textarea" id="form-change-summary" placeholder="Summarize the substantive change for the record."></textarea></label>
+      <label class="check-row"><input type="checkbox" id="form-confirm" required /> <span>I confirm this proposal is ready for CSA staff review.</span></label>
+    </div></div><div class="modal-foot"><button class="button secondary" type="button" id="save-draft">Save draft</button><div class="foot-right"><button class="button secondary" type="button" id="cancel-proposal">Cancel</button><button class="button" type="submit">Submit for review</button></div></div></form>
+  </section>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const seedProposals = [
+      { id: 'p1', title: 'Standardize championship host selection criteria', program: 'Princeton', proposer: 'Will Carlin', proposerId: 'u-will', coSponsors: ['Penn', 'Yale'], bucket: 'Bucket 3', status: 'comment', statusLabel: 'Comment window', next: 'Revisions due Dec 1', body: 'Create a transparent host-selection process that accounts for facility readiness, travel burden, broadcast capacity, and student-athlete experience.', comments: [{ author: 'Jordan Smith', date: 'Nov 14', text: 'The travel burden language should include a consistent distance threshold.' }, { author: 'Maya Chen', date: 'Nov 13', text: 'Support the direction. Would like to see the facility checklist before December.' }], files: ['Host selection draft v2.pdf'], activity: 'Comment added by Jordan Smith', time: '18 min ago' },
+      { id: 'p2', title: 'Clarify ranking data submission windows', program: 'Columbia', proposer: 'Jordan Smith', proposerId: 'u-jordan', coSponsors: ['Princeton', 'Penn'], bucket: 'Bucket 2', status: 'review', statusLabel: 'Staff review', next: 'Awaiting Commissioner review', body: 'Establish a shared submission window and correction protocol for ranking match data across the regular season.', comments: [], files: ['Ranking data proposal.docx'], activity: 'Submitted for staff review', time: 'Yesterday' },
+      { id: 'p3', title: 'Member program travel support pilot', program: 'Yale', proposer: 'Anna Morales', coSponsors: ['Columbia', 'Princeton'], bucket: 'Bucket 3', status: 'vote', statusLabel: 'Coach vote open', next: 'Quorum and threshold calculated at close', body: 'Pilot a needs-based travel support fund for qualifying member programs attending CSA championship events.', comments: [{ author: 'Alex Reed', date: 'Oct 28', text: 'Would like to understand the proposed funding source.' }], files: ['Travel support pilot.pdf', 'Budget assumptions.xlsx'], activity: 'Moved to coach vote', time: 'Oct 29', vote: { eligibleUnits: ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'], quorumRequired: 3, thresholdPercent: 50, ballots: [], status: 'open', result: null, counts: null, quorumMet: null, thresholdMet: null } },
+      { id: 'p4', title: 'Update emergency session notice language', program: 'Trinity', proposer: 'Maya Chen', proposerId: 'u-maya', coSponsors: ['Columbia', 'Penn'], bucket: 'Bucket 1', status: 'closed', statusLabel: 'Decision recorded', next: 'Decision recorded Nov 2', body: 'Clarify emergency session notices and the circumstances in which the Commissioner may authorize an exception.', comments: [], files: [], activity: 'Decision recorded by Commissioner', time: 'Nov 2', decision: { outcome: 'Adopted', reason: 'Administrative clarification', effectiveDate: '2026-11-02', decidedBy: 'Harry Smith', decidedAt: 'Nov 2' } },
+      { id: 'p5', title: 'Create a shared rules change archive', program: 'Penn', proposer: 'Chris Bell', proposerId: 'u-chris', coSponsors: ['Princeton', 'Trinity'], bucket: 'Bucket 2', status: 'comment', statusLabel: 'Comment window', next: 'Comments close Dec 1', body: 'Create a durable, searchable archive of approved and rejected proposals, effective dates, and policy versions.', comments: [], files: ['Archive outline.pdf'], activity: 'Document updated', time: 'Nov 8' }
+    ];
+    const storeKey = 'csa-portal-proposals-v1';
+    let proposals = [];
+    let serverBacked = false;
+    let activeProposal = null;
+    let editingProposal = null;
+    let editingMode = 'draft';
+    let currentFilter = 'all';
+    let feedbackItems = [];
+    const feedbackStoreKey = 'csa-portal-feedback-v1';
+    let feedbackRefreshTimer = null;
+    let currentRole = 'coach';
+    let authUser = null;
+    let authEmail = '';
+    let cycle = null;
+    let adminOverview = null;
+    let currentView = 'overview';
+    let currentAdminPanel = 'queue';
+    const $ = (s) => document.querySelector(s);
+    const esc = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[ch]));
+    const save = () => localStorage.setItem(storeKey, JSON.stringify(proposals));
+    async function api(path, options = {}) {
+      const response = await fetch(path, { headers: { 'Content-Type': 'application/json', ...(options.headers || {}) }, ...options });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(payload.error || 'Request failed');
+      return payload;
+    }
+    async function syncProposal(proposal) {
+      if (!serverBacked || !proposal) return proposal;
+      try {
+        const updated = await api(`/api/proposals/${proposal.id}`, { method: 'PATCH', body: JSON.stringify(proposal) });
+        const index = proposals.findIndex(item => item.id === updated.id);
+        if (index >= 0) proposals[index] = updated;
+        return updated;
+      } catch (error) { toast(`Could not sync change: ${error.message}`); }
+      return null;
+    }
+    const toast = (message) => { const node = $('#toast'); node.textContent = message; node.classList.add('show'); clearTimeout(window.__toast); window.__toast = setTimeout(() => node.classList.remove('show'), 3200); };
+    const memberPrograms = ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'];
+    const roleLabels = { commissioner: 'CSA Commissioner', coach: 'Head coach', institutional_representative: 'Institution representative', board_member: 'Board member', staff: 'CSA staff', administrator: 'Portal administrator', conference_observer: 'Conference observer' };
+    const bucketDescriptions = { Unassigned: 'Route not assigned.', 'Bucket 1': 'Administrative path · no coach vote.', 'Bucket 2': 'Full cycle · coach vote.', 'Bucket 3': 'Full cycle · coach vote + Board ratification.' };
+    const programDisplayNames = { Columbia: 'Columbia Both Programs', Princeton: 'Princeton Men' };
+    const viewLabels = { overview: 'Overview', proposals: 'Proposals', review: 'Review Queue', feedback: 'Feedback', documents: 'Documents', scheduler: 'Scheduler', awards: 'Awards' };
+    const roleLabel = (user) => roleLabels[user.role] || user.role;
+    const bucketDescription = bucket => bucketDescriptions[bucket] || 'Governance route not recorded.';
+    const programLabel = program => programDisplayNames[program] || program;
+    const phaseLabels = { submission: 'Submission window', review: 'Staff review', comment: 'Comment and revision window', vote: 'Coach vote', board: 'Board review', decision: 'Final decision', complete: 'Complete' };
+    const formatDate = (value, options = {}) => { if (!value) return '—'; const date = new Date(`${String(value).slice(0, 10)}T12:00:00`); return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', ...(options.year ? { year: 'numeric' } : {}) }).format(date); };
+    const formatWhen = (value) => { if (!value) return '—'; if (!/^\d{4}-\d{2}-\d{2}/.test(String(value))) return String(value); const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date); };
+    const cycleDeadline = (id) => cycle?.deadlines?.find(item => item.id === id) || null;
+    const deadlineText = (id, fallback) => { const item = cycleDeadline(id); return item ? `${item.label} · ${formatDate(item.date, { year: true })}` : fallback; };
+    const canReview = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:admin')));
+    const canManageAccess = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:admin') || (authUser.permissions || []).includes('legislative:access')));
+    const canManageConfiguration = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:admin') || (authUser.permissions || []).includes('legislative:configuration')));
+    const canModerate = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:moderation')));
+    const canBoard = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:board')));
+    const canSubmit = () => Boolean(authUser && (['coach', 'institutional_representative'].includes(authUser.role) || canReview()));
+    function fillSelect(select, values, placeholder = '') {
+      select.innerHTML = `${placeholder ? `<option value="">${esc(placeholder)}</option>` : ''}${values.map(value => `<option value="${esc(value)}">${esc(programLabel(value))}</option>`).join('')}`;
+    }
+    function populateProgramFields() {
+      const primaryPrograms = canReview() ? memberPrograms : (authUser && authUser.programs && authUser.programs.length ? authUser.programs : memberPrograms);
+      const selectedPrimary = $('#form-program').value;
+      fillSelect($('#form-program'), primaryPrograms);
+      if (primaryPrograms.includes(selectedPrimary)) $('#form-program').value = selectedPrimary;
+      const primary = $('#form-program').value;
+      const sponsors = memberPrograms.filter(program => program !== primary);
+      fillSelect($('#form-sponsor-1'), sponsors, 'Select first co-sponsor');
+      fillSelect($('#form-sponsor-2'), sponsors, 'Select second co-sponsor');
+    }
+    function applyAuthUser(user) {
+      authUser = user; currentRole = user.role; document.body.classList.add('authenticated');
+      const roleSelect = $('#role-select'); roleSelect.innerHTML = `<option value="${esc(user.role)}">${esc(roleLabel(user))}</option>`; roleSelect.disabled = true; roleSelect.setAttribute('aria-label', 'Authorized role');
+      document.querySelector('.identity-role').textContent = `${roleLabel(user)}${user.programs?.length ? ` · ${programLabel(user.programs[0])}` : ''}`;
+      document.querySelector('.identity-name').textContent = user.name; document.querySelector('.avatar').textContent = user.name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
+      const programSelect = $('#program-select');
+      const visiblePrograms = canReview() ? memberPrograms : (user.programs?.length ? user.programs : memberPrograms);
+      fillSelect(programSelect, visiblePrograms, canReview() ? 'All program accounts' : '');
+      programSelect.value = user.programs?.[0] || '';
+      populateProgramFields();
+      document.querySelector('[data-view="review"]').style.display = canReview() ? 'flex' : 'none';
+      $('#access-nav').style.display = canReview() ? 'flex' : 'none';
+      $('#new-proposal').style.display = canSubmit() ? '' : 'none';
+    }
+    function renderCycle() {
+      if (!cycle) return;
+      const deadlines = cycle.deadlines || [];
+      const first = deadlines[0]; const last = deadlines[deadlines.length - 1];
+      $('#cycle-status').textContent = `${cycle.status || 'active'} phase`;
+      $('#cycle-detail').textContent = `Policy ${cycle.policyVersion || cycle.policy?.version || '—'} · quorum ${cycle.policy?.quorumRequired || '—'} · threshold ${cycle.policy?.thresholdPercent || '—'}%.`;
+      $('#cycle-start').textContent = first ? formatDate(first.date) : '—';
+      $('#cycle-phase').textContent = phaseLabels[cycle.phase] || cycle.phase || '—';
+      $('#cycle-end').textContent = last ? formatDate(last.date, { year: true }) : '—';
+      $('#cycle-next-date').textContent = cycle.nextDeadline ? formatDate(cycle.nextDeadline.date, { year: true }) : '—';
+      $('#cycle-next-action').textContent = cycle.nextDeadline?.label || 'No upcoming deadline';
+      $('#cycle-timeline').innerHTML = deadlines.length ? deadlines.map(item => `<div class="timeline-item ${new Date(`${item.date}T23:59:59`) < new Date() ? 'done' : ''}"><div class="timeline-date">${esc(formatDate(item.date, { year: true }))}</div><div class="timeline-title">${esc(item.label)}</div><div class="timeline-copy">${esc(phaseLabels[item.stage] || item.stage)} · ${esc(cycle.timeZone || 'cycle time')}</div></div>`).join('') : '<div class="empty">No cycle deadlines configured.</div>';
+    }
+    async function loadCycle() {
+      try { cycle = await api('/api/cycle'); renderCycle(); }
+      catch (error) { toast(`Could not load cycle schedule: ${error.message}`); }
+    }
+    async function loadProposals() {
+      try { proposals = await api('/api/proposals'); serverBacked = true; }
+      catch (error) { proposals = JSON.parse(localStorage.getItem(storeKey) || 'null') || seedProposals; serverBacked = false; }
+      renderProposals(); renderActivity();
+    }
+    function renderAdminOverview() {
+      const node = $('#admin-overview');
+      if (!node || !adminOverview) return;
+      const counts = adminOverview.counts || {};
+      const active = (counts.review || 0) + (counts.comment || 0) + (counts.vote || 0) + (counts.board || 0) + (counts.decision || 0);
+      const next = adminOverview.cycle?.nextDeadline;
+      const signals = [
+        { value: active, label: 'records in motion', note: `${counts.total || 0} total proposal records` },
+        { value: adminOverview.queue?.length || 0, label: 'Governance Queue', note: `${counts.review || 0} awaiting staff review` },
+        { value: adminOverview.access?.active || 0, label: 'active identities', note: `${adminOverview.access?.inactive || 0} inactive record${adminOverview.access?.inactive === 1 ? '' : 's'}` },
+        { value: next ? formatDate(next.date, { year: true }) : '—', label: 'next deadline', note: next?.label || 'No deadline configured' }
+      ];
+      node.innerHTML = signals.map(signal => `<div class="admin-signal"><div class="admin-signal-value">${esc(signal.value)}</div><div class="admin-signal-label">${esc(signal.label)}</div><div class="admin-signal-note">${esc(signal.note)}</div></div>`).join('');
+    }
+    function renderAdminQueue() {
+      const node = $('#admin-queue');
+      if (!node || !adminOverview) return;
+      const queue = adminOverview.queue || [];
+      node.innerHTML = queue.length ? queue.map(p => `<article class="admin-queue-row"><button class="admin-queue-open" data-admin-proposal="${esc(p.id)}"><div class="admin-queue-title">${esc(p.title)}</div><div class="admin-queue-meta">${esc(programLabel(p.program))} · ${esc(p.proposer)} · ${esc(p.bucket)}</div></button><div class="admin-queue-status">${esc(p.statusLabel)}</div><div class="admin-queue-next"><strong>Next action</strong>${esc(p.next)}</div></article>`).join('') : '<div class="empty">Governance Queue is clear.</div>';
+      node.querySelectorAll('[data-admin-proposal]').forEach(button => button.addEventListener('click', () => openDrawer(button.dataset.adminProposal)));
+    }
+    function renderAdminCycle() {
+      const node = $('#cycle-controls');
+      if (!node || !cycle) return;
+      const policy = cycle.policy || {};
+      const deadlines = cycle.deadlines || [];
+      const phases = ['submission', 'review', 'comment', 'vote', 'board', 'decision', 'complete'];
+      const policyHistory = adminOverview?.policyHistory || [];
+      node.innerHTML = `<div class="admin-config"><div class="admin-config-intro">Edits create a configuration event. Votes retain their opening policy.</div><div class="admin-config-fields"><label class="form-label"><strong>Cycle status</strong><select data-cycle-status>${['pilot', 'active', 'paused', 'closed'].map(value => `<option value="${value}" ${cycle.status === value ? 'selected' : ''}>${value}</option>`).join('')}</select></label><label class="form-label"><strong>Current phase</strong><select data-cycle-phase>${phases.map(value => `<option value="${value}" ${cycle.phase === value ? 'selected' : ''}>${esc(phaseLabels[value] || value)}</option>`).join('')}</select></label><label class="form-label"><strong>Timezone</strong><input data-cycle-timezone value="${esc(cycle.timeZone || 'America/New_York')}" /></label><label class="form-label full"><strong>Commissioner note</strong><textarea data-cycle-note>${esc(cycle.note || '')}</textarea></label></div><div class="policy-rule"><div class="policy-rule-title">Policy ${esc(policy.version || cycle.policyVersion || '—')}</div><div class="policy-fields"><label class="form-label"><strong>Version</strong><input data-policy-version value="${esc(policy.version || '')}" /></label><label class="form-label"><strong>Effective date</strong><input type="date" data-policy-effective value="${esc(policy.effectiveDate || '')}" /></label><label class="form-label"><strong>Proxy hours</strong><input type="number" min="1" data-policy-proxy value="${esc(policy.proxyRegistrationHours ?? '')}" /></label><label class="form-label"><strong>Quorum</strong><input type="number" min="1" max="${memberPrograms.length}" data-policy-quorum value="${esc(policy.quorumRequired ?? '')}" /></label><label class="form-label"><strong>Threshold</strong><input type="number" min="0" max="100" data-policy-threshold value="${esc(policy.thresholdPercent ?? '')}" /></label></div><fieldset class="policy-units"><legend>Voting units</legend><div class="policy-unit-list">${memberPrograms.map(unit => `<label class="policy-unit"><input type="checkbox" data-policy-unit value="${esc(unit)}" ${(policy.eligibleVotingUnits || []).includes(unit) ? 'checked' : ''} />${esc(unit)}</label>`).join('')}</div></fieldset></div>${policyHistory.length ? `<div class="policy-history"><div class="policy-rule-title" style="margin-top:18px;">Retired policy history</div>${policyHistory.slice().reverse().map(item => `<div class="version-row"><div class="version-row-head"><strong>${esc(item.version || 'Policy')}</strong><span>Retired ${esc(formatWhen(item.retiredAt))}</span></div><div class="version-row-copy">Effective ${esc(formatDate(item.effectiveDate, { year: true }))} · ${esc(item.retiredBy || 'CSA governance')} · quorum ${esc(item.quorumRequired)} · ${esc(item.thresholdPercent)}% threshold</div></div>`).join('')}</div>` : '<div class="version-note" style="margin-top:18px;">No retired policy versions.</div>'}<div class="admin-config-footer"><span class="deadline-note">${esc(cycle.timeZone || 'America/New_York')} · ${deadlines.length} deadlines</span><button class="button secondary" data-save-cycle ${canManageConfiguration() ? '' : 'disabled'}>Save changes</button></div><div class="cycle-control-list">${deadlines.map(item => `<label class="cycle-control-row"><span class="cycle-control-label">${esc(item.label)}</span><span class="cycle-control-stage">${esc(phaseLabels[item.stage] || item.stage)}</span><input type="date" data-cycle-deadline="${esc(item.id)}" value="${esc(item.date)}" aria-label="${esc(item.label)} date" /></label>`).join('')}</div></div>`;
+      node.querySelector('[data-save-cycle]')?.addEventListener('click', async (event) => {
+        const button = event.currentTarget;
+        const updatedDeadlines = Array.from(node.querySelectorAll('[data-cycle-deadline]')).map(input => { const source = deadlines.find(item => item.id === input.dataset.cycleDeadline); return { ...source, date: input.value }; });
+        const eligibleVotingUnits = Array.from(node.querySelectorAll('[data-policy-unit]:checked')).map(input => input.value);
+        button.disabled = true;
+        try {
+          const result = await api('/api/cycle', { method: 'PATCH', body: JSON.stringify({ status: node.querySelector('[data-cycle-status]').value, phase: node.querySelector('[data-cycle-phase]').value, timeZone: node.querySelector('[data-cycle-timezone]').value.trim(), note: node.querySelector('[data-cycle-note]').value.trim(), deadlines: updatedDeadlines, policy: { version: node.querySelector('[data-policy-version]').value.trim(), effectiveDate: node.querySelector('[data-policy-effective]').value, quorumRequired: Number(node.querySelector('[data-policy-quorum]').value), thresholdPercent: Number(node.querySelector('[data-policy-threshold]').value), proxyRegistrationHours: Number(node.querySelector('[data-policy-proxy]').value), eligibleVotingUnits } }) });
+          cycle = result.cycle; renderCycle(); await loadAdmin(); toast('Governance configuration saved to the record.');
+        } catch (error) { toast(`Could not save governance configuration: ${error.message}`); button.disabled = false; }
+      });
+    }
+    function renderAdminAudit() {
+      const node = $('#admin-audit');
+      if (!node || !adminOverview) return;
+      const audit = adminOverview.recentAudit || [];
+      node.innerHTML = audit.length ? audit.map(item => { const detail = [item.proposalTitle, item.user, item.policyVersion ? `policy ${item.policyVersion}` : '', item.fields?.length ? `fields: ${item.fields.join(', ')}` : '', item.reason].filter(Boolean).join(' · '); return `<div class="admin-audit-row"><div class="admin-audit-scope">${esc(item.scope || 'Record')}</div><div><div class="admin-audit-event"><strong>${esc(item.event)}</strong></div><div class="admin-audit-detail">${esc(item.by || 'CSA governance')}${detail ? ` · ${esc(detail)}` : ''}</div></div><div class="admin-audit-time">${esc(formatWhen(item.at))}</div></div>`; }).join('') : '<div class="empty">No audit events have been recorded yet.</div>';
+    }
+    async function loadAdmin() {
+      if (!canReview()) return;
+      try {
+        adminOverview = await api('/api/admin/overview');
+        cycle = adminOverview.cycle;
+        renderCycle(); renderAdminOverview(); renderAdminQueue(); renderAdminCycle(); renderAdminAudit(); renderAdminNextDeadline(); setAdminPanel(currentAdminPanel);
+        await renderAccess();
+      } catch (error) { toast(`Could not load administration: ${error.message}`); }
+    }
+    async function loadAuthConfig() {
+      try {
+        const config = await api('/api/auth/config');
+        if (!config.development) return;
+        $('#auth-dev-panel').hidden = false;
+        $('#auth-dev-username').value = config.username || '';
+      } catch {}
+    }
+    async function bootAuth() {
+      await loadAuthConfig();
+      try { const session = await api('/api/auth/me'); applyAuthUser(session.user); await loadCycle(); await loadProposals(); await loadFeedback({ silent: true }); setView('overview'); }
+      catch (error) { document.body.classList.remove('authenticated'); }
+    }
+
+    function statusClass(status) { return ['draft','review','comment','vote','board','decision','closed'].includes(status) ? status : 'review'; }
+    function visibleProposals() {
+      return proposals.filter(p => currentFilter === 'all' || (currentFilter === 'attention' && ['review','vote','board','decision'].includes(p.status)) || (currentFilter === 'mine' && p.program === $('#program-select').value));
+    }
+    function updateTabState() {
+      document.querySelectorAll('.tab').forEach(tab => { const active = tab.dataset.filter === currentFilter; tab.classList.toggle('active', active); tab.setAttribute('aria-selected', active ? 'true' : 'false'); });
+    }
+    function renderProposals() {
+      const list = $('#proposal-list');
+      const rows = visibleProposals();
+      if (!rows.length) { list.innerHTML = '<div class="empty">No proposals match this view.</div>'; return; }
+      list.innerHTML = rows.map(p => `<article class="proposal-row" data-id="${esc(p.id)}"><div class="proposal-row-head"><div><div class="proposal-title">${esc(p.title)}</div><div class="proposal-meta">${esc(p.proposer)} · ${esc(programLabel(p.program))} · ${(p.comments || []).length} comments</div></div></div><div class="proposal-row-state"><span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span><span class="bucket">${esc(p.bucket)}</span><div class="next-action"><strong>Next action</strong><span>${esc(p.next)}</span></div></div></article>`).join('');
+      list.querySelectorAll('[data-id]').forEach(row => row.addEventListener('click', () => openDrawer(row.dataset.id)));
+      $('#stat-active').textContent = proposals.filter(p => p.status !== 'closed').length;
+      updateTabState();
+    }
+    function activityTimeRank(value) {
+      const text = String(value || '').trim();
+      if (!text) return 0;
+      if (/just now/i.test(text)) return Date.now();
+      const minutes = text.match(/^(\d+)\s+min(?:ute)?s? ago$/i);
+      if (minutes) return Date.now() - Number(minutes[1]) * 60 * 1000;
+      if (/yesterday/i.test(text)) return Date.now() - 24 * 60 * 60 * 1000;
+      const parsed = Date.parse(text);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
+    function renderActivity() {
+      const recent = proposals
+        .map((proposal, index) => {
+          const audit = Array.isArray(proposal.audit) ? proposal.audit : [];
+          const latest = audit[audit.length - 1];
+          return { proposal, event: proposal.activity || latest?.event || proposal.statusLabel || 'Record updated', time: proposal.time || latest?.at || '', rank: activityTimeRank(proposal.time || latest?.at) || index };
+        })
+        .filter(item => item.event)
+        .sort((a, b) => b.rank - a.rank)
+        .slice(0, 4);
+      const list = $('#activity-list');
+      if (!recent.length) { list.innerHTML = '<div class="empty">No activity recorded yet.</div>'; return; }
+      list.innerHTML = recent.map((item, index) => {
+        const p = item.proposal;
+        const source = `${p.title} · ${programLabel(p.program)}`;
+        return `<button class="activity-item" type="button" data-activity-proposal="${esc(p.id)}" aria-label="${esc(`${item.event} — ${source}`)}" style="animation-delay:${index * 45}ms"><span class="activity-mark" aria-hidden="true"></span><span class="activity-text"><strong>${esc(item.event)}</strong><span class="activity-source">Source · ${esc(source)}</span></span><span class="activity-time">${esc(item.time)}</span></button>`;
+      }).join('');
+      list.querySelectorAll('[data-activity-proposal]').forEach(row => row.addEventListener('click', () => openDrawer(row.dataset.activityProposal)));
+    }
+    function renderOverview() {
+      const next = cycle?.nextDeadline;
+      const attention = proposals.filter(item => ['review', 'vote', 'board', 'decision'].includes(item.status));
+      const recent = proposals[0];
+      $('#overview-register').innerHTML = [
+        { label: 'Needs attention', value: `${attention.length} record${attention.length === 1 ? '' : 's'}`, copy: attention[0]?.title || 'Nothing waiting.' },
+        { label: 'Latest record', value: recent?.title || 'No proposal records', copy: recent ? `${recent.statusLabel} · ${programLabel(recent.program)}` : '—' }
+      ].map(row => `<div class="module-row"><div class="module-row-label">${esc(row.label)}</div><div><div class="module-row-value">${esc(row.value)}</div><div class="module-row-copy">${esc(row.copy)}</div></div></div>`).join('');
+    }
+    function renderFeedbackList() {
+      const list = $('#feedback-list');
+      if (!list) return;
+      if (!feedbackItems.length) { list.innerHTML = '<div class="empty">No feedback submitted yet.</div>'; return; }
+      list.innerHTML = feedbackItems.map(item => {
+        const context = item.proposalTitle ? `${item.page} · ${item.proposalTitle}` : item.page;
+        const resolve = canReview() && item.status === 'Open' ? `<button class="feedback-resolve" type="button" data-feedback-resolve="${esc(item.id)}">Mark fixed</button>` : '';
+        return `<article class="feedback-row"><div class="feedback-category">${esc(item.category)}</div><div><div class="feedback-message">${esc(item.message)}</div><div class="feedback-context">${esc(context)}</div></div><div class="feedback-byline"><div>${esc(item.status)} · ${esc(item.author)}</div><div>${esc(formatWhen(item.createdAt))}</div>${resolve}</div></article>`;
+      }).join('');
+      list.querySelectorAll('[data-feedback-resolve]').forEach(button => button.addEventListener('click', async () => {
+        button.disabled = true;
+        try {
+          if (serverBacked) await api(`/api/feedback/${encodeURIComponent(button.dataset.feedbackResolve)}`, { method: 'PATCH', body: JSON.stringify({ status: 'Resolved' }) });
+          feedbackItems = feedbackItems.map(item => item.id === button.dataset.feedbackResolve ? { ...item, status: 'Resolved' } : item);
+          if (!serverBacked) localStorage.setItem(feedbackStoreKey, JSON.stringify(feedbackItems));
+          updateFeedbackCount(); renderFeedbackList(); toast('Feedback marked fixed.');
+        } catch (error) { toast(`Could not update feedback: ${error.message}`); button.disabled = false; }
+      }));
+    }
+    function updateFeedbackCount() {
+      const count = $('#feedback-count');
+      if (!count) return;
+      const openCount = feedbackItems.filter(item => item.status === 'Open').length;
+      count.textContent = openCount ? String(openCount) : '';
+      count.hidden = !openCount;
+    }
+    async function loadFeedback({ silent = false } = {}) {
+      const list = $('#feedback-list');
+      const previousIds = new Set(feedbackItems.map(item => item.id));
+      if (list && !silent) list.innerHTML = '<div class="empty">Loading feedback…</div>';
+      try {
+        if (serverBacked) {
+          const payload = await api('/api/feedback');
+          feedbackItems = payload.feedback || [];
+        } else {
+          feedbackItems = JSON.parse(localStorage.getItem(feedbackStoreKey) || '[]');
+        }
+        updateFeedbackCount();
+        if (list) renderFeedbackList();
+        if (silent && currentView === 'feedback') {
+          const newCount = feedbackItems.filter(item => !previousIds.has(item.id)).length;
+          if (newCount) toast(`${newCount} new feedback note${newCount === 1 ? '' : 's'} received.`);
+        }
+      } catch (error) { if (list) list.innerHTML = `<div class="empty">${esc(error.message)}</div>`; }
+    }
+    function renderFeedback() {
+      const node = $('#module-content');
+      $('#module-title').textContent = 'Feedback';
+      $('#module-sub').textContent = 'Leave a note for the portal team.';
+      const proposalOptions = proposals.map(p => `<option value="${esc(p.id)}">${esc(p.title)} · ${esc(programLabel(p.program))}</option>`).join('');
+      node.innerHTML = `<form class="feedback-form" id="feedback-form"><div class="feedback-fields"><label class="form-label"><strong>Type</strong><select class="field" id="feedback-category"><option>Bug</option><option>Copy</option><option>Design</option><option>Workflow</option><option>Other</option></select></label><label class="form-label"><strong>What should change?</strong><textarea class="textarea" id="feedback-message" maxlength="2000" required placeholder="Describe what happened and what you expected."></textarea></label><label class="form-label"><strong>Proposal</strong><select class="field" id="feedback-proposal"><option value="">No specific proposal</option>${proposalOptions}</select></label></div><div class="feedback-form-footer"><span class="feedback-form-note">Shared with the Commissioner and saved to the portal.</span><button class="button" type="submit">Send feedback</button></div></form><div class="feedback-list"><div class="section-head"><div><div class="section-title">Feedback Queue</div><div class="section-sub">Product notes from testers.</div></div><button class="button secondary" type="button" id="feedback-refresh">Refresh</button></div><div id="feedback-list"></div></div>`;
+      $('#feedback-form').addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = event.currentTarget.querySelector('button[type="submit"]');
+        const message = $('#feedback-message').value.trim();
+        if (!message) return;
+        button.disabled = true;
+        const payload = { category: $('#feedback-category').value, message, page: viewLabels[currentView] || 'Portal' };
+        const proposalId = $('#feedback-proposal').value;
+        if (proposalId) payload.proposalId = proposalId;
+        try {
+          if (serverBacked) {
+            const result = await api('/api/feedback', { method: 'POST', body: JSON.stringify(payload) });
+            feedbackItems = [result.feedback, ...feedbackItems];
+          } else {
+            const proposal = proposals.find(item => item.id === payload.proposalId);
+            const localItem = { id: `f${Date.now()}`, ...payload, proposalTitle: proposal?.title || '', author: authUser?.name || 'Member', status: 'Open', createdAt: 'Just now' };
+            feedbackItems = [localItem, ...feedbackItems];
+            localStorage.setItem(feedbackStoreKey, JSON.stringify(feedbackItems));
+          }
+          $('#feedback-message').value = '';
+          updateFeedbackCount();
+          renderFeedbackList();
+          toast('Feedback saved to the portal.');
+        } catch (error) { toast(`Could not save feedback: ${error.message}`); }
+        button.disabled = false;
+      });
+      $('#feedback-refresh').addEventListener('click', loadFeedback);
+      loadFeedback();
+      clearInterval(feedbackRefreshTimer);
+      feedbackRefreshTimer = setInterval(() => loadFeedback({ silent: true }), 15000);
+    }
+    function renderModule(view) {
+      const node = $('#module-content');
+      if (!node) return;
+      if (view === 'feedback') {
+        renderFeedback();
+      } else if (view === 'documents') {
+        const documents = proposals.flatMap(item => (item.files || []).map(file => ({ file, title: item.title, id: item.id })));
+        $('#module-title').textContent = 'Documents';
+        $('#module-sub').textContent = 'Files on proposal records.';
+        node.innerHTML = documents.length ? `<div class="module-register">${documents.map(doc => `<div class="module-row"><div class="module-row-label">File</div><div><div class="module-row-value">${esc(doc.file)}</div><div class="module-row-copy">${esc(doc.title)}</div></div><button class="button secondary" data-open-proposal="${esc(doc.id)}">Open record</button></div>`).join('')}</div>` : '<div class="empty">No documents attached.</div>';
+      } else {
+        const title = view === 'scheduler' ? 'Scheduler' : 'Awards';
+        const copy = view === 'scheduler' ? 'Not available yet.' : 'Not available yet.';
+        $('#module-title').textContent = title;
+        $('#module-sub').textContent = 'Not available yet.';
+        node.innerHTML = `<p class="module-note">${esc(copy)}</p><div class="module-actions"><button class="button secondary" data-jump="overview">Back to overview</button></div>`;
+      }
+      node.querySelectorAll('[data-jump]').forEach(button => button.addEventListener('click', () => setView(button.dataset.jump)));
+      node.querySelectorAll('[data-open-proposal]').forEach(button => button.addEventListener('click', () => openDrawer(button.dataset.openProposal)));
+    }
+    function setAdminPanel(panel = 'queue') {
+      currentAdminPanel = panel;
+      document.querySelectorAll('[data-admin-pane]').forEach(node => { node.hidden = node.dataset.adminPane !== panel; });
+      document.querySelectorAll('[data-admin-tab]').forEach(button => button.classList.toggle('active', button.dataset.adminTab === panel));
+    }
+    function renderAdminNextDeadline() {
+      const node = $('#admin-next-deadline');
+      const next = adminOverview?.cycle?.nextDeadline;
+      if (!node) return;
+      node.innerHTML = next ? `<div class="module-row"><div><div class="module-row-value">${esc(formatDate(next.date, { year: true }))}</div><div class="module-row-copy">${esc(next.label)}</div></div></div>` : '<div class="empty">No deadline.</div>';
+    }
+    function setView(view) {
+      currentView = view;
+      if (activeProposal) closeDrawer();
+      if (view !== 'feedback' && feedbackRefreshTimer) { clearInterval(feedbackRefreshTimer); feedbackRefreshTimer = null; }
+      const configs = {
+        overview: ['Annual Legislative Cycle'],
+        proposals: ['Proposals'],
+        review: ['Review Queue'],
+        admin: ['Administration'],
+        feedback: ['Feedback'],
+        documents: ['Documents'],
+        scheduler: ['Scheduler'],
+        awards: ['Awards']
+      };
+      const [title] = configs[view] || configs.overview;
+      $('#page-title').textContent = title;
+      document.querySelectorAll('.nav button').forEach(button => button.classList.toggle('active', button.dataset.view === view));
+      $('#cycle-strip').hidden = view !== 'overview';
+      $('#cycle-stats').hidden = view !== 'overview';
+      $('#overview-panel').hidden = view !== 'overview';
+      $('#proposal-workspace').hidden = !['proposals', 'review'].includes(view);
+      $('#module-panel').hidden = !['feedback', 'documents', 'scheduler', 'awards'].includes(view);
+      $('#access-panel').hidden = view !== 'admin';
+      $('#new-proposal').style.display = ['proposals', 'review'].includes(view) && canSubmit() ? '' : 'none';
+      if (view === 'overview') renderOverview();
+      if (view === 'proposals') { currentFilter = 'all'; $('#workspace-title').textContent = 'Proposal Register'; $('#workspace-sub').textContent = 'Current proposal records.'; renderProposals(); }
+      if (view === 'review') { currentFilter = 'attention'; $('#workspace-title').textContent = 'Review Queue'; $('#workspace-sub').textContent = 'Records needing action.'; renderProposals(); }
+      if (view === 'admin') { setAdminPanel('queue'); loadAdmin(); }
+      if (['feedback', 'documents', 'scheduler', 'awards'].includes(view)) renderModule(view);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    async function renderAccess() {
+      if (!canManageAccess()) return;
+      const list = $('#access-list');
+      list.innerHTML = '<div class="empty">Loading approved identities…</div>';
+      try {
+        const payload = await api('/api/access/users');
+        const roles = Object.entries(roleLabels).map(([value, label]) => `<option value="${esc(value)}">${esc(label)}</option>`).join('');
+        const inviteRoles = `<option value="" selected disabled>Select role</option>${roles}`;
+        const permissions = ['legislative:submit', 'legislative:comment', 'legislative:vote', 'legislative:admin', 'legislative:access', 'legislative:configuration', 'legislative:records', 'legislative:moderation', 'legislative:board'];
+        const programs = ['CSA', ...memberPrograms];
+        $('#access-invite').innerHTML = `<form class="invite-form" id="access-invite-form"><label class="form-label"><strong>Name</strong><input name="name" required placeholder="Full name" /></label><label class="form-label"><strong>Email</strong><input name="email" type="email" required placeholder="name@institution.edu" /></label><label class="form-label"><strong>Role</strong><select name="role" required>${inviteRoles}</select></label><label class="access-active"><input type="checkbox" name="active" checked /> Active</label><label class="form-label wide"><strong>Program scope</strong><select name="programs" multiple>${programs.map(program => `<option value="${esc(program)}">${esc(program)}</option>`).join('')}</select><span class="form-help">Acting scope.</span></label><label class="form-label invite-permissions"><strong>Permissions</strong><select name="permissions" multiple>${permissions.map(permission => `<option value="${esc(permission)}">${esc(permission)}</option>`).join('')}</select><span class="form-help">Explicit only.</span></label><button class="button" type="submit">Add identity</button></form>`;
+        $('#access-invite-form').addEventListener('submit', async event => {
+          event.preventDefault();
+          const form = event.currentTarget;
+          const selected = name => Array.from(form.querySelectorAll(`[name="${name}"] option:checked`)).map(option => option.value);
+          const button = form.querySelector('button'); button.disabled = true;
+          try { await api('/api/access/users', { method: 'POST', body: JSON.stringify({ name: form.elements.name.value.trim(), email: form.elements.email.value.trim(), role: form.elements.role.value, active: form.elements.active.checked, programs: selected('programs'), permissions: selected('permissions') }) }); await loadAdmin(); toast('Approved identity added to the access register.'); }
+          catch (error) { toast(`Could not add identity: ${error.message}`); button.disabled = false; }
+        });
+        list.innerHTML = payload.users.map(user => `<article class="access-row" data-user-id="${esc(user.id)}"><div><div class="access-name">${esc(user.name)}</div><div class="access-email">${esc(user.email)}</div></div><div class="access-controls"><label>Role</label><select data-access-role>${roles.replace(`value="${esc(user.role)}"`, `value="${esc(user.role)}" selected`)}</select><label class="access-active"><input type="checkbox" data-access-active ${user.active ? 'checked' : ''} /> Active</label></div><div class="access-controls"><label>Program scope</label><select multiple data-access-programs>${programs.map(program => `<option value="${esc(program)}" ${(user.programs || []).includes(program) ? 'selected' : ''}>${esc(program)}</option>`).join('')}</select><label>Permissions</label><select multiple data-access-permissions>${permissions.map(permission => `<option value="${esc(permission)}" ${(user.permissions || []).includes(permission) ? 'selected' : ''}>${esc(permission)}</option>`).join('')}</select></div><button class="button secondary" data-save-access>Save access</button></article>`).join('');
+        list.querySelectorAll('[data-save-access]').forEach(button => button.addEventListener('click', async () => {
+          const row = button.closest('[data-user-id]');
+          const selected = selector => Array.from(row.querySelectorAll(`${selector} option:checked`)).map(option => option.value);
+          button.disabled = true;
+          try {
+            await api(`/api/access/users/${row.dataset.userId}`, { method: 'PATCH', body: JSON.stringify({ role: row.querySelector('[data-access-role]').value, active: row.querySelector('[data-access-active]').checked, programs: selected('[data-access-programs]'), permissions: selected('[data-access-permissions]') }) });
+            await loadAdmin(); toast('Access assignment saved to the register.');
+          } catch (error) { toast(`Could not save access: ${error.message}`); }
+          button.disabled = false;
+        }));
+      } catch (error) { list.innerHTML = `<div class="empty">${esc(error.message)}</div>`; }
+    }
+    async function replaceProposal(updated, message) { proposals = proposals.map(item => item.id === updated.id ? updated : item); renderProposals(); renderActivity(); openDrawer(updated.id); if (message) toast(message); }
+    function renderReviewActions(p) {
+      const owner = Boolean(authUser && (p.proposerId ? p.proposerId === authUser.id : p.proposer === authUser.name));
+      const recordLink = `<a class="button secondary" href="/api/proposals/${encodeURIComponent(p.id)}/record.pdf" target="_blank" rel="noopener">Download record PDF</a>`;
+      if (!canReview()) {
+        const controls = [];
+        if (p.status === 'draft' && owner) controls.push('<button class="button" id="edit-draft">Continue draft</button>');
+        if (owner && ['comment', 'vote', 'board', 'decision'].includes(p.status)) controls.push('<button class="button secondary" id="create-revision">Create revision</button>');
+        controls.push(recordLink);
+        $('#drawer-actions').innerHTML = `<div class="review-actions"><div class="review-note">${p.status === 'draft' ? 'Draft · private to your program account until you submit it.' : 'Record access · the PDF preserves the current version, discussion, and audit trail.'}</div>${controls.join('')}</div>`;
+        if ($('#edit-draft')) $('#edit-draft').addEventListener('click', () => openModal(p));
+        if ($('#create-revision')) $('#create-revision').addEventListener('click', () => openModal(p, 'revision'));
+        return;
+      }
+      const reviewable = !['closed', 'vote', 'board', 'decision'].includes(p.status);
+      $('#drawer-actions').innerHTML = `<div class="review-actions"><div class="review-note">CSA governance authority · ${reviewable ? 'assign the route and move the record forward.' : 'the record is in a governed decision state.'}</div>${reviewable ? `<label class="form-label"><strong>Decision bucket</strong><select class="field" id="drawer-bucket"><option ${p.bucket === 'Unassigned' ? 'selected' : ''}>Unassigned</option><option ${p.bucket === 'Bucket 1' ? 'selected' : ''}>Bucket 1</option><option ${p.bucket === 'Bucket 2' ? 'selected' : ''}>Bucket 2</option><option ${p.bucket === 'Bucket 3' ? 'selected' : ''}>Bucket 3</option></select><span class="form-help" id="bucket-help">${esc(bucketDescription(p.bucket))}</span></label><button class="button secondary" id="assign-bucket">Assign bucket</button><button class="button" id="accept-review">Accept &amp; distribute</button><button class="button secondary" id="return-review">Return to proposer</button>` : ''}${p.status === 'comment' && ['Bucket 2', 'Bucket 3'].includes(p.bucket) ? '<button class="button" id="open-vote">Close comments &amp; open vote</button>' : ''}${p.status === 'vote' ? '<button class="button" id="finalize-vote">Finalize coach vote</button>' : ''}${recordLink}</div>`;
+      if ($('#drawer-bucket')) $('#drawer-bucket').addEventListener('change', event => { if ($('#bucket-help')) $('#bucket-help').textContent = bucketDescription(event.target.value); });
+      if ($('#assign-bucket')) $('#assign-bucket').addEventListener('click', async () => { const value = $('#drawer-bucket').value; if (value === 'Unassigned') return toast('Choose a bucket before assigning.'); try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify({ bucket: value, next: 'Commissioner final review', activity: `Bucket assigned by ${authUser.name}`, statusLabel: p.statusLabel }) }); await replaceProposal(updated, `${value} assigned and recorded.`); } catch (error) { toast(`Could not assign bucket: ${error.message}`); } });
+      if ($('#accept-review')) $('#accept-review').addEventListener('click', async () => { if (p.bucket === 'Unassigned') return toast('Assign a decision bucket first.'); const patch = p.bucket === 'Bucket 1' ? { status: 'decision', statusLabel: 'Commissioner decision', next: 'Commissioner to record final outcome', activity: 'Accepted for Commissioner decision' } : { status: 'comment', statusLabel: 'Comment window', next: deadlineText('comment-close', 'Comment window close date not configured'), activity: 'Accepted and distributed' }; try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify(patch) }); await replaceProposal(updated, 'Proposal route recorded.'); } catch (error) { toast(`Could not accept proposal: ${error.message}`); } });
+      if ($('#return-review')) $('#return-review').addEventListener('click', async () => { const reason = window.prompt('Reason to return this proposal to the proposer:'); if (!reason || !reason.trim()) return; try { const updated = await api(`/api/proposals/${p.id}`, { method: 'PATCH', body: JSON.stringify({ statusLabel: 'Returned to proposer', next: 'Correction required', reviewReason: reason.trim(), activity: 'Returned by CSA governance' }) }); await replaceProposal(updated, 'Proposal returned with a recorded reason.'); } catch (error) { toast(`Could not return proposal: ${error.message}`); } });
+      if ($('#open-vote')) $('#open-vote').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/open-vote`, { method: 'POST' }); await replaceProposal(updated, 'Comments closed; coach vote is open.'); } catch (error) { toast(`Could not open vote: ${error.message}`); } });
+      if ($('#finalize-vote')) $('#finalize-vote').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/finalize-vote`, { method: 'POST' }); await replaceProposal(updated, updated.vote?.result === 'passed' ? 'Vote finalized and routed.' : 'Vote finalized; proposal was not adopted.'); } catch (error) { toast(`Could not finalize vote: ${error.message}`); } });
+    }
+    function renderDecisionForm(p, board = false) {
+      const authority = board ? canBoard() : canReview();
+      if (!authority) return '';
+      return `<div class="governance-panel"><h3>${board ? 'Board decision' : 'Commissioner decision'}</h3><div class="governance-note">Record one final outcome. Adopted decisions require an effective date; Rejected and Tabled decisions require a reason.</div><div class="governance-grid"><label class="form-label"><strong>Outcome</strong><select class="field" id="decision-outcome"><option>Adopted</option><option>Rejected</option><option>Tabled</option></select></label><label class="form-label"><strong>Reason</strong><textarea class="textarea" id="decision-reason" placeholder="Explain the decision for the permanent record."></textarea></label><label class="form-label"><strong>Effective date</strong><input class="field" id="decision-effective-date" type="date" /></label><button class="button" id="record-decision">Record ${board ? 'Board' : 'Commissioner'} decision</button></div></div>`;
+    }
+    function renderGovernance(p) {
+      const node = $('#drawer-governance');
+      node.innerHTML = '';
+      if (p.status === 'vote' && p.vote) {
+        const eligible = (authUser?.programs || []).filter(unit => (p.vote.eligibleUnits || []).includes(unit));
+        const voted = p.vote.myVotingUnits || [];
+        const options = eligible.map(unit => `<option value="${esc(unit)}" ${voted.includes(unit) ? 'disabled' : ''}>${esc(unit)}${voted.includes(unit) ? ' · ballot recorded' : ''}</option>`).join('');
+        const voteDeadline = p.vote.closeAt ? `Vote closes ${formatDate(p.vote.closeAt, { year: true })}.` : 'The close date is not configured.';
+        node.innerHTML = `<div class="governance-panel"><h3>Coach vote</h3><div class="governance-note">Ballots are immutable and confidential until CSA staff finalizes the vote. ${voteDeadline} Quorum: ${esc(p.vote.quorumRequired)} of ${esc(p.vote.eligibleUnits.length)} voting units; approval threshold: ${esc(p.vote.thresholdPercent)}% of decided ballots.</div>${eligible.length ? `<div class="governance-grid"><label class="form-label"><strong>Voting unit</strong><select class="field" id="vote-unit">${options}</select></label><label class="form-label"><strong>Ballot</strong><select class="field" id="vote-choice"><option value="yes">Yes</option><option value="no">No</option><option value="abstain">Abstain</option></select></label><button class="button" id="submit-vote" ${eligible.every(unit => voted.includes(unit)) ? 'disabled' : ''}>Submit immutable ballot</button></div>` : '<div class="version-note">No voting unit is authorized for this account.</div>'}${canReview() ? '<button class="button secondary" id="finalize-vote-inline" style="margin-top:12px;">Finalize vote</button>' : ''}</div>`;
+        if ($('#submit-vote')) $('#submit-vote').addEventListener('click', async () => { const unit = $('#vote-unit').value; if (!unit || voted.includes(unit)) return toast('Choose an authorized voting unit without a recorded ballot.'); try { const updated = await api(`/api/proposals/${p.id}/votes`, { method: 'POST', body: JSON.stringify({ votingUnit: unit, choice: $('#vote-choice').value }) }); await replaceProposal(updated, 'Immutable ballot recorded.'); } catch (error) { toast(`Could not submit ballot: ${error.message}`); } });
+        if ($('#finalize-vote-inline')) $('#finalize-vote-inline').addEventListener('click', async () => { try { const updated = await api(`/api/proposals/${p.id}/finalize-vote`, { method: 'POST' }); await replaceProposal(updated, 'Vote finalized and routed.'); } catch (error) { toast(`Could not finalize vote: ${error.message}`); } });
+      } else if (p.status === 'decision') {
+        node.innerHTML = renderDecisionForm(p, false);
+      } else if (p.status === 'board') {
+        node.innerHTML = renderDecisionForm(p, true);
+      } else if (p.status === 'closed' && p.decision) {
+        node.innerHTML = `<div class="governance-panel"><h3>Decision record</h3><div class="governance-results"><span><strong>${esc(p.decision.outcome)}</strong></span>${p.decision.effectiveDate ? `<span>Effective ${esc(p.decision.effectiveDate)}</span>` : ''}${p.decision.reason ? `<span>${esc(p.decision.reason)}</span>` : ''}</div></div>`;
+      }
+      if ($('#record-decision')) $('#record-decision').addEventListener('click', async () => { const outcome = $('#decision-outcome').value; const reason = $('#decision-reason').value.trim(); const effectiveDate = $('#decision-effective-date').value; if (outcome === 'Adopted' && !effectiveDate) return toast('Choose an effective date for an Adopted decision.'); if (outcome !== 'Adopted' && !reason) return toast(`Add a reason for a ${outcome} decision.`); const endpoint = p.status === 'board' ? 'board-decision' : 'decision'; try { const updated = await api(`/api/proposals/${p.id}/${endpoint}`, { method: 'POST', body: JSON.stringify({ outcome, reason, effectiveDate }) }); await replaceProposal(updated, `${outcome} decision recorded.`); } catch (error) { toast(`Could not record decision: ${error.message}`); } });
+    }
+    function auditFor(p) {
+      return p.audit && p.audit.length ? p.audit : [{ event: 'Proposal submitted', by: p.proposer, at: 'Nov 4' }, ...(p.status !== 'review' ? [{ event: 'Accepted for current cycle', by: 'CSA staff', at: 'Nov 6' }] : [])];
+    }
+    function renderComments(p) {
+      const ownsComment = (comment) => Boolean(authUser && (comment.authorId ? comment.authorId === authUser.id : comment.author === authUser.name));
+      const comments = Array.isArray(p.comments) ? p.comments : [];
+      $('#comment-list').innerHTML = comments.length ? comments.map((c, index) => `<div class="comment"><div class="comment-head"><strong>${esc(c.author)}</strong><span>${esc(formatWhen(c.date))}</span></div><p>${c.removed ? '<em>Comment removed from the visible thread.</em>' : esc(c.text)}</p>${(!c.removed && (canModerate() || ownsComment(c))) ? `<div class="comment-tools"><button class="comment-remove" data-comment-index="${index}">Remove comment</button></div>` : ''}</div>`).join('') : '<div class="empty">No comments yet.</div>';
+      $('#comment-list').querySelectorAll('[data-comment-index]').forEach(button => button.addEventListener('click', async () => {
+        const comment = comments[Number(button.dataset.commentIndex)];
+        const moderating = canModerate() && !ownsComment(comment);
+        const reason = moderating ? window.prompt('Reason for removing this comment:') : 'Removed by commenter';
+        if (moderating && (!reason || !reason.trim())) return;
+        try {
+          if (serverBacked) {
+            const updated = await api(`/api/proposals/${p.id}/comments/${button.dataset.commentIndex}`, { method: 'DELETE', body: JSON.stringify({ reason }) });
+            proposals = proposals.map(item => item.id === updated.id ? updated : item); activeProposal = updated;
+          } else {
+            comment.removed = true; comment.originalText = comment.text; comment.removedBy = authUser?.name || 'Head coach'; comment.removedReason = (reason || 'Removed by commenter').trim();
+            p.audit = [...(p.audit || []), { event: 'Comment removed', by: comment.removedBy, at: 'Just now', reason: comment.removedReason }]; p.activity = 'Comment removed from visible thread'; p.time = 'Just now'; save();
+          }
+          renderProposals(); renderActivity(); openDrawer(p.id); toast('Comment removed; audit record preserved.');
+        } catch (error) { toast(`Could not remove comment: ${error.message}`); }
+      }));
+    }
+    function syncCommentState(p) {
+      const open = p.status === 'comment';
+      $('#comment-input').disabled = !open;
+      $('#comment-input').placeholder = open ? 'Add a comment to this proposal…' : 'Comment window closed — this record is read-only.';
+      $('#comment-form button').disabled = !open;
+      $('#comment-form button').title = open ? '' : 'Comments are closed for this proposal';
+    }
+    function renderVersions(p) {
+      const versions = Array.isArray(p.versions) ? p.versions : [];
+      $('#drawer-versions').innerHTML = versions.length ? versions.map(version => `<div class="version-row"><div class="version-row-head"><strong>Version ${esc(version.version)}${Number(version.version) === Number(p.version || 1) ? ' · current' : ''}</strong><span>${esc(formatWhen(version.createdAt))}</span></div><div class="version-row-copy">${esc(version.createdBy || 'CSA staff')} · ${esc(version.changeSummary || 'Original submission')}${version.changedFields?.length ? ` · <em>Changed: ${esc(version.changedFields.join(', '))}</em>` : ''}</div></div>`).join('') : '<div class="version-note">Version history will appear after the first submitted record.</div>';
+    }
+    function setOverlayState(node, open) { node.setAttribute('aria-hidden', open ? 'false' : 'true'); }
+    function openDrawer(id) {
+      const p = proposals.find(item => item.id === id); if (!p) return; activeProposal = p;
+      $('#drawer-title').textContent = p.title; $('#drawer-kicker').textContent = `${programLabel(p.program)} · ${p.bucket}`;
+      $('#drawer-meta').innerHTML = `<span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span><span class="proposal-meta">Proposed by ${esc(p.proposer)}</span>`;
+      const version = p.version || (Array.isArray(p.versions) && p.versions.length) || 1;
+      $('#drawer-details').innerHTML = `<div><div class="detail-label">Proposer</div><div class="detail-value">${esc(programLabel(p.program))}</div></div><div><div class="detail-label">Co-sponsors</div><div class="detail-value">${esc(Array.isArray(p.coSponsors) && p.coSponsors.length ? p.coSponsors.map(programLabel).join(' · ') : 'Not recorded')}</div></div><div><div class="detail-label">Next action</div><div class="detail-value">${esc(p.next)}</div></div><div><div class="detail-label">Decision route</div><div class="detail-value route-value"><strong>${esc(p.bucket)}</strong><span class="route-description">${esc(bucketDescription(p.bucket))}</span></div></div><div><div class="detail-label">Record status</div><div class="detail-value">Version ${esc(version)} · audited</div></div>`;
+      renderReviewActions(p);
+      renderGovernance(p);
+      const steps = ['Submitted','Staff review','Comment window','Coach vote','Board decision','Final decision']; const current = p.status === 'draft' ? -1 : p.status === 'review' ? 1 : p.status === 'comment' ? 2 : p.status === 'vote' ? 3 : p.status === 'board' ? 4 : 5;
+      $('#drawer-stage').innerHTML = steps.map((step, i) => `<div class="stage ${i < current ? 'done' : i === current ? 'current' : ''}"><span>${i < current ? '✓' : i + 1}</span>${step}</div>`).join('');
+      renderVersions(p);
+      $('#drawer-body').textContent = p.body; $('#drawer-files').innerHTML = (p.files || []).length ? p.files.map(f => `<div class="file-line"><span><span class="file-mark" aria-hidden="true"></span>${esc(f)}</span><small>Version ${esc(version)}</small></div>`).join('') : '<div class="empty">No supporting documents attached.</div>';
+      renderComments(p); syncCommentState(p);
+      $('#drawer-audit').innerHTML = auditFor(p).map(item => `<div class="audit-row"><span class="audit-dot"></span><div class="audit-event"><strong>${esc(item.event)}</strong><br><span>${esc(item.by)}${item.reason ? ` · ${esc(item.reason)}` : ''}${item.fields?.length ? ` · fields: ${esc(item.fields.join(', '))}` : ''}</span></div><div class="audit-meta">${esc(formatWhen(item.at))}</div></div>`).join('');
+      $('#drawer-backdrop').classList.add('open'); $('#proposal-drawer').classList.add('open'); setOverlayState($('#proposal-drawer'), true); $('#drawer-close').focus();
+    }
+    function closeDrawer() { $('#drawer-backdrop').classList.remove('open'); $('#proposal-drawer').classList.remove('open'); setOverlayState($('#proposal-drawer'), false); activeProposal = null; }
+    function openModal(proposal = null, mode = 'draft') {
+      editingProposal = proposal; editingMode = mode;
+      $('#proposal-form').reset();
+      $('#modal-title').textContent = mode === 'revision' ? 'Create a new version' : proposal ? 'Continue a draft' : 'Start a proposal';
+      $('#revision-summary-field').hidden = mode !== 'revision';
+      if (proposal) {
+        $('#form-title').value = proposal.title || '';
+        $('#form-program').value = proposal.program || 'Columbia';
+        const sponsors = Array.isArray(proposal.coSponsors) ? proposal.coSponsors : [];
+        $('#form-sponsor-1').value = sponsors[0] || '';
+        $('#form-sponsor-2').value = sponsors[1] || '';
+        const match = String(proposal.body || '').match(/^Current issue:\n([\s\S]*?)\n\nAssociation impact:\n([\s\S]*?)\n\nFinancial implications:\n([\s\S]*?)\n\nBenefit to the student-athlete:\n([\s\S]*)$/);
+        $('#form-issue').value = match ? match[1] : proposal.body || '';
+        $('#form-impact').value = match ? match[2] : '';
+        $('#form-financial').value = match ? match[3] : '';
+        $('#form-benefit').value = match ? match[4] : '';
+      }
+      $('#proposal-modal').classList.add('open'); $('#modal-backdrop').classList.add('open'); setOverlayState($('#proposal-modal'), true); setTimeout(() => $('#form-title').focus(), 120);
+    }
+    function closeModal() { $('#proposal-modal').classList.remove('open'); $('#modal-backdrop').classList.remove('open'); setOverlayState($('#proposal-modal'), false); $('#proposal-form').reset(); $('#revision-summary-field').hidden = true; $('#modal-title').textContent = 'Start a proposal'; editingProposal = null; editingMode = 'draft'; }
+    function readForm() { const selectedFiles = Array.from($('#form-files').files).map(f => f.name); return { title: $('#form-title').value.trim(), program: $('#form-program').value, coSponsors: [$('#form-sponsor-1').value, $('#form-sponsor-2').value].filter(Boolean), submissionState: 'submit', body: `Current issue:\n${$('#form-issue').value.trim()}\n\nAssociation impact:\n${$('#form-impact').value.trim()}\n\nFinancial implications:\n${$('#form-financial').value.trim()}\n\nBenefit to the student-athlete:\n${$('#form-benefit').value.trim()}`, files: selectedFiles.length ? selectedFiles : (editingProposal?.files || []) }; }
+    async function createProposal(submit) {
+      const p = readForm(); p.submissionState = submit ? 'submit' : 'draft'; if (!p.title) return;
+      const mode = editingMode;
+      if (submit && new Set(p.coSponsors).size < 2) return toast('Choose two different co-sponsoring programs before submitting.');
+      if (editingMode === 'revision' && !$('#form-change-summary').value.trim()) return toast('Summarize what changed in this version.');
+      if (p.coSponsors.length) p.activity = submit ? `Submitted with ${p.coSponsors.join(' and ')} co-sponsors` : 'Draft saved';
+      if (!submit) { p.statusLabel = 'Draft'; p.next = 'Complete and submit'; }
+      const editingId = editingProposal?.id;
+      try {
+        if (editingProposal) {
+          if (serverBacked) { const updated = editingMode === 'revision' ? await api(`/api/proposals/${editingProposal.id}/revisions`, { method: 'POST', body: JSON.stringify({ ...p, changeSummary: $('#form-change-summary').value.trim() }) }) : await api(`/api/proposals/${editingProposal.id}`, { method: 'PATCH', body: JSON.stringify(p) }); proposals = proposals.map(item => item.id === updated.id ? updated : item); }
+          else { const updated = { ...editingProposal, ...p, audit: [...(editingProposal.audit || []), { event: submit ? 'Proposal submitted' : 'Draft updated', by: authUser?.name || 'Head coach', at: 'Just now' }] }; proposals = proposals.map(item => item.id === updated.id ? updated : item); save(); }
+        } else if (serverBacked) { const created = await api('/api/proposals', { method: 'POST', body: JSON.stringify(p) }); proposals = [created, ...proposals]; }
+        else { p.id = `p${Date.now()}`; proposals = [p, ...proposals]; save(); }
+        renderProposals(); renderActivity(); closeModal(); if (editingId) openDrawer(editingId); toast(mode === 'revision' ? 'New version submitted for CSA staff review.' : submit ? 'Proposal submitted for CSA staff review.' : 'Draft saved to your register.');
+      } catch (error) { toast(`Could not save proposal: ${error.message}`); }
+    }
+
+    document.querySelectorAll('.nav button').forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+    document.querySelectorAll('[data-admin-tab]').forEach(btn => btn.addEventListener('click', () => setAdminPanel(btn.dataset.adminTab)));
+    document.querySelectorAll('.tab').forEach(tab => tab.addEventListener('click', () => { currentFilter = tab.dataset.filter; renderProposals(); }));
+    $('#program-select').addEventListener('change', () => { $('#stat-program').textContent = '1'; if (currentFilter === 'mine') renderProposals(); });
+    $('#role-select').addEventListener('change', () => { if (authUser) toast(`Authorized role: ${roleLabel(authUser)}. Role changes are managed in the access register.`); });
+    $('#new-proposal').addEventListener('click', () => openModal()); $('#modal-close').addEventListener('click', closeModal); $('#cancel-proposal').addEventListener('click', closeModal); $('#modal-backdrop').addEventListener('click', closeModal); $('#drawer-close').addEventListener('click', closeDrawer); $('#drawer-backdrop').addEventListener('click', closeDrawer);
+    $('#save-draft').addEventListener('click', () => { if ($('#form-title').value.trim()) createProposal(false); else toast('Add a working title before saving.'); });
+    $('#proposal-form').addEventListener('submit', (event) => { event.preventDefault(); createProposal(true); });
+    $('#comment-form').addEventListener('submit', async (event) => { event.preventDefault(); if (!activeProposal || activeProposal.status !== 'comment') return; const text = $('#comment-input').value.trim(); if (!text) return; try { if (serverBacked) { const updated = await api(`/api/proposals/${activeProposal.id}/comments`, { method: 'POST', body: JSON.stringify({ text }) }); proposals = proposals.map(item => item.id === updated.id ? updated : item); activeProposal = updated; } else { activeProposal.comments.push({ author: 'Jordan Smith', date: 'Just now', text }); activeProposal.activity = 'Comment added by Jordan Smith'; activeProposal.time = 'Just now'; save(); } renderProposals(); renderActivity(); openDrawer(activeProposal.id); $('#comment-input').value = ''; toast('Comment added to the proposal record.'); } catch (error) { toast(`Could not add comment: ${error.message}`); } });
+    $('#view-all').addEventListener('click', () => { currentFilter = 'all'; renderProposals(); window.scrollTo({ top: 370, behavior: 'smooth' }); });
+    $('#help-button').addEventListener('click', () => toast('Policy guide: approved rules are versioned by the Commissioner.'));
+    $('#logout-button').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }).catch(() => {}); document.body.classList.remove('authenticated'); window.location.reload(); });
+    $('#auth-request-form').addEventListener('submit', async (event) => { event.preventDefault(); authEmail = $('#auth-email').value.trim().toLowerCase(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/request-code', { method: 'POST', body: JSON.stringify({ email: authEmail }) }); $('#auth-request-form').style.display = 'none'; $('#auth-verify-form').classList.add('visible'); if (result.devCode) { $('#auth-dev-hint').hidden = false; $('#auth-dev-hint').textContent = `Local development code: ${result.devCode}`; } $('#auth-code').focus(); } catch (error) { $('#auth-error').textContent = error.message; } });
+    $('#auth-verify-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ email: authEmail, code: $('#auth-code').value.trim() }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); await loadFeedback({ silent: true }); setView('overview'); } catch (error) { $('#auth-error').textContent = error.message; } });
+    $('#auth-back').addEventListener('click', () => { $('#auth-verify-form').classList.remove('visible'); $('#auth-request-form').style.display = 'grid'; $('#auth-code').value = ''; $('#auth-dev-hint').hidden = true; });
+    $('#auth-dev-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-dev-error').textContent = ''; try { const result = await api('/api/auth/dev-login', { method: 'POST', body: JSON.stringify({ username: $('#auth-dev-username').value.trim(), password: $('#auth-dev-password').value }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); await loadFeedback({ silent: true }); setView('overview'); } catch (error) { $('#auth-dev-error').textContent = error.message; } });
+    bootAuth();
+  </script>
+</body>
+</html>
