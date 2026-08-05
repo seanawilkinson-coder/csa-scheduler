@@ -162,8 +162,10 @@
     .tab:hover, .tab.active { border-bottom-color: var(--gold); color: var(--ink); }
     .tab.active { font-weight: 700; }
     .proposal-list { border-top: 1px solid var(--ink); }
-    .proposal-row { display: grid; grid-template-columns: minmax(220px, 2.1fr) minmax(120px, .9fr) minmax(85px, .6fr) minmax(140px, 1fr); gap: 20px; align-items: center; min-height: 88px; padding: 17px 0; border-bottom: 1px solid var(--rule); cursor: pointer; transition: background .18s var(--ease-out), padding .18s var(--ease-out); }
+    .proposal-row { display: block; min-height: 0; padding: 18px 0; border-bottom: 1px solid var(--rule); cursor: pointer; transition: background .18s var(--ease-out), padding .18s var(--ease-out); }
     .proposal-row:hover { padding-left: 11px; padding-right: 11px; background: rgba(238,240,238,.72); }
+    .proposal-row-head { display: flex; align-items: baseline; justify-content: space-between; gap: 18px; }
+    .proposal-row-state { display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 18px; margin-top: 11px; }
     .proposal-title { font-size: 14px; font-weight: 700; letter-spacing: -.015em; }
     .proposal-meta { margin-top: 5px; color: var(--muted); font-size: 12px; }
     .status, .bucket { display: inline-flex; align-items: center; width: fit-content; gap: 7px; min-height: 0; padding: 0; border-radius: 0; font: 500 11px/1.25 var(--data); white-space: nowrap; }
@@ -175,17 +177,21 @@
     .status.closed { color: var(--rust); }
     .status.draft { color: var(--muted); }
     .bucket { color: var(--muted); }
-    .next-action { color: var(--muted); font-size: 12px; line-height: 1.4; }
-    .next-action strong { display: block; margin-bottom: 4px; color: var(--ink); font: 500 10px/1 var(--data); letter-spacing: .12em; text-transform: uppercase; }
+    .next-action { display: flex; align-items: baseline; gap: 8px; margin-left: auto; color: var(--muted); font-size: 12px; line-height: 1.4; }
+    .next-action strong { color: var(--ink); font: 500 10px/1 var(--data); letter-spacing: .12em; text-transform: uppercase; }
     .empty { padding: 24px 0; border-bottom: 1px solid var(--rule); color: var(--muted); font-size: 13px; }
 
     .activity { margin-top: 52px; }
     .activity-list { border-top: 1px solid var(--ink); }
-    .activity-item { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 15px 0; border-bottom: 1px solid var(--rule); }
+    .activity-item { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: start; width: 100%; padding: 15px 0; border: 0; border-bottom: 1px solid var(--rule); background: transparent; color: inherit; text-align: left; cursor: pointer; animation: activity-rise .28s var(--ease-out) both; transition: background .18s var(--ease-out), padding .18s var(--ease-out); }
+    .activity-item:hover { padding-left: 10px; padding-right: 10px; background: rgba(238,240,238,.72); }
+    .activity-item:focus-visible { position: relative; z-index: 1; outline: 2px solid var(--gold); outline-offset: -2px; }
     .activity-mark { width: 8px; height: 8px; margin-top: 5px; border: 2px solid var(--gold); border-radius: 50%; }
     .activity-text { font-size: 12px; }
     .activity-text strong { font-weight: 700; }
+    .activity-source { display: block; margin-top: 4px; color: var(--muted); font: 500 10px/1.4 var(--data); }
     .activity-time { color: var(--quiet); font: 500 10px/1.3 var(--data); white-space: nowrap; }
+    @keyframes activity-rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     .module-panel { margin-top: 40px; padding-top: 26px; border-top: 1px solid var(--ink); }
     .module-register { margin-top: 18px; border-top: 1px solid var(--ink); }
     .module-row { display: grid; grid-template-columns: 150px minmax(0, 1fr) auto; gap: 22px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--rule); }
@@ -233,13 +239,12 @@
 
     /* Administration is a set of operating rails, never a grid of cells. */
     .admin-panel { margin-top: 46px; padding-top: 26px; border-top: 1px solid var(--ink); }
-    .admin-overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 28px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
-    .admin-signal { min-height: 92px; display: flex; flex-direction: column; justify-content: center; padding: 16px 18px 16px 0; border-right: 1px solid var(--rule); }
-    .admin-signal:not(:first-child) { padding-left: 18px; }
-    .admin-signal:last-child { border-right: 0; }
+    .admin-overview { margin-top: 28px; border-top: 1px solid var(--ink); border-bottom: 1px solid var(--ink); }
+    .admin-signal { display: flex; align-items: baseline; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--rule); }
+    .admin-signal:last-child { border-bottom: 0; }
     .admin-signal-value { font: 600 24px/.95 var(--serif); letter-spacing: -.03em; }
     .admin-signal-label { margin-top: 7px; color: var(--muted); font: 500 10px/1.3 var(--data); letter-spacing: .08em; text-transform: uppercase; }
-    .admin-signal-note { margin-top: 5px; color: var(--muted); font-size: 11px; }
+    .admin-signal-note { margin-left: auto; color: var(--muted); font-size: 11px; }
     .admin-tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 0 23px; margin-top: 28px; border-bottom: 1px solid var(--rule); }
     .admin-tabs-label { margin-right: 3px; color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .14em; text-transform: uppercase; }
     .admin-tab { min-height: 43px; border: 0; border-bottom: 2px solid transparent; padding: 0 0 11px; background: transparent; color: var(--muted); font-size: 12px; }
@@ -250,14 +255,14 @@
     .admin-section { min-width: 0; }
     .admin-rail { padding-left: 28px; border-left: 1px solid var(--rule); }
     .admin-queue { margin-top: 19px; border-top: 1px solid var(--ink); }
-    .admin-queue-row { display: grid; grid-template-columns: minmax(0, 1fr) 116px 142px; gap: 18px; align-items: center; padding: 17px 0; border-bottom: 1px solid var(--rule); }
+    .admin-queue-row { padding: 17px 0; border-bottom: 1px solid var(--rule); }
     .admin-queue-row:hover .admin-queue-title { color: var(--maroon); }
     .admin-queue-open { width: 100%; border: 0; padding: 0; background: transparent; color: inherit; text-align: left; }
     .admin-queue-title { font-weight: 700; transition: color .18s var(--ease-out); }
     .admin-queue-meta { margin-top: 5px; color: var(--muted); font: 500 10px/1.35 var(--data); }
-    .admin-queue-status { color: var(--muted); font: 500 10px/1.35 var(--data); letter-spacing: .05em; text-transform: uppercase; }
-    .admin-queue-next { color: var(--muted); font-size: 11px; text-align: right; }
-    .admin-queue-next strong { display: block; color: var(--ink); font-size: 10px; }
+    .admin-queue-status { display: inline-block; margin-top: 11px; color: var(--muted); font: 500 10px/1.35 var(--data); letter-spacing: .05em; text-transform: uppercase; }
+    .admin-queue-next { display: inline-flex; align-items: baseline; gap: 8px; margin-left: 18px; color: var(--muted); font-size: 11px; }
+    .admin-queue-next strong { color: var(--ink); font-size: 10px; }
     .admin-config { margin-top: 18px; }
     .admin-config-intro { margin-bottom: 5px; color: var(--muted); font-size: 11px; line-height: 1.5; }
     .admin-config-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
@@ -305,10 +310,10 @@
     .drawer-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 17px; }
     .drawer-scroll { overflow-y: auto; padding: 0 34px 50px; }
     .detail-grid { border-bottom: 1px solid var(--rule); }
-    .detail-grid > div { display: flex; align-items: baseline; justify-content: space-between; gap: 20px; padding: 15px 0; border-bottom: 1px solid var(--rule); }
+    .detail-grid > div { display: block; padding: 15px 0; border-bottom: 1px solid var(--rule); }
     .detail-grid > div:last-child { border-bottom: 0; }
     .detail-label { color: var(--muted); font: 500 10px/1.2 var(--data); letter-spacing: .1em; text-transform: uppercase; }
-    .detail-value { font-size: 13px; text-align: right; }
+    .detail-value { margin-top: 5px; font-size: 13px; }
     .review-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 19px 0 21px; border-bottom: 1px solid var(--rule); }
     .review-note { width: 100%; margin-bottom: 3px; color: var(--muted); font-size: 12px; }
     .review-actions .form-label { min-width: 150px; flex: 1; }
@@ -407,11 +412,10 @@
       .content { width: min(100% - 36px, 600px); padding-top: 32px; }
       .stats { gap: 12px 0; }
       .stat { flex-wrap: wrap; }
-      .stat::after { margin-left: 9px; }
       .stat-note { width: 100%; padding-left: 0; }
-      .proposal-row { grid-template-columns: 1fr auto; gap: 12px; }
-      .proposal-row > :first-child { grid-column: 1 / -1; }
-      .next-action { text-align: right; }
+      .proposal-row-head { display: block; }
+      .proposal-row-state { gap: 8px 14px; }
+      .next-action { width: 100%; margin-left: 0; }
       .stage-line { display: block; }
       .stage { min-height: 40px; }
       .stage:not(:last-child)::after { position: absolute; left: 10px; top: 24px; bottom: -11px; width: 1px; height: auto; }
@@ -427,22 +431,15 @@
       .sidebar { padding-top: 18px; }
       .top-actions .top-link { font-size: 11px; }
       .cycle-strip { padding: 23px 20px 27px; }
-      .proposal-row { grid-template-columns: 1fr; }
-      .next-action { text-align: left; }
-      .proposal-row .status, .proposal-row .bucket { justify-self: start; }
-      .detail-grid > div { display: block; }
-      .detail-value { margin-top: 5px; text-align: left; }
+      .detail-value { margin-top: 5px; }
       .split-fields { grid-template-columns: 1fr; }
       .access-row, .cycle-control-row { grid-template-columns: 1fr; }
       .access-row > :first-child, .access-row > :last-child { grid-column: auto; }
       .cycle-control-footer { align-items: stretch; flex-direction: column; }
-      .admin-overview { grid-template-columns: 1fr 1fr; }
-      .admin-signal:nth-child(2) { border-right: 0; }
-      .admin-signal:nth-child(3), .admin-signal:nth-child(4) { border-top: 1px solid var(--rule); }
-      .admin-signal:nth-child(3) { padding-left: 0; }
-      .admin-queue-row { grid-template-columns: 1fr auto; gap: 8px 14px; }
-      .admin-queue-status { grid-column: 2; grid-row: 1; }
-      .admin-queue-next { grid-column: 1 / -1; text-align: left; }
+      .admin-signal { flex-wrap: wrap; }
+      .admin-signal-note { width: 100%; margin-left: 0; }
+      .admin-queue-status { display: block; }
+      .admin-queue-next { display: flex; margin: 8px 0 0; }
       .module-row { grid-template-columns: 1fr; gap: 8px; }
       .module-row .button { justify-self: start; }
       .admin-config-fields, .policy-fields, .invite-form { grid-template-columns: 1fr; }
@@ -798,14 +795,39 @@
       const list = $('#proposal-list');
       const rows = visibleProposals();
       if (!rows.length) { list.innerHTML = '<div class="empty">No proposals match this view.</div>'; return; }
-      list.innerHTML = rows.map(p => `<article class="proposal-row" data-id="${esc(p.id)}"><div><div class="proposal-title">${esc(p.title)}</div><div class="proposal-meta">${esc(p.proposer)} · ${esc(p.program)} · ${(p.comments || []).length} comments</div></div><div><span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span></div><div><span class="bucket">${esc(p.bucket)}</span></div><div class="next-action"><strong>Next action</strong>${esc(p.next)}</div></article>`).join('');
+      list.innerHTML = rows.map(p => `<article class="proposal-row" data-id="${esc(p.id)}"><div class="proposal-row-head"><div><div class="proposal-title">${esc(p.title)}</div><div class="proposal-meta">${esc(p.proposer)} · ${esc(p.program)} · ${(p.comments || []).length} comments</div></div></div><div class="proposal-row-state"><span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span><span class="bucket">${esc(p.bucket)}</span><div class="next-action"><strong>Next action</strong><span>${esc(p.next)}</span></div></div></article>`).join('');
       list.querySelectorAll('[data-id]').forEach(row => row.addEventListener('click', () => openDrawer(row.dataset.id)));
       $('#stat-active').textContent = proposals.filter(p => p.status !== 'closed').length;
       updateTabState();
     }
+    function activityTimeRank(value) {
+      const text = String(value || '').trim();
+      if (!text) return 0;
+      if (/just now/i.test(text)) return Date.now();
+      const minutes = text.match(/^(\d+)\s+min(?:ute)?s? ago$/i);
+      if (minutes) return Date.now() - Number(minutes[1]) * 60 * 1000;
+      if (/yesterday/i.test(text)) return Date.now() - 24 * 60 * 60 * 1000;
+      const parsed = Date.parse(text);
+      return Number.isNaN(parsed) ? 0 : parsed;
+    }
     function renderActivity() {
-      const recent = proposals.slice(0, 4);
-      $('#activity-list').innerHTML = recent.map(p => `<div class="activity-item"><span class="activity-mark" aria-hidden="true"></span><div class="activity-text"><strong>${esc(p.activity)}</strong><br><span>${esc(p.title)}</span></div><div class="activity-time">${esc(p.time)}</div></div>`).join('');
+      const recent = proposals
+        .map((proposal, index) => {
+          const audit = Array.isArray(proposal.audit) ? proposal.audit : [];
+          const latest = audit[audit.length - 1];
+          return { proposal, event: proposal.activity || latest?.event || proposal.statusLabel || 'Record updated', time: proposal.time || latest?.at || '', rank: activityTimeRank(proposal.time || latest?.at) || index };
+        })
+        .filter(item => item.event)
+        .sort((a, b) => b.rank - a.rank)
+        .slice(0, 4);
+      const list = $('#activity-list');
+      if (!recent.length) { list.innerHTML = '<div class="empty">No activity recorded yet.</div>'; return; }
+      list.innerHTML = recent.map((item, index) => {
+        const p = item.proposal;
+        const source = `${p.title} · ${p.program}`;
+        return `<button class="activity-item" type="button" data-activity-proposal="${esc(p.id)}" aria-label="${esc(`${item.event} — ${source}`)}" style="animation-delay:${index * 45}ms"><span class="activity-mark" aria-hidden="true"></span><span class="activity-text"><strong>${esc(item.event)}</strong><span class="activity-source">Source · ${esc(source)}</span></span><span class="activity-time">${esc(item.time)}</span></button>`;
+      }).join('');
+      list.querySelectorAll('[data-activity-proposal]').forEach(row => row.addEventListener('click', () => openDrawer(row.dataset.activityProposal)));
     }
     function renderOverview() {
       const next = cycle?.nextDeadline;
