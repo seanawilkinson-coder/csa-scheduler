@@ -96,6 +96,8 @@ function publicUser(user) {
 }
 
 const PROPOSAL_LIMITS = { title: 160, body: 4000, fileCount: 20, fileName: 200, coSponsorCount: 5, statusLabel: 80, next: 160, activity: 200, reason: 1000 };
+const FEEDBACK_CATEGORIES = ['Bug', 'Copy', 'Design', 'Workflow', 'Other'];
+const FEEDBACK_LIMITS = { category: 40, message: 2000, page: 80, proposalId: 120 };
 
 function isRecord(value) {
   return value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -576,6 +578,44 @@ function validateDecisionInput(body) {
   return { value: { outcome: outcome.value, reason: reason.value, effectiveDate: effectiveDate.value } };
 }
 
+function validateFeedbackInput(body) {
+  if (!isRecord(body)) return { error: 'Feedback payload must be an object' };
+  const category = requiredText(body.category, 'Category', FEEDBACK_LIMITS.category);
+  if (category.error || !FEEDBACK_CATEGORIES.includes(category.value)) return { error: 'Feedback category is invalid' };
+  const message = requiredText(body.message, 'Message', FEEDBACK_LIMITS.message);
+  if (message.error) return message;
+  const page = body.page === undefined ? { value: 'Portal' } : optionalText(body.page, 'Page', FEEDBACK_LIMITS.page);
+  if (page.error) return page;
+  const proposalId = body.proposalId === undefined ? { value: '' } : optionalText(body.proposalId, 'Proposal', FEEDBACK_LIMITS.proposalId);
+  if (proposalId.error) return proposalId;
+  return { value: { category: category.value, message: message.value, page: page.value || 'Portal', proposalId: proposalId.value || '' } };
+}
+
+function validateFeedbackPatch(body) {
+  if (!isRecord(body)) return { error: 'Feedback update must be an object' };
+  const status = requiredText(body.status, 'Status', 20);
+  if (status.error || !['Open', 'Resolved'].includes(status.value)) return { error: 'Feedback status must be Open or Resolved' };
+  return { value: { status: status.value } };
+}
+
+function publicFeedback(item) {
+  return {
+    id: item.id,
+    category: item.category,
+    message: item.message,
+    page: item.page || 'Portal',
+    proposalId: item.proposalId || '',
+    proposalTitle: item.proposalTitle || '',
+    author: item.author || 'Member',
+    status: item.status || 'Open',
+    createdAt: item.createdAt || item.at || ''
+  };
+}
+
+function feedbackFor(data) {
+  return Array.isArray(data.feedback) ? data.feedback : [];
+}
+
 function recordDecision(proposal, input, user) {
   proposal.decision = {
     outcome: input.outcome,
@@ -610,6 +650,50 @@ app.get('/api/auth/config', (req, res) => {
 app.get('/api/cycle', requireSession, (req, res) => {
   const data = readPortalData();
   res.json(publicCycle(data));
+});
+
+app.get('/api/feedback', requireSession, (req, res) => {
+  const data = readPortalData();
+  const feedback = feedbackFor(data)
+    .filter(item => isGovernanceAdmin(req.user) || item.authorId === req.user.id)
+    .sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')));
+  res.json({ feedback: feedback.map(publicFeedback) });
+});
+
+app.post('/api/feedback', requireSession, (req, res) => {
+  const data = readPortalData();
+  const input = validateFeedbackInput(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  const proposal = input.value.proposalId ? data.proposals.find(item => item.id === input.value.proposalId) : null;
+  if (input.value.proposalId && !proposal) return res.status(404).json({ error: 'Proposal context not found' });
+  const feedback = {
+    id: `f-${crypto.randomUUID()}`,
+    category: input.value.category,
+    message: input.value.message,
+    page: input.value.page,
+    proposalId: input.value.proposalId,
+    proposalTitle: proposal?.title || '',
+    authorId: req.user.id,
+    author: req.user.name,
+    status: 'Open',
+    createdAt: nowStamp()
+  };
+  data.feedback = [feedback, ...feedbackFor(data)];
+  appendAccessAudit(data, 'Product feedback submitted', req.user.name, { scope: 'Feedback', feedbackId: feedback.id, category: feedback.category });
+  writePortalData(data);
+  res.status(201).json({ feedback: publicFeedback(feedback) });
+});
+
+app.patch('/api/feedback/:id', requireSession, requireGovernanceAdmin, (req, res) => {
+  const data = readPortalData();
+  const feedback = feedbackFor(data).find(item => item.id === req.params.id);
+  if (!feedback) return res.status(404).json({ error: 'Feedback not found' });
+  const input = validateFeedbackPatch(req.body);
+  if (input.error) return res.status(400).json({ error: input.error });
+  feedback.status = input.value.status;
+  appendAccessAudit(data, 'Product feedback status updated', req.user.name, { scope: 'Feedback', feedbackId: feedback.id, status: feedback.status });
+  writePortalData(data);
+  res.json({ feedback: publicFeedback(feedback) });
 });
 
 app.get('/api/admin/overview', requireSession, requireGovernanceAdmin, (req, res) => {

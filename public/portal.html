@@ -94,6 +94,7 @@
     .nav button { min-height: 44px; display: flex; align-items: center; gap: 12px; padding: 10px 11px; border: 0; border-left: 2px solid transparent; background: transparent; color: rgba(255,255,255,.62); text-align: left; transition: color .18s var(--ease-out), background .18s var(--ease-out), border-color .18s var(--ease-out); }
     .nav button:hover { background: rgba(255,255,255,.06); color: var(--white); }
     .nav button.active { border-left-color: var(--gold); background: rgba(255,255,255,.1); color: var(--white); }
+    .nav-count { margin-left: auto; color: var(--gold); font: 500 10px/1 var(--data); }
     .nav-icon { position: relative; width: 13px; height: 13px; flex: 0 0 13px; color: var(--gold); }
     .nav-icon::before { content: ''; position: absolute; inset: 2px; border: 1px solid currentColor; }
     .nav-icon.circle::before { border-radius: 50%; }
@@ -199,6 +200,21 @@
     .module-row-copy { margin-top: 4px; color: var(--muted); font-size: 12px; line-height: 1.45; }
     .module-note { margin-top: 18px; max-width: 58ch; color: var(--muted); font-size: 13px; line-height: 1.55; }
     .module-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+    .feedback-form { max-width: 760px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--ink); }
+    .feedback-fields { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 0 20px; align-items: start; }
+    .feedback-fields .form-label { padding: 13px 0; border-bottom: 0; }
+    .feedback-form .textarea { min-height: 130px; }
+    .feedback-form-footer { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 8px; }
+    .feedback-form-note { color: var(--muted); font-size: 11px; }
+    .feedback-list { margin-top: 45px; }
+    .feedback-list .section-head { margin-bottom: 18px; }
+    .feedback-row { display: grid; grid-template-columns: 92px minmax(0, 1fr) auto; gap: 16px; align-items: start; padding: 17px 0; border-top: 1px solid var(--rule); }
+    .feedback-category { color: var(--gold); font: 500 10px/1.35 var(--data); letter-spacing: .08em; text-transform: uppercase; }
+    .feedback-message { font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+    .feedback-context { margin-top: 5px; color: var(--muted); font: 500 10px/1.4 var(--data); }
+    .feedback-byline { color: var(--muted); font: 500 10px/1.35 var(--data); text-align: right; white-space: nowrap; }
+    .feedback-resolve { margin-top: 8px; border: 0; border-bottom: 1px solid var(--rule); padding: 0 0 2px; background: transparent; color: var(--ink); font: 500 10px/1.3 var(--data); }
+    .feedback-resolve:hover { border-bottom-color: var(--gold); color: var(--gold); }
 
     /* The cycle sidebar is a vertical rail, not a stack of milestone cards. */
     .timeline { padding-left: 23px; border-left: 1px solid var(--rule); }
@@ -315,7 +331,7 @@
     .detail-value { margin-top: 5px; font-size: 13px; }
     .route-value { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; }
     .route-description { color: var(--muted); font-size: 11px; }
-    .route-description::before { content: '·'; margin-right: 10px; color: var(--quiet); }
+    .route-description::before { content: '·  '; color: var(--quiet); }
     .review-actions { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; padding: 19px 0 21px; border-bottom: 1px solid var(--rule); }
     .review-note { width: 100%; margin-bottom: 3px; color: var(--muted); font-size: 12px; }
     .review-actions .form-label { min-width: 150px; flex: 1; }
@@ -436,6 +452,10 @@
       .detail-value { margin-top: 5px; }
       .split-fields { grid-template-columns: 1fr; }
       .access-row, .cycle-control-row { grid-template-columns: 1fr; }
+      .feedback-fields { grid-template-columns: 1fr; }
+      .feedback-form-footer { align-items: stretch; flex-direction: column; }
+      .feedback-row { grid-template-columns: 1fr; gap: 7px; }
+      .feedback-byline { text-align: left; }
       .access-row > :first-child, .access-row > :last-child { grid-column: auto; }
       .cycle-control-footer { align-items: stretch; flex-direction: column; }
       .admin-signal { flex-wrap: wrap; }
@@ -501,7 +521,7 @@
         <button data-view="proposals"><span class="nav-icon line" aria-hidden="true"></span><span>Proposals</span></button>
         <button data-view="review"><span class="nav-icon check" aria-hidden="true"></span><span>Review Queue</span></button>
         <button data-view="admin" id="access-nav" style="display:none"><span class="nav-icon square" aria-hidden="true"></span><span>Administration</span></button>
-        <button data-view="feedback"><span class="nav-icon corner" aria-hidden="true"></span><span>Feedback</span></button>
+        <button data-view="feedback"><span class="nav-icon corner" aria-hidden="true"></span><span>Feedback</span><span class="nav-count" id="feedback-count" hidden></span></button>
         <button data-view="documents"><span class="nav-icon square" aria-hidden="true"></span><span>Documents</span></button>
       </nav>
       <div class="side-label" style="margin-top: 28px;">Later</div>
@@ -626,6 +646,9 @@
     let editingProposal = null;
     let editingMode = 'draft';
     let currentFilter = 'all';
+    let feedbackItems = [];
+    const feedbackStoreKey = 'csa-portal-feedback-v1';
+    let feedbackRefreshTimer = null;
     let currentRole = 'coach';
     let authUser = null;
     let authEmail = '';
@@ -656,8 +679,11 @@
     const memberPrograms = ['Columbia', 'Princeton', 'Penn', 'Trinity', 'Yale'];
     const roleLabels = { commissioner: 'CSA Commissioner', coach: 'Head coach', institutional_representative: 'Institution representative', board_member: 'Board member', staff: 'CSA staff', administrator: 'Portal administrator', conference_observer: 'Conference observer' };
     const bucketDescriptions = { Unassigned: 'Route not assigned.', 'Bucket 1': 'Administrative path · no coach vote.', 'Bucket 2': 'Full cycle · coach vote.', 'Bucket 3': 'Full cycle · coach vote + Board ratification.' };
+    const programDisplayNames = { Columbia: 'Columbia Both Programs', Princeton: 'Princeton Men' };
+    const viewLabels = { overview: 'Overview', proposals: 'Proposals', review: 'Review Queue', feedback: 'Feedback', documents: 'Documents', scheduler: 'Scheduler', awards: 'Awards' };
     const roleLabel = (user) => roleLabels[user.role] || user.role;
     const bucketDescription = bucket => bucketDescriptions[bucket] || 'Governance route not recorded.';
+    const programLabel = program => programDisplayNames[program] || program;
     const phaseLabels = { submission: 'Submission window', review: 'Staff review', comment: 'Comment and revision window', vote: 'Coach vote', board: 'Board review', decision: 'Final decision', complete: 'Complete' };
     const formatDate = (value, options = {}) => { if (!value) return '—'; const date = new Date(`${String(value).slice(0, 10)}T12:00:00`); return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', ...(options.year ? { year: 'numeric' } : {}) }).format(date); };
     const formatWhen = (value) => { if (!value) return '—'; if (!/^\d{4}-\d{2}-\d{2}/.test(String(value))) return String(value); const date = new Date(value); return Number.isNaN(date.getTime()) ? String(value) : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date); };
@@ -670,7 +696,7 @@
     const canBoard = () => Boolean(authUser && (authUser.role === 'commissioner' || (authUser.permissions || []).includes('legislative:board')));
     const canSubmit = () => Boolean(authUser && (['coach', 'institutional_representative'].includes(authUser.role) || canReview()));
     function fillSelect(select, values, placeholder = '') {
-      select.innerHTML = `${placeholder ? `<option value="">${esc(placeholder)}</option>` : ''}${values.map(value => `<option value="${esc(value)}">${esc(value)}</option>`).join('')}`;
+      select.innerHTML = `${placeholder ? `<option value="">${esc(placeholder)}</option>` : ''}${values.map(value => `<option value="${esc(value)}">${esc(programLabel(value))}</option>`).join('')}`;
     }
     function populateProgramFields() {
       const primaryPrograms = canReview() ? memberPrograms : (authUser && authUser.programs && authUser.programs.length ? authUser.programs : memberPrograms);
@@ -685,7 +711,7 @@
     function applyAuthUser(user) {
       authUser = user; currentRole = user.role; document.body.classList.add('authenticated');
       const roleSelect = $('#role-select'); roleSelect.innerHTML = `<option value="${esc(user.role)}">${esc(roleLabel(user))}</option>`; roleSelect.disabled = true; roleSelect.setAttribute('aria-label', 'Authorized role');
-      document.querySelector('.identity-role').textContent = `${roleLabel(user)}${user.programs?.length ? ` · ${user.programs[0]}` : ''}`;
+      document.querySelector('.identity-role').textContent = `${roleLabel(user)}${user.programs?.length ? ` · ${programLabel(user.programs[0])}` : ''}`;
       document.querySelector('.identity-name').textContent = user.name; document.querySelector('.avatar').textContent = user.name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase();
       const programSelect = $('#program-select');
       const visiblePrograms = canReview() ? memberPrograms : (user.programs?.length ? user.programs : memberPrograms);
@@ -736,7 +762,7 @@
       const node = $('#admin-queue');
       if (!node || !adminOverview) return;
       const queue = adminOverview.queue || [];
-      node.innerHTML = queue.length ? queue.map(p => `<article class="admin-queue-row"><button class="admin-queue-open" data-admin-proposal="${esc(p.id)}"><div class="admin-queue-title">${esc(p.title)}</div><div class="admin-queue-meta">${esc(p.program)} · ${esc(p.proposer)} · ${esc(p.bucket)}</div></button><div class="admin-queue-status">${esc(p.statusLabel)}</div><div class="admin-queue-next"><strong>Next action</strong>${esc(p.next)}</div></article>`).join('') : '<div class="empty">Governance Queue is clear.</div>';
+      node.innerHTML = queue.length ? queue.map(p => `<article class="admin-queue-row"><button class="admin-queue-open" data-admin-proposal="${esc(p.id)}"><div class="admin-queue-title">${esc(p.title)}</div><div class="admin-queue-meta">${esc(programLabel(p.program))} · ${esc(p.proposer)} · ${esc(p.bucket)}</div></button><div class="admin-queue-status">${esc(p.statusLabel)}</div><div class="admin-queue-next"><strong>Next action</strong>${esc(p.next)}</div></article>`).join('') : '<div class="empty">Governance Queue is clear.</div>';
       node.querySelectorAll('[data-admin-proposal]').forEach(button => button.addEventListener('click', () => openDrawer(button.dataset.adminProposal)));
     }
     function renderAdminCycle() {
@@ -783,7 +809,7 @@
     }
     async function bootAuth() {
       await loadAuthConfig();
-      try { const session = await api('/api/auth/me'); applyAuthUser(session.user); await loadCycle(); await loadProposals(); setView('overview'); }
+      try { const session = await api('/api/auth/me'); applyAuthUser(session.user); await loadCycle(); await loadProposals(); await loadFeedback({ silent: true }); setView('overview'); }
       catch (error) { document.body.classList.remove('authenticated'); }
     }
 
@@ -798,7 +824,7 @@
       const list = $('#proposal-list');
       const rows = visibleProposals();
       if (!rows.length) { list.innerHTML = '<div class="empty">No proposals match this view.</div>'; return; }
-      list.innerHTML = rows.map(p => `<article class="proposal-row" data-id="${esc(p.id)}"><div class="proposal-row-head"><div><div class="proposal-title">${esc(p.title)}</div><div class="proposal-meta">${esc(p.proposer)} · ${esc(p.program)} · ${(p.comments || []).length} comments</div></div></div><div class="proposal-row-state"><span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span><span class="bucket">${esc(p.bucket)}</span><div class="next-action"><strong>Next action</strong><span>${esc(p.next)}</span></div></div></article>`).join('');
+      list.innerHTML = rows.map(p => `<article class="proposal-row" data-id="${esc(p.id)}"><div class="proposal-row-head"><div><div class="proposal-title">${esc(p.title)}</div><div class="proposal-meta">${esc(p.proposer)} · ${esc(programLabel(p.program))} · ${(p.comments || []).length} comments</div></div></div><div class="proposal-row-state"><span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span><span class="bucket">${esc(p.bucket)}</span><div class="next-action"><strong>Next action</strong><span>${esc(p.next)}</span></div></div></article>`).join('');
       list.querySelectorAll('[data-id]').forEach(row => row.addEventListener('click', () => openDrawer(row.dataset.id)));
       $('#stat-active').textContent = proposals.filter(p => p.status !== 'closed').length;
       updateTabState();
@@ -827,7 +853,7 @@
       if (!recent.length) { list.innerHTML = '<div class="empty">No activity recorded yet.</div>'; return; }
       list.innerHTML = recent.map((item, index) => {
         const p = item.proposal;
-        const source = `${p.title} · ${p.program}`;
+        const source = `${p.title} · ${programLabel(p.program)}`;
         return `<button class="activity-item" type="button" data-activity-proposal="${esc(p.id)}" aria-label="${esc(`${item.event} — ${source}`)}" style="animation-delay:${index * 45}ms"><span class="activity-mark" aria-hidden="true"></span><span class="activity-text"><strong>${esc(item.event)}</strong><span class="activity-source">Source · ${esc(source)}</span></span><span class="activity-time">${esc(item.time)}</span></button>`;
       }).join('');
       list.querySelectorAll('[data-activity-proposal]').forEach(row => row.addEventListener('click', () => openDrawer(row.dataset.activityProposal)));
@@ -838,18 +864,96 @@
       const recent = proposals[0];
       $('#overview-register').innerHTML = [
         { label: 'Needs attention', value: `${attention.length} record${attention.length === 1 ? '' : 's'}`, copy: attention[0]?.title || 'Nothing waiting.' },
-        { label: 'Latest record', value: recent?.title || 'No proposal records', copy: recent ? `${recent.statusLabel} · ${recent.program}` : '—' }
+        { label: 'Latest record', value: recent?.title || 'No proposal records', copy: recent ? `${recent.statusLabel} · ${programLabel(recent.program)}` : '—' }
       ].map(row => `<div class="module-row"><div class="module-row-label">${esc(row.label)}</div><div><div class="module-row-value">${esc(row.value)}</div><div class="module-row-copy">${esc(row.copy)}</div></div></div>`).join('');
+    }
+    function renderFeedbackList() {
+      const list = $('#feedback-list');
+      if (!list) return;
+      if (!feedbackItems.length) { list.innerHTML = '<div class="empty">No feedback submitted yet.</div>'; return; }
+      list.innerHTML = feedbackItems.map(item => {
+        const context = item.proposalTitle ? `${item.page} · ${item.proposalTitle}` : item.page;
+        const resolve = canReview() && item.status === 'Open' ? `<button class="feedback-resolve" type="button" data-feedback-resolve="${esc(item.id)}">Mark fixed</button>` : '';
+        return `<article class="feedback-row"><div class="feedback-category">${esc(item.category)}</div><div><div class="feedback-message">${esc(item.message)}</div><div class="feedback-context">${esc(context)}</div></div><div class="feedback-byline"><div>${esc(item.status)} · ${esc(item.author)}</div><div>${esc(formatWhen(item.createdAt))}</div>${resolve}</div></article>`;
+      }).join('');
+      list.querySelectorAll('[data-feedback-resolve]').forEach(button => button.addEventListener('click', async () => {
+        button.disabled = true;
+        try {
+          if (serverBacked) await api(`/api/feedback/${encodeURIComponent(button.dataset.feedbackResolve)}`, { method: 'PATCH', body: JSON.stringify({ status: 'Resolved' }) });
+          feedbackItems = feedbackItems.map(item => item.id === button.dataset.feedbackResolve ? { ...item, status: 'Resolved' } : item);
+          if (!serverBacked) localStorage.setItem(feedbackStoreKey, JSON.stringify(feedbackItems));
+          updateFeedbackCount(); renderFeedbackList(); toast('Feedback marked fixed.');
+        } catch (error) { toast(`Could not update feedback: ${error.message}`); button.disabled = false; }
+      }));
+    }
+    function updateFeedbackCount() {
+      const count = $('#feedback-count');
+      if (!count) return;
+      const openCount = feedbackItems.filter(item => item.status === 'Open').length;
+      count.textContent = openCount ? String(openCount) : '';
+      count.hidden = !openCount;
+    }
+    async function loadFeedback({ silent = false } = {}) {
+      const list = $('#feedback-list');
+      const previousIds = new Set(feedbackItems.map(item => item.id));
+      if (list && !silent) list.innerHTML = '<div class="empty">Loading feedback…</div>';
+      try {
+        if (serverBacked) {
+          const payload = await api('/api/feedback');
+          feedbackItems = payload.feedback || [];
+        } else {
+          feedbackItems = JSON.parse(localStorage.getItem(feedbackStoreKey) || '[]');
+        }
+        updateFeedbackCount();
+        if (list) renderFeedbackList();
+        if (silent && currentView === 'feedback') {
+          const newCount = feedbackItems.filter(item => !previousIds.has(item.id)).length;
+          if (newCount) toast(`${newCount} new feedback note${newCount === 1 ? '' : 's'} received.`);
+        }
+      } catch (error) { if (list) list.innerHTML = `<div class="empty">${esc(error.message)}</div>`; }
+    }
+    function renderFeedback() {
+      const node = $('#module-content');
+      $('#module-title').textContent = 'Feedback';
+      $('#module-sub').textContent = 'Leave a note for the portal team.';
+      const proposalOptions = proposals.map(p => `<option value="${esc(p.id)}">${esc(p.title)} · ${esc(programLabel(p.program))}</option>`).join('');
+      node.innerHTML = `<form class="feedback-form" id="feedback-form"><div class="feedback-fields"><label class="form-label"><strong>Type</strong><select class="field" id="feedback-category"><option>Bug</option><option>Copy</option><option>Design</option><option>Workflow</option><option>Other</option></select></label><label class="form-label"><strong>What should change?</strong><textarea class="textarea" id="feedback-message" maxlength="2000" required placeholder="Describe what happened and what you expected."></textarea></label><label class="form-label"><strong>Proposal</strong><select class="field" id="feedback-proposal"><option value="">No specific proposal</option>${proposalOptions}</select></label></div><div class="feedback-form-footer"><span class="feedback-form-note">Shared with the Commissioner and saved to the portal.</span><button class="button" type="submit">Send feedback</button></div></form><div class="feedback-list"><div class="section-head"><div><div class="section-title">Feedback Queue</div><div class="section-sub">Product notes from testers.</div></div><button class="button secondary" type="button" id="feedback-refresh">Refresh</button></div><div id="feedback-list"></div></div>`;
+      $('#feedback-form').addEventListener('submit', async event => {
+        event.preventDefault();
+        const button = event.currentTarget.querySelector('button[type="submit"]');
+        const message = $('#feedback-message').value.trim();
+        if (!message) return;
+        button.disabled = true;
+        const payload = { category: $('#feedback-category').value, message, page: viewLabels[currentView] || 'Portal' };
+        const proposalId = $('#feedback-proposal').value;
+        if (proposalId) payload.proposalId = proposalId;
+        try {
+          if (serverBacked) {
+            const result = await api('/api/feedback', { method: 'POST', body: JSON.stringify(payload) });
+            feedbackItems = [result.feedback, ...feedbackItems];
+          } else {
+            const proposal = proposals.find(item => item.id === payload.proposalId);
+            const localItem = { id: `f${Date.now()}`, ...payload, proposalTitle: proposal?.title || '', author: authUser?.name || 'Member', status: 'Open', createdAt: 'Just now' };
+            feedbackItems = [localItem, ...feedbackItems];
+            localStorage.setItem(feedbackStoreKey, JSON.stringify(feedbackItems));
+          }
+          $('#feedback-message').value = '';
+          updateFeedbackCount();
+          renderFeedbackList();
+          toast('Feedback saved to the portal.');
+        } catch (error) { toast(`Could not save feedback: ${error.message}`); }
+        button.disabled = false;
+      });
+      $('#feedback-refresh').addEventListener('click', loadFeedback);
+      loadFeedback();
+      clearInterval(feedbackRefreshTimer);
+      feedbackRefreshTimer = setInterval(() => loadFeedback({ silent: true }), 15000);
     }
     function renderModule(view) {
       const node = $('#module-content');
       if (!node) return;
-      const openProposals = `<div class="module-actions"><button class="button secondary" data-jump="proposals">Open proposals</button></div>`;
       if (view === 'feedback') {
-        const threads = proposals.reduce((total, item) => total + (item.comments || []).length, 0);
-        $('#module-title').textContent = 'Feedback';
-        $('#module-sub').textContent = 'Comments live on each proposal.';
-        node.innerHTML = `<div class="module-register"><div class="module-row"><div class="module-row-label">Open threads</div><div><div class="module-row-value">${threads}</div><div class="module-row-copy">Current proposals.</div></div></div><div class="module-row"><div class="module-row-label">Where to respond</div><div><div class="module-row-value">Proposal records</div><div class="module-row-copy">Open a proposal to respond.</div></div></div></div>${openProposals}`;
+        renderFeedback();
       } else if (view === 'documents') {
         const documents = proposals.flatMap(item => (item.files || []).map(file => ({ file, title: item.title, id: item.id })));
         $('#module-title').textContent = 'Documents';
@@ -878,6 +982,7 @@
     }
     function setView(view) {
       currentView = view;
+      if (view !== 'feedback' && feedbackRefreshTimer) { clearInterval(feedbackRefreshTimer); feedbackRefreshTimer = null; }
       const configs = {
         overview: ['Annual Legislative Cycle'],
         proposals: ['Proposals'],
@@ -1023,10 +1128,10 @@
     function setOverlayState(node, open) { node.setAttribute('aria-hidden', open ? 'false' : 'true'); }
     function openDrawer(id) {
       const p = proposals.find(item => item.id === id); if (!p) return; activeProposal = p;
-      $('#drawer-title').textContent = p.title; $('#drawer-kicker').textContent = `${p.program} · ${p.bucket}`;
+      $('#drawer-title').textContent = p.title; $('#drawer-kicker').textContent = `${programLabel(p.program)} · ${p.bucket}`;
       $('#drawer-meta').innerHTML = `<span class="status ${statusClass(p.status)}">${esc(p.statusLabel)}</span><span class="proposal-meta">Proposed by ${esc(p.proposer)}</span>`;
       const version = p.version || (Array.isArray(p.versions) && p.versions.length) || 1;
-      $('#drawer-details').innerHTML = `<div><div class="detail-label">Program account</div><div class="detail-value">${esc(p.program)}</div></div><div><div class="detail-label">Co-sponsors</div><div class="detail-value">${esc(Array.isArray(p.coSponsors) && p.coSponsors.length ? p.coSponsors.join(' · ') : 'Not recorded')}</div></div><div><div class="detail-label">Next action</div><div class="detail-value">${esc(p.next)}</div></div><div><div class="detail-label">Decision route</div><div class="detail-value route-value"><strong>${esc(p.bucket)}</strong><span class="route-description">${esc(bucketDescription(p.bucket))}</span></div></div><div><div class="detail-label">Record status</div><div class="detail-value">Version ${esc(version)} · audited</div></div>`;
+      $('#drawer-details').innerHTML = `<div><div class="detail-label">Proposer</div><div class="detail-value">${esc(programLabel(p.program))}</div></div><div><div class="detail-label">Co-sponsors</div><div class="detail-value">${esc(Array.isArray(p.coSponsors) && p.coSponsors.length ? p.coSponsors.map(programLabel).join(' · ') : 'Not recorded')}</div></div><div><div class="detail-label">Next action</div><div class="detail-value">${esc(p.next)}</div></div><div><div class="detail-label">Decision route</div><div class="detail-value route-value"><strong>${esc(p.bucket)}</strong><span class="route-description">${esc(bucketDescription(p.bucket))}</span></div></div><div><div class="detail-label">Record status</div><div class="detail-value">Version ${esc(version)} · audited</div></div>`;
       renderReviewActions(p);
       renderGovernance(p);
       const steps = ['Submitted','Staff review','Comment window','Coach vote','Board decision','Final decision']; const current = p.status === 'draft' ? -1 : p.status === 'review' ? 1 : p.status === 'comment' ? 2 : p.status === 'vote' ? 3 : p.status === 'board' ? 4 : 5;
@@ -1090,9 +1195,9 @@
     $('#help-button').addEventListener('click', () => toast('Policy guide: approved rules are versioned by the Commissioner.'));
     $('#logout-button').addEventListener('click', async () => { await api('/api/auth/logout', { method: 'POST' }).catch(() => {}); document.body.classList.remove('authenticated'); window.location.reload(); });
     $('#auth-request-form').addEventListener('submit', async (event) => { event.preventDefault(); authEmail = $('#auth-email').value.trim().toLowerCase(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/request-code', { method: 'POST', body: JSON.stringify({ email: authEmail }) }); $('#auth-request-form').style.display = 'none'; $('#auth-verify-form').classList.add('visible'); if (result.devCode) { $('#auth-dev-hint').hidden = false; $('#auth-dev-hint').textContent = `Local development code: ${result.devCode}`; } $('#auth-code').focus(); } catch (error) { $('#auth-error').textContent = error.message; } });
-    $('#auth-verify-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ email: authEmail, code: $('#auth-code').value.trim() }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); setView('overview'); } catch (error) { $('#auth-error').textContent = error.message; } });
+    $('#auth-verify-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-error').textContent = ''; try { const result = await api('/api/auth/verify-code', { method: 'POST', body: JSON.stringify({ email: authEmail, code: $('#auth-code').value.trim() }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); await loadFeedback({ silent: true }); setView('overview'); } catch (error) { $('#auth-error').textContent = error.message; } });
     $('#auth-back').addEventListener('click', () => { $('#auth-verify-form').classList.remove('visible'); $('#auth-request-form').style.display = 'grid'; $('#auth-code').value = ''; $('#auth-dev-hint').hidden = true; });
-    $('#auth-dev-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-dev-error').textContent = ''; try { const result = await api('/api/auth/dev-login', { method: 'POST', body: JSON.stringify({ username: $('#auth-dev-username').value.trim(), password: $('#auth-dev-password').value }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); setView('overview'); } catch (error) { $('#auth-dev-error').textContent = error.message; } });
+    $('#auth-dev-form').addEventListener('submit', async (event) => { event.preventDefault(); $('#auth-dev-error').textContent = ''; try { const result = await api('/api/auth/dev-login', { method: 'POST', body: JSON.stringify({ username: $('#auth-dev-username').value.trim(), password: $('#auth-dev-password').value }) }); applyAuthUser(result.user); await loadCycle(); await loadProposals(); await loadFeedback({ silent: true }); setView('overview'); } catch (error) { $('#auth-dev-error').textContent = error.message; } });
     bootAuth();
   </script>
 </body>
