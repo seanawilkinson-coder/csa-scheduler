@@ -982,6 +982,7 @@
     }
     function setView(view) {
       currentView = view;
+      if (activeProposal) closeDrawer();
       if (view !== 'feedback' && feedbackRefreshTimer) { clearInterval(feedbackRefreshTimer); feedbackRefreshTimer = null; }
       const configs = {
         overview: ['Annual Legislative Cycle'],
