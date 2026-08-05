@@ -133,7 +133,6 @@
     /* The active cycle is one dark field with a rail. It is not a card. */
     .cycle-strip { display: grid; grid-template-columns: minmax(240px, .9fr) minmax(340px, 1.5fr) auto; gap: 38px; align-items: center; padding: 27px 28px 31px; background: var(--navy); color: var(--white); }
     .cycle-kicker { color: var(--gold); font: 500 10px/1 var(--data); letter-spacing: .16em; text-transform: uppercase; }
-    .cycle-name { margin-top: 9px; font: 600 28px/1 var(--serif); letter-spacing: -.035em; }
     .cycle-detail { max-width: 32ch; margin-top: 8px; color: rgba(255,255,255,.68); font-size: 12px; }
     .cycle-progress { display: grid; gap: 10px; }
     .progress-labels { display: flex; justify-content: space-between; gap: 16px; color: rgba(255,255,255,.7); font: 500 10px/1 var(--data); letter-spacing: .07em; text-transform: uppercase; }
@@ -528,7 +527,7 @@
         </section>
 
         <section class="cycle-strip" id="cycle-strip" aria-label="Current cycle status">
-          <div><div class="cycle-kicker" id="cycle-status">Current phase</div><div class="cycle-name" id="cycle-name">Annual Legislative Cycle</div><div class="cycle-detail" id="cycle-detail">Loading the current cycle record.</div></div>
+          <div><div class="cycle-kicker" id="cycle-status">Current phase</div><div class="cycle-detail" id="cycle-detail">Loading the current cycle record.</div></div>
           <div class="cycle-progress"><div class="progress-labels"><span id="cycle-start">—</span><strong id="cycle-phase">—</strong><span id="cycle-end">—</span></div><div class="progress-track" aria-hidden="true"><span></span></div></div>
           <div class="cycle-next"><div class="cycle-next-label">Next deadline</div><div class="cycle-next-date" id="cycle-next-date">—</div><div class="cycle-next-action" id="cycle-next-action">Loading</div></div>
         </section>
@@ -697,7 +696,6 @@
       const deadlines = cycle.deadlines || [];
       const first = deadlines[0]; const last = deadlines[deadlines.length - 1];
       $('#cycle-status').textContent = `${cycle.status || 'active'} phase`;
-      $('#cycle-name').textContent = cycle.name;
       $('#cycle-detail').textContent = `Policy ${cycle.policyVersion || cycle.policy?.version || '—'} · quorum ${cycle.policy?.quorumRequired || '—'} · threshold ${cycle.policy?.thresholdPercent || '—'}%.`;
       $('#cycle-start').textContent = first ? formatDate(first.date) : '—';
       $('#cycle-phase').textContent = phaseLabels[cycle.phase] || cycle.phase || '—';
@@ -834,7 +832,6 @@
       const attention = proposals.filter(item => ['review', 'vote', 'board', 'decision'].includes(item.status));
       const recent = proposals[0];
       $('#overview-register').innerHTML = [
-        { label: 'Next action', value: next?.label || 'No deadline', copy: next ? formatDate(next.date, { year: true }) : 'Cycle schedule is clear.' },
         { label: 'Needs attention', value: `${attention.length} record${attention.length === 1 ? '' : 's'}`, copy: attention[0]?.title || 'Nothing waiting.' },
         { label: 'Latest record', value: recent?.title || 'No proposal records', copy: recent ? `${recent.statusLabel} · ${recent.program}` : '—' }
       ].map(row => `<div class="module-row"><div class="module-row-label">${esc(row.label)}</div><div><div class="module-row-value">${esc(row.value)}</div><div class="module-row-copy">${esc(row.copy)}</div></div></div>`).join('');
